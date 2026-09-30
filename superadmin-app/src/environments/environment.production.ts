@@ -4,13 +4,13 @@
  * Substituted for `environment.ts` by the `fileReplacements` entry in
  * angular.json's production configuration.
  *
- * `apiBaseUrl` is a placeholder and is set to the deployed Worker's URL once
- * the owner deploys it (CP-B8).
+ * `apiBaseUrl` is the deployed Worker. It used to read
+ * `onp-fer-api.workers.dev`, a host that never existed.
  */
 export const environment = {
   produccion: true,
 
-  apiBaseUrl: 'https://onp-fer-api.workers.dev',
+  apiBaseUrl: 'https://demo-onp-api.emnsistemas.workers.dev',
 
   /**
    * Never true in a production build. The mock accepts any password and
