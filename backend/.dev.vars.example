@@ -1,8 +1,30 @@
-# Copy to .dev.vars for local `wrangler dev`. .dev.vars is gitignored.
-# In production these are Worker secrets: `wrangler secret put <NAME>`.
-# Never put any of these in wrangler.jsonc — that file is committed.
+# Copia esto a .dev.vars para `wrangler dev`. .dev.vars está en .gitignore.
+# En producción son secretos del Worker: `wrangler secret put <NAME>`.
+# Ninguno va en wrangler.jsonc — ese archivo se commitea.
+#
+# Las DOS llaves de Supabase son de servidor. Ninguna llega a un
+# navegador, ni siquiera la publicable.
 
+# Supabase → Project Settings → API
 SUPABASE_URL=
-SUPABASE_SERVICE_KEY=
+
+# Nombre heredado: service_role. Esquiva RLS; es la identidad del Worker.
+SUPABASE_SECRET_KEY=
+
+# Nombre heredado: anon. Solo para signInWithPassword en el login del
+# panel. Que se llame "publicable" no significa que se publique.
+SUPABASE_PUBLISHABLE_KEY=
+
+# Firma la cookie de sesión del panel. Nuestra, no de Supabase.
+# Genérala con:  openssl rand -base64 48
 JWT_SECRET=
+
+# Resend → API Keys
 RESEND_API_KEY=
+
+# El uuid de la SOFOM activa que ya existe en el proyecto reusado.
+# `expedientes.sofom_id` viene de la etapa multi-tenant y probablemente
+# es NOT NULL; nosotros somos un solo tenant, así que la columna se
+# llena desde aquí. `supabase/seed.sql` imprime el valor.
+# Si la base no tiene esa columna, DÉJALO VACÍO.
+DEMO_SOFOM_ID=

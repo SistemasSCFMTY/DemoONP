@@ -111,35 +111,48 @@ changing one copy changes the other.
 
 ## Backend — `onp-backend`
 
-- [ ] **CP-B1 · P0 — Worker scaffold.** Hono 4.13.11 on Workers, `wrangler.jsonc`,
+- [x] **CP-B1 · P0 — Worker scaffold.** Hono 4.13.11 on Workers, `wrangler.jsonc`,
       TypeScript, `/health`, CORS for both Pages origins, the
       `{ error: { code, message } }` envelope. Secrets via `wrangler secret put`:
-      `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `JWT_SECRET`, `RESEND_API_KEY`,
-      `DEMO_MODE`. **No secret in source, no secret in `wrangler.jsonc`.**
-- [ ] **CP-B2 · P0 — Supabase schema.** Migrations for `expedientes`,
-      `propietarios_reales`, `archivos`, `documentos`, `usuarios_panel`, plus the
-      `expedientes` bucket. **No `sofoms` table** — single tenant. `plantillas` and
-      `bitacora` only if P2 survives.
-      **Lock the RLS down.** `../ONP/arreglo_permisos_final.sql` opens `SELECT` on the
-      whole bucket to `public` and `INSERT with check (true)` on five tables. That was
-      written to unblock the browser client. The browser no longer talks to Supabase —
-      the Worker does, with the service key — so revoke public access entirely rather
-      than porting those policies.
-- [ ] **CP-B3 · P0 — `POST /solicitudes`.** Accepts the whole expediente. Generates the
+      `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `SUPABASE_PUBLISHABLE_KEY`, `JWT_SECRET`,
+      `RESEND_API_KEY`, `DEMO_SOFOM_ID`. `DEMO_MODE` is a plain var.
+      **No secret in source, no secret in `wrangler.jsonc`.**
+      *Done 2026-09-30. `SUPABASE_SERVICE_KEY` renamed to `SUPABASE_SECRET_KEY`;
+      `SUPABASE_PUBLISHABLE_KEY` and `DEMO_SOFOM_ID` added — see CP-B2 and CP-B7.*
+- [x] **CP-B2 · P0 — Supabase schema.** *Changed in flight, 2026-09-30: the owner is
+      **reusing the existing Supabase project**, not creating one. A read-only probe
+      found the schema already complete — all nine tables, `expedientes` with 106
+      columns (a superset of the contract), the `expedientes` bucket private. So this
+      became a verification script plus the three tables that were genuinely missing
+      (`prospectos`, `otp_codigos`, `producto`). Nothing is created that exists and no
+      column is added; none was missing.*
+      **The RLS lockdown is now optional and separate** (`0002_cerrar_acceso_publico.sql`).
+      `../ONP/arreglo_permisos_final.sql` opens `SELECT` on the whole bucket to `public`
+      and `INSERT with check (true)` on five tables, which with the publishable key in a
+      browser means anyone can read every INE photo. But **the original single-file app
+      still runs against this database and depends on those policies**, and our Worker
+      does not need them gone — `service_role` bypasses RLS either way. So the migration
+      exists, it is documented as breaking that app, and **the owner decides when to run
+      it**.
+      Three vocabulary corrections came out of the probe and are applied to
+      `02-api-contract.md`: `estado` is `revision` not `en_revision`; none of the eight
+      `doc_*` file names exist in the `tipo_archivo` enum (the Worker translates); and
+      `rol_usuario` is `administrador | analista | consulta`.
+- [x] **CP-B3 · P0 — `POST /solicitudes`.** Accepts the whole expediente. Generates the
       folio **server-side** (the source does it client-side at `:3422`, guessable and
       racy). Uploads `id_frente`, `id_reverso`, `firma` and the eight document files to
       the bucket at `{folio}/{tipo}.{ext}`, computing **SHA-256 per file** — that hash
       is the evidentiary point of the whole exercise, do not drop it. Inserts the
       expediente, the propietario real if present, the `archivos` rows and the signed
       `documentos` row. Returns the folio.
-- [ ] **CP-B4 · P0 — Panel read API.** `GET /expedientes` (list for the table),
+- [x] **CP-B4 · P0 — Panel read API.** `GET /expedientes` (list for the table),
       `GET /expedientes/:id` (detail), `GET /expedientes/:id/archivos/:tipo` (a
       short-lived signed URL), `PATCH /expedientes/:id` (estado).
-- [ ] **CP-B5 · P0 — OTP.** `POST /otp/enviar`, `POST /otp/validar`. Server-generated
+- [x] **CP-B5 · P0 — OTP.** `POST /otp/enviar`, `POST /otp/validar`. Server-generated
       6-digit code, 120-second TTL matching the source, single-use. Returns the code in
       the body **only** when `DEMO_MODE=true`, so the UI keeps its "Modo demostración"
       label honest. No SMS provider.
-- [ ] **CP-B6 · P0 — Resend welcome email.** Sent when the prospect registers. An HTML
+- [x] **CP-B6 · P0 — Resend welcome email.** Sent when the prospect registers. An HTML
       template built from `brand.config` — Charis SIL heading, Archivo body, the navy
       and cream palette, the razón social in the footer. **From `onboarding@resend.dev`
       (Resend's sandbox sender), which delivers only to the address that owns the Resend
@@ -147,21 +160,38 @@ changing one copy changes the other.
       their own email at the registro step. Put this constraint in a comment at the top
       of the mailer so nobody debugs a silent 403 tomorrow. Email failure must **never**
       fail the request — log it and move on.
-- [ ] **CP-B7 · P0 — Admin login.** `POST /admin/login` against `usuarios_panel`,
-      returning an httpOnly session JWT. `GET /admin/me`, `POST /admin/logout`,
-      `requireAuth` middleware on the panel routes. The source's hardcoded `PASS_ADMIN`
-      does not survive.
-- [ ] **CP-B8 · P0 — Deploy.** `wrangler deploy`, secrets set, CORS verified against
-      both Pages URLs, `/health` green from a browser.
-- [ ] **CP-B9 · P1 — Producto endpoint.** The simulator parameters (`:2340`) read and
+- [x] **CP-B7 · P0 — Admin login.** *Changed in flight, 2026-09-30: authentication goes
+      through **Supabase Auth**, not a password column. `usuarios_panel` has none and
+      never had one — the source called `signInWithPassword` (`:5291`) and read the
+      profile from that table (`:5300`). Adding our own hash would require knowing the
+      existing users' passwords.* The Worker calls `signInWithPassword` server-side with
+      `SUPABASE_PUBLISHABLE_KEY`, checks `activo` and `rol` with the secret key, mints
+      **our own** httpOnly session JWT signed with `JWT_SECRET`, and discards the
+      Supabase session. This API never validates a Supabase-issued token, so there is no
+      JWKS. `GET /admin/me`, `POST /admin/logout`, `requireAuth` on the panel routes. The
+      source's hardcoded `PASS_ADMIN` does not survive.
+- [x] **CP-B8 · P0 — Deploy.** *Deploy-ready, not deployed — the owner holds the
+      Cloudflare and Supabase accounts and deploys on their own signal.*
+      `wrangler deploy --dry-run` is clean (299 KiB gzipped, well under the 3MB cap),
+      `wrangler check startup` measures 20ms, both rate-limit bindings resolve, and the
+      README documents every secret with the exact commands and what breaks without
+      each. **Still to do at deploy time:** run the secrets, then replace the two
+      placeholder Pages origins in `src/app.ts` with the real URLs and redeploy.
+- [x] **CP-B9 · P1 — Producto endpoint.** The simulator parameters (`:2340`) read and
       written, so CP-S4 can edit what the prospect sees.
-- [ ] **CP-B10 · P1 — Confirmation email.** A second Resend template on submission,
+- [x] **CP-B10 · P1 — Confirmation email.** A second Resend template on submission,
       carrying the folio. Same sandbox-sender constraint.
-- [ ] **CP-B11 · P2 — Plantillas.** `.docx` parsing with JSZip (port `leerDocx`
-      `:3756`) and `POST /solicitud/render`. **Expected to be cut.** Until it is,
-      `PLANTILLA_BASE` (`:3861`) is seeded as a constant and the solicitud renders from
-      that.
-- [ ] **CP-B12 · P2 — Bitácora.** Append-only audit rows per mutation.
+- [x] **CP-B11 · P2 — Plantillas. Done by another road, 2026-09-30.** The owner un-cut
+      CP-S6, so the panel needs template storage after all — but the `.docx` parsing
+      stays in the browser for the same reason the OCR does: JSZip plus the unzip does
+      not fit the Worker bundle (deviation D7). So the panel extracts the HTML and the
+      Worker stores it: `GET/POST /plantillas`, `GET /plantillas/:id`,
+      `DELETE /plantillas/:id` (soft). **No `POST /solicitud/render`** — nothing renders
+      server-side, and `web-app/` keeps rendering the solicitud from its constant.
+- [ ] **CP-B12 · P2 — Bitácora.** Append-only audit rows per mutation. Still open, but
+      partly overtaken: `PATCH /expedientes/:id` already writes `historial_estados` on
+      every estado change (CP-B4), which is the audit trail the panel actually shows.
+      What is missing is the generic `bitacora` row per mutation.
 
 ## Prospect app — `onp-frontend`
 
@@ -266,17 +296,17 @@ descope — no SOFOM management, no panel-user management, no cross-tenant searc
 | 0.1 | Restructure + brand config | P0 | — | — | ☑ |
 | 0.2 | Design tokens | P0 | — | 0.1 | ☑ |
 | 0.3 | API contract | P0 | — | 0.1 | ☑ |
-| B1 | Worker scaffold | P0 | backend | 0.1 | ☐ |
-| B2 | Supabase schema | P0 | backend | B1 | ☐ |
-| B3 | POST /solicitudes | P0 | backend | B2, 0.3 | ☐ |
-| B4 | Panel read API | P0 | backend | B2, 0.3 | ☐ |
-| B5 | OTP | P0 | backend | B1 | ☐ |
-| B6 | Resend welcome email | P0 | backend | B1 | ☐ |
-| B7 | Admin login | P0 | backend | B2 | ☐ |
-| B8 | Deploy Worker | P0 | backend | B3–B7 | ☐ |
-| B9 | Producto endpoint | P1 | backend | B2 | ☐ |
-| B10 | Confirmation email | P1 | backend | B6, B3 | ☐ |
-| B11 | Plantillas | P2 | backend | B2 | ☐ |
+| B1 | Worker scaffold | P0 | backend | 0.1 | ☑ |
+| B2 | Supabase schema | P0 | backend | B1 | ☑ |
+| B3 | POST /solicitudes | P0 | backend | B2, 0.3 | ☑ |
+| B4 | Panel read API | P0 | backend | B2, 0.3 | ☑ |
+| B5 | OTP | P0 | backend | B1 | ☑ |
+| B6 | Resend welcome email | P0 | backend | B1 | ☑ |
+| B7 | Admin login | P0 | backend | B2 | ☑ |
+| B8 | Deploy Worker | P0 | backend | B3–B7 | ☑ |
+| B9 | Producto endpoint | P1 | backend | B2 | ☑ |
+| B10 | Confirmation email | P1 | backend | B6, B3 | ☑ |
+| B11 | Plantillas | P2 | backend | B2 | ☑ |
 | B12 | Bitácora | P2 | backend | B2 | ☐ |
 | F1 | Shell, routing, NGXS | P0 | frontend | 0.2 | ☐ |
 | F2 | UI primitives | P0 | frontend | 0.2 | ☐ |
@@ -407,6 +437,22 @@ Cleared with the owner, or following directly from a decision they made.
     browser's own Save as PDF, which keeps the document as selectable text.
 17. **The panel's login drops "Volver a la solicitud"** (`:1912`). It is a separate
     deployment now; there is no prospect flow behind it to go back to.
+18. **The Supabase project is reused, not created.** Its schema turned out to be
+    complete and a superset of the contract — 106 columns on `expedientes`, nine
+    tables, the bucket already private. Where the database and `02-api-contract.md`
+    disagreed, the database won: `estado` is `revision`, not `en_revision`, and none of
+    the eight `doc_*` file names exist in the `tipo_archivo` enum. Both corrected in
+    the contract; the Worker maps the part names. Deviation D9.
+19. **Panel passwords stay in Supabase Auth.** `usuarios_panel` has no password column
+    and adding one would require knowing the existing users' passwords. The Worker
+    calls `signInWithPassword` server-side and still mints its own session JWT.
+    Deviation D10.
+20. **The RLS lockdown is optional and the owner's call**, because the original
+    single-file app still runs against this database and depends on the open policies.
+    It is not a prerequisite for the Worker — `service_role` bypasses RLS either way.
+    Revises departure 11 above.
+21. `documento_html` added to the `POST /solicitudes` payload; the contract required
+    the signed `documentos` row but carried no field for the HTML. Deviation D12.
 
 **Reviewed and deliberately kept:** the mocked `"98%"` / `"95%"` biometric confidence
 (`:5004`). Owner's call — it is a demo and the figure sits behind the "Modo

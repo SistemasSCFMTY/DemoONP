@@ -4,18 +4,46 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-09-30",
   "compatibility_flags": ["nodejs_compat"],
-  "observability": { "enabled": true },
+  "observability": { "enabled": true, "head_sampling_rate": 1 },
 
-  // NO SECRETS IN THIS FILE. It is committed.
+  // NINGÚN SECRETO EN ESTE ARCHIVO. Se commitea.
   //
-  // Set them with `wrangler secret put <NAME>`:
-  //   SUPABASE_URL, SUPABASE_SERVICE_KEY, JWT_SECRET, RESEND_API_KEY
+  // Se ponen con `wrangler secret put <NAME>`:
+  //   SUPABASE_URL, SUPABASE_SECRET_KEY, SUPABASE_PUBLISHABLE_KEY,
+  //   JWT_SECRET, RESEND_API_KEY, DEMO_SOFOM_ID
   //
-  // For local dev, put the same keys in .dev.vars (gitignored).
-  // See .dev.vars.example.
+  // Para desarrollo local, los mismos nombres en .dev.vars
+  // (ignorado por git). Ver .dev.vars.example.
   "vars": {
-    // Non-secret only. DEMO_MODE=true makes /otp/enviar echo the generated
-    // code in its response so the UI can show it under "Modo demostración".
+    // Solo lo que no es secreto. DEMO_MODE=true hace que /otp/enviar
+    // devuelva el código generado en su respuesta, para que la UI lo
+    // pinte bajo su etiqueta "Modo demostración".
     "DEMO_MODE": "true"
-  }
+  },
+
+  // Tope de envíos de OTP. Un endpoint de OTP sin tope es la cuenta de
+  // SMS de alguien más (01-conventions.md §10).
+  //
+  // No consumen ningún recurso de la cuenta: `namespace_id` es un
+  // número que se elige y solo tiene que ser único dentro de este
+  // Worker. No hay nada que aprovisionar antes de desplegar.
+  //
+  // `period` solo acepta 10 o 60 segundos. El resto del control —TTL de
+  // 120 s y un solo uso— lo pone la tabla `otp_codigos`.
+  "ratelimits": [
+    {
+      "name": "LIMITE_OTP_TELEFONO",
+      "namespace_id": "1001",
+      // Tres códigos por minuto por teléfono. La UI deja reenviar a los
+      // 30 segundos (onp_fer_etapa2_pf.html:2697), así que tres cabe de
+      // sobra en un uso honesto.
+      "simple": { "limit": 3, "period": 60 }
+    },
+    {
+      "name": "LIMITE_OTP_IP",
+      "namespace_id": "1002",
+      // Más holgado: una sala de demo sale por una sola IP.
+      "simple": { "limit": 20, "period": 60 }
+    }
+  ]
 }
