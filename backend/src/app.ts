@@ -45,12 +45,11 @@ app.use(
       'http://127.0.0.1:4200',
       'http://localhost:4201',
       'http://127.0.0.1:4201',
-      // El proyecto de Pages que existe hoy; sirve `web-app`.
+      // Los dos proyectos de Pages de la cuenta: `demo-onp` sirve el
+      // prospecto y `demo-onp-superadmin` sirve el panel.
       'https://demo-onp.pages.dev',
-      // El panel todavía no tiene proyecto propio. Cuando lo tenga, su
-      // dominio va aquí, o no podrá hablarle al Worker desde un navegador.
-      //
-      // Los despliegues de vista previa salen en `<hash>.demo-onp.pages.dev`
+      'https://demo-onp-superadmin.pages.dev',
+      // Los despliegues de vista previa salen en `<hash>.<proyecto>.pages.dev`
       // y NO entran por esta lista, que compara texto exacto. Es a
       // propósito: producción es la que importa mañana.
     ],
