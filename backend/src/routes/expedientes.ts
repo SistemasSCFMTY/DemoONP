@@ -5,7 +5,7 @@ import { cuerpoJson, responder, validar } from '../lib/respuesta';
 import type { Sesion } from '../lib/sesion';
 import { supabaseDe } from '../lib/supabase';
 import { sofomActual } from '../lib/tenant';
-import { requireAuth } from '../middleware/auth';
+import { requireAdmin, requireAuth } from '../middleware/auth';
 import {
   ArchivoFirmadoSchema,
   CambioEstadoSchema,
@@ -54,7 +54,16 @@ expedientes.get('/', async (c) => {
  * ruta cayera en `/:id`, «exportar» se trataría como un uuid y el
  * botón de exportar devolvería un 404 que costaría un rato entender.
  */
-expedientes.get('/exportar', async (c) => {
+/**
+ * El extracto completo — `requireAdmin` encima de `requireAuth`.
+ *
+ * Es el endpoint que más dato personal entrega de una sola vez: todos
+ * los expedientes del tenant, con CURP, RFC, domicilio, ingreso y
+ * geolocalización. `consulta` existe para mirar un expediente a la vez;
+ * bajarlos todos a un archivo es otra cosa. Decisión del dueño,
+ * 2026-09-30.
+ */
+expedientes.get('/exportar', requireAdmin, async (c) => {
   const exportacion = await exportarExpedientes(
     supabaseDe(c.env),
     sofomActual(c.env),
@@ -81,7 +90,14 @@ expedientes.get('/:id/archivos/:tipo', async (c) => {
   return responder(c, ArchivoFirmadoSchema, firmado);
 });
 
-expedientes.patch('/:id', async (c) => {
+/**
+ * Cambiar el estado de un expediente — `requireAdmin`.
+ *
+ * Aprobar o rechazar una solicitud de crédito es la decisión del
+ * trámite, no una nota al margen. `analista` y `consulta` pueden verla;
+ * dictaminarla es del administrador. Decisión del dueño, 2026-09-30.
+ */
+expedientes.patch('/:id', requireAdmin, async (c) => {
   const { estado, motivo } = await cuerpoJson(c, CambioEstadoSchema);
   const actual = await cambiarEstado(
     supabaseDe(c.env),

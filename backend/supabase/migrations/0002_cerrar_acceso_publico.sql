@@ -1,5 +1,5 @@
 -- ============================================================
---  ONP FER — 0003 · cerrar el acceso público
+--  ONP FER — 0002 · cerrar el acceso público
 --
 --  ============ OPCIONAL. LA DECIDE EL DUEÑO. =================
 --
@@ -43,7 +43,7 @@ declare
     t text;
     tablas constant text[] := array[
         'expedientes', 'propietarios_reales', 'archivos', 'documentos',
-        'usuarios_panel', 'prospectos', 'otp_codigos', 'producto'
+        'usuarios_panel', 'otp_codigos', 'producto'
     ];
 begin
     foreach t in array tablas loop
@@ -70,7 +70,7 @@ begin
         from pg_policies
         where schemaname = 'public'
           and tablename in ('expedientes','propietarios_reales','archivos',
-                            'documentos','usuarios_panel','prospectos',
+                            'documentos','usuarios_panel',
                             'otp_codigos','producto','plantillas','bitacora')
     loop
         execute format('drop policy if exists %I on public.%I', p.policyname, p.tablename);
