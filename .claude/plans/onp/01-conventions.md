@@ -435,6 +435,26 @@ the `doc-hoja` sheet still styles the document) and returns accented characters 
 numeric entities, which the HTML parser decodes on the way back in — the printed
 solicitud keeps its accents.
 
+**The `.docx` is parsed in the browser.** JSZip plus a DOM parser is not what a 3 MB
+Worker bundle is for, and it is the same platform constraint that keeps Tesseract
+client-side (deviation D7). The panel converts the file and sends only the resulting
+HTML; the Worker never receives a `.docx`. Both halves of the result are untrusted on
+display — the template came out of an uploaded file, the values out of a prospect's
+form — so the preview sanitises like every other stored HTML in this app.
+
+**A template cannot contain `{{` as literal text**, and escaping it as `&#123;&#123;`
+does not help: Angular decodes HTML entities before it parses interpolation, so the
+braces come back and the expression fails to compile. The catalogue of claves builds
+those strings in TypeScript, through the `llaves` pipe.
+
+**Never point the panel at `wrangler dev` and press a write button.** That Worker
+talks to the owner's live production Supabase, not a local database: `PUT /sofom`
+overwrites the single tenant row whose razón social is printed in every email footer,
+and `POST /plantillas` writes rows the panel cannot clean up. Reads and login are
+safe and are how the session work was verified. Write paths are unit-tested against
+`PanelApiSimulada` — which is the reason to keep it now that the app runs on the real
+API — and confirmed against the backend once, deliberately, with the owner's say-so.
+
 ### Open question for the owner
 
 **May an operator delete an expediente?** The source offers "Eliminar expediente"

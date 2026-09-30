@@ -177,6 +177,10 @@ pill. The Spanish label need not match the slug: "En revisión" reads better and
 transmits as `revision`. An estado the build does not know shows its raw value in a
 neutral chip; never blank, and never relabelled as something it is not.
 
+**Never fire a write at a `wrangler dev` pointed at production.** Reads and login are
+safe; `PUT`/`POST`/`DELETE` are not, and a dev Worker is not a dev database. Write
+paths are unit-tested against the in-memory API.
+
 **Where a value crosses into the database, pin it in a test.** The panel once shipped
 `en_revision` because the API contract said so, and the Worker rejected every estado
 change — both sides type-checked perfectly against a wrong agreement. A contract is

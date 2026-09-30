@@ -246,10 +246,16 @@ descope — no SOFOM management, no panel-user management, no cross-tenant searc
       `02-api-contract.md`; the source's screen edits two of them, so either the
       contract grows or the simulator's step size stops being configurable —
       `onp-backend` and the owner to decide.
-- [ ] **CP-S6 · P2 — Formatos and Ajustes.** `.docx` upload and the sofom identity
-      editor. **Expected to be cut** — branding is `brand.config.ts` now, and the
-      Ajustes tab's connection-string fields are gone with the Worker owning the
-      credentials.
+- [x] **CP-S6 · P2 — Formatos and Ajustes.** `.docx` upload and the sofom identity
+      editor. Uncut: the owner asked for both tabs back.
+      **Formatos** — the active formato, upload, "Ver cómo queda" and the searchable
+      catálogo de claves. The `.docx` is parsed in the browser with JSZip and only the
+      resulting HTML is sent (same platform constraint as the OCR — see the Cloudflare
+      section above). **Ajustes** — datos de la SOFOM and the export, two cards only.
+      **Not ported, by the owner's decision:** the "Dónde se guarda la información"
+      card (`:2048`), whose Project URL and anon key fields would put a Supabase
+      credential in a browser, and "Borrar todos los datos" (`:6025`), an unguarded
+      mass delete against a live database.
 
 ---
 
@@ -290,7 +296,7 @@ descope — no SOFOM management, no panel-user management, no cross-tenant searc
 | S3 | Expediente detail | P0 | superadmin | S2, B4 | ☑ |
 | S4 | Deploy to Pages | P0 | superadmin | S3, B8 | ◐ |
 | S5 | Producto | P1 | superadmin | S1, B9 | ☑ |
-| S6 | Formatos and Ajustes | P2 | superadmin | S1 | ☐ |
+| S6 | Formatos and Ajustes | P2 | superadmin | S1 | ☑ |
 
 **26 P0 · 4 P1 · 5 P2.** ◐ = built and documented, waiting on a dependency to close.
 

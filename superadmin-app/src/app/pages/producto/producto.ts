@@ -116,9 +116,14 @@ export class ProductoVista implements AfterViewInit {
 
     const servidor = this.#errorServidor();
     if (servidor) {
+      // A failure with nothing loaded is a read that did not land, not a
+      // rejected save. `GET /producto` currently 500s against the live
+      // Worker — migration 0001 has not been run and the `producto` table
+      // does not exist yet — so this is the state the panel shows today, and
+      // it should not claim the operator's edit was refused.
       return {
         ok: false,
-        titulo: 'No se pudo guardar',
+        titulo: this.#producto() ? 'No se pudo guardar' : 'No se pudieron cargar los parámetros',
         texto: servidor,
         clases: 'bg-error/10 text-error',
       };

@@ -54,6 +54,7 @@ export class PanelShell {
   protected readonly secciones: readonly SeccionNav[] = [
     { ruta: '/expedientes', etiqueta: 'Expedientes', icono: 'expedientes' },
     { ruta: '/producto', etiqueta: 'Producto', icono: 'producto' },
+    { ruta: '/formatos', etiqueta: 'Formatos', icono: 'formatos' },
     { ruta: '/ajustes', etiqueta: 'Ajustes', icono: 'ajustes' },
   ];
 
