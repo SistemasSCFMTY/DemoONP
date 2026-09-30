@@ -55,24 +55,26 @@ no `video` key, and nothing captures bytes.
 
 ## CP-V1 · P0 — el Worker acepta la parte `video`
 
+**Cerrado** — PR #13.
+
 Branch `cp/v1-video-backend`. **Ship this first and alone**: nothing sends a `video`
 part yet, so it is inert on arrival and can be deployed without touching the apps.
 
-- [ ] `schemas/comunes.ts`: add `video: 'video_identificacion'` to
+- [x] `schemas/comunes.ts`: add `video: 'video_identificacion'` to
       `TIPO_ARCHIVO_POR_PARTE`. `PARTES_ARCHIVO` derives from it, so the upload loop
       picks the part up with no further change.
-- [ ] `services/archivos.ts`: add `video/webm` → `webm` and `video/mp4` → `mp4` to
+- [x] `services/archivos.ts`: add `video/webm` → `webm` and `video/mp4` → `mp4` to
       `EXTENSION_POR_MIME`. Safari reports `video/mp4`; Chromium `video/webm`.
-- [ ] Per-part size cap instead of one constant: video **25 MB**, everything else stays
+- [x] Per-part size cap instead of one constant: video **25 MB**, everything else stays
       at **10 MB**. A single `MAX_BYTES` either starves the video or lets an 11 MB "INE
       photo" through.
-- [ ] Rejection copy per part: the current message names "JPG, PNG, WEBP o PDF", which
+- [x] Rejection copy per part: the current message names "JPG, PNG, WEBP o PDF", which
       is wrong for a video part.
-- [ ] Tests: a `video` part with `video/webm` stores as `video_identificacion`; an
+- [x] Tests: a `video` part with `video/webm` stores as `video_identificacion`; an
       oversized video is rejected **and the expediente is still created** with the part
       listed in `archivosFallidos` — that last assertion is the whole point of the
       checkpoint and must not be skipped.
-- [ ] `02-api-contract.md`: eleven upload parts become twelve. Same PR (protocol §3).
+- [x] `02-api-contract.md`: eleven upload parts become twelve. Same PR (protocol §3).
 
 **Closeable when** `npm run typecheck` passes, tests are green, `wrangler deploy` is
 done, and a `curl` with a small webm part returns 201 with the file registered.
@@ -81,29 +83,31 @@ done, and a `curl` with a small webm part returns 201 with the file registered.
 
 ## CP-V2 · P0 — grabadora real en `web-app`
 
+**Cerrado** — PR #14.
+
 Branch `cp/v2-video-recorder`. Depends on CP-V1 being **deployed**, not merely merged.
 
-- [ ] `GrabacionReal implements Grabacion`, using `MediaRecorder`.
-- [ ] Pick the mime with `MediaRecorder.isTypeSupported`, in this order:
+- [x] `GrabacionReal implements Grabacion`, using `MediaRecorder`.
+- [x] Pick the mime with `MediaRecorder.isTypeSupported`, in this order:
       `video/mp4;codecs=avc1`, `video/webm;codecs=vp9`, `video/webm;codecs=vp8`,
       `video/webm`. **No supported type → fall back to `GrabacionSimulada`.**
-- [ ] `getUserMedia` constrained to 640×480, `facingMode: 'user'`, audio on, and
+- [x] `getUserMedia` constrained to 640×480, `facingMode: 'user'`, audio on, and
       `videoBitsPerSecond: 500_000`.
-- [ ] Hard 45 s cap with `setTimeout(stop)`, and stop every track in a `finally` — a
+- [x] Hard 45 s cap with `setTimeout(stop)`, and stop every track in a `finally` — a
       camera left running after the screen is gone is the kind of thing a stakeholder
       notices.
-- [ ] Return the `Blob` together with the mime actually used.
-- [ ] `simulada` keeps telling the truth, so the "Modo demostración" note on the screen
+- [x] Return the `Blob` together with the mime actually used.
+- [x] `simulada` keeps telling the truth, so the "Modo demostración" note on the screen
       appears exactly when the recording _is_ simulated and not otherwise. A simulation
       that stops admitting it is the failure mode `01-conventions.md` §11 exists to
       prevent.
-- [ ] **Kill switch**: `grabarVideo: boolean` in both environment files. False →
+- [x] **Kill switch**: `grabarVideo: boolean` in both environment files. False →
       `GrabacionSimulada`, no camera, no upload. This is the "it is misbehaving on stage"
       lever: flip it, push, Pages rebuilds in about two minutes.
-- [ ] Store the blob in `IdentidadState` via `RegistrarVideo`.
-- [ ] `'video'` added to `TipoArchivo`; `signature.ts` puts it in the `archivos` map.
-- [ ] Live preview while recording, with the seconds remaining.
-- [ ] Verification: Playwright with `--use-fake-device-for-media-stream`, asserting the
+- [x] Store the blob in `IdentidadState` via `RegistrarVideo`.
+- [x] `'video'` added to `TipoArchivo`; `signature.ts` puts it in the `archivos` map.
+- [x] Live preview while recording, with the seconds remaining.
+- [x] Verification: Playwright with `--use-fake-device-for-media-stream`, asserting the
       blob is non-empty, the mime is one of the four, and the tracks are stopped.
 
 **Closeable when** `ng build` and `ng test` pass, and a full Playwright run reaches
@@ -113,16 +117,18 @@ Branch `cp/v2-video-recorder`. Depends on CP-V1 being **deployed**, not merely m
 
 ## CP-V3 · P1 — el panel lo muestra
 
+**Cerrado** — PR #15.
+
 Branch `cp/v3-video-panel`.
 
-- [ ] Label for `video_identificacion` in the detail's `nombreArchivo` map — without it
+- [x] Label for `video_identificacion` in the detail's `nombreArchivo` map — without it
       the row renders with an empty name.
-- [ ] `<video controls preload="metadata" playsinline>` in the evidence column, fed by
+- [x] `<video controls preload="metadata" playsinline>` in the evidence column, fed by
       the same short-lived signed URL the images use. `panel-archivo-imagen` is an
       `<img>` and must not be bent into serving both.
-- [ ] `preload="metadata"`, not `auto`: the panel must not pull megabytes for every
+- [x] `preload="metadata"`, not `auto`: the panel must not pull megabytes for every
       expediente an analyst merely opens.
-- [ ] Both copies of the design tokens and API types stay in step (CLAUDE.md).
+- [x] Both copies of the design tokens and API types stay in step (CLAUDE.md).
 
 ---
 
@@ -153,6 +159,46 @@ Not optional in spirit, only in ordering.
       what the screen does when the camera is denied.
 
 ---
+
+## Cómo quedó — lo que el código dijo y el plan no
+
+Los tres P0 cerraron el 2026-09-30. Cuatro cosas salieron distinto y quedan aquí
+porque el plan se equivocaba, no el código.
+
+- **El allowlist de MIME del plan habría rechazado las grabaciones de CP-V2.**
+  `MediaRecorder` no entrega `video/webm`: entrega `video/webm;codecs=vp8,opus`, y esa
+  cadena llega tal cual en `File.type`. Una búsqueda exacta no la encuentra, y como la
+  subida no es bloqueante habría fallado **en silencio** —201, expediente creado, sin
+  vídeo y sin avisarle a nadie. Se casa por el tipo base; los parámetros se guardan en
+  `tipo_mime` y no deciden nada.
+- **La cuenta de memoria del Worker cambió de signo.** Once archivos de 10 MB en
+  paralelo daban 110 MB contra un techo de 128 MB: desperdicio. Con el vídeo de 25 MB
+  son 135 MB: por encima del techo. El ciclo secuencial dejó de ser orden y pasó a ser
+  requisito.
+- **Chromium elige `video/mp4;codecs=avc1`, no WebM.** El plan pintaba mp4 como el
+  camino de Safari y WebM como el de Chromium. El ensayo recorre mp4, así que la rama
+  WebM y el respaldo de iOS siguen sin tocarse. Solo CP-V5 los prueba.
+- **`Continuar` bloqueado por `grabado()` convertía una cámara denegada en un callejón
+  sin salida**, contra la premisa del encabezado de este plan. CP-V2 agregó un
+  _Continuar sin grabación de vídeo_ con copy que nombra la falla. Es pantalla nueva,
+  no copy alterado: la fuente nunca grabó de verdad y no tenía este estado.
+
+Y un hallazgo que no era de este plan: el panel tenía su mapa de nombres indexado por
+los nombres de parte del multipart mientras la API devuelve el enum de Postgres, así
+que **ocho de doce renglones de «Archivos recibidos» salían sin nombre** contra el
+backend real desde CP-S3. Sobrevivió porque el mock hablaba el mismo vocabulario que
+el panel: los dos coincidían entre sí y los dos discrepaban de la API. Corregido en
+CP-V3 y anotado en `02-api-contract.md`.
+
+## Lo que sigue sin probarse
+
+- **Safari/iOS.** Nada lo ha tocado. Chromium pasa aunque la detección de códec esté
+  rota —se comprobó mutándola— así que el ensayo en headless no dice nada de iPhone.
+  Es CP-V5 y es la razón de que exista el interruptor `grabarVideo`.
+- **`preload="metadata"`.** El atributo está puesto y afirmado en prueba, pero el clip
+  de la prueba es un data URI: Chromium llega a `readyState 4` sin tocar la red, así
+  que «no se baja megabytes» no queda demostrado hasta que haya una URL firmada real.
+- **Un `video` aterrizando en `archivos`.** Espera al despliegue del Worker.
 
 ## Rollback
 
