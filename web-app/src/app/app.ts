@@ -8,20 +8,30 @@ import { pasoPorId } from './model/constants/pasos/pasos';
 import { NavegacionState } from './state/navegacion/navegacion.state';
 
 /**
- * The 390px shell: sticky topbar → progress bar → scrolling body.
+ * The shell: sticky topbar → progress bar → scrolling body.
+ *
+ * **Full-bleed containers, capped content.** Every band spans the viewport
+ * and caps only what is inside it at `max-w-app` (64rem, the `lg`
+ * breakpoint). The shell used to pin the whole tree to 390px, which put the
+ * navy topbar in a 390px stub on anything wider than a phone — owner's call
+ * to change it, 2026-09-30.
+ *
+ * Mobile first is unaffected: below 64rem the cap does nothing and 390
+ * remains where the design is decided.
+ *
+ * `min-h-dvh`, not `min-h-screen`: `100vh` breaks under mobile Safari's
+ * collapsing toolbar (departure 8).
  *
  * The portada carries neither bar — it is the presentation, no trámite has
  * started (`switchScreen`, onp_fer_etapa2_pf.html:4446). The informational
  * screens keep the topbar but hide the progress, because they are not steps.
- *
- * `.app-shell` and its `100dvh` live in `styles.css` (01-conventions.md §5).
  */
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterOutlet, Topbar, BarraProgreso],
   template: `
-    <div class="app-shell bg-bg">
+    <div class="flex min-h-dvh w-full flex-col bg-bg">
       @if (muestraTopbar()) {
         <onp-topbar
           [titulo]="titulo()"
@@ -32,7 +42,7 @@ import { NavegacionState } from './state/navegacion/navegacion.state';
       @if (muestraProgreso()) {
         <onp-barra-progreso [porcentaje]="progreso()" />
       }
-      <main class="flex-1 px-5 pt-6 pb-10">
+      <main class="mx-auto w-full max-w-app flex-1 px-5 pt-6 pb-10">
         <router-outlet />
       </main>
     </div>

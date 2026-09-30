@@ -19,15 +19,6 @@
 @import 'tailwindcss';
 
 @theme {
-  /* --- Breakpoints (§5) ---
-     Tailwind's smallest default is `sm` at 40rem, which is wider than the
-     whole prospect shell — so nothing inside a 390px column can ever respond
-     to it. `xs` at 360px is the one that matters here: it is the width below
-     which a two-column form row stops fitting and has to fall back to one.
-     390 (the design width) and 375 (iPhone SE) are above it; 320 is below.
-     This is a density change *inside* the 390px shell, not a desktop layout. */
-  --breakpoint-xs: 22.5rem; /* 360px */
-
   /* --- Colour (§3). ONP FER's own identity. No hex in a template, ever. --- */
   --color-navy: #1c3352;
   --color-navy-deep: #0e2036;
@@ -50,9 +41,9 @@
      Registered in 01-conventions.md §3 before being used (no hex in a
      template, ever). */
   --color-surface-warning: #fdf6e3; /* warning wash — alert.warning       */
-  --color-surface-info: #eef2f7; /* navy wash    — alert.info          */
+  --color-surface-info: #eef2f7;    /* navy wash    — alert.info          */
   --color-surface-success: #eef6f1; /* success wash — OCR-detected field  */
-  --color-surface-muted: #f9f8f5; /* cream wash   — leyenda, pep-section */
+  --color-surface-muted: #f9f8f5;   /* cream wash   — leyenda, pep-section */
 
   /* --- Typography (§2). Charis SIL headings, Archivo body. ---
      Confirmed by the owner 2026-09-30: Charis SIL for main headings,
@@ -188,17 +179,37 @@
 /* ==========================================================================
    web-app only — the prospect shell (§5)
    ==========================================================================
-   The source ships a 390px-wide centred column. 100dvh, not 100vh: the
-   original breaks under mobile Safari's collapsing toolbar (departure 8).
-   superadmin-app does NOT get this block — it is a desktop surface (§12).
+   The shell used to be a `.app-shell` class pinning EVERYTHING to 390px,
+   the source's centred column. That caged the chrome too: on a laptop the
+   navy topbar was a 390px stub floating in white, which is what the owner
+   saw and rejected (2026-09-30, reversing departure 1's literal reading).
+
+   Mobile first still holds — 390 is where the design is decided, and below
+   64rem this cap does nothing at all. What changed is what happens above it:
+   the layout containers now span the viewport and only the *content* is
+   capped, so the topbar reads as a bar instead of a fragment.
+
+   The shell itself is Tailwind on the element now (owner: prefer Tailwind
+   over plain CSS). All that survives here is the token, because a width
+   used by four components belongs in one named place.
+
+   `--container-*` is the namespace Tailwind builds `max-w-*` from, so this
+   spells `max-w-app`. 64rem is the `lg` breakpoint, on purpose: the cap and
+   the breakpoint should not be able to drift apart.
+
+   Its own `@theme` and not the shared block above: the panel is a desktop
+   tool with its own shell and no use for this, so copying it there would be
+   dead tokens in both files instead of one honest one (§3 duplication).
    ========================================================================== */
-@layer base {
-  .app-shell {
-    width: 100%;
-    max-width: 390px;
-    margin: 0 auto;
-    min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
-  }
+@theme {
+  /* The content cap. 64rem is the `lg` breakpoint, named so the cap and the
+     breakpoint cannot drift apart. Spells `max-w-app`. */
+  --container-app: 64rem;
+
+  /* Tailwind's smallest default is `sm` at 40rem — wider than a phone, so
+     nothing in this app could ever respond to it. `xs` is the width below
+     which a two-column form row stops fitting: 390 (the design width) and
+     375 (iPhone SE) are above it, 320 is below. A density change inside the
+     column, not a desktop layout. */
+  --breakpoint-xs: 22.5rem; /* 360px */
 }

@@ -12,7 +12,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div
-      class="h-1 w-full bg-border"
+      class="mx-auto h-1 w-full max-w-app bg-border"
       role="progressbar"
       aria-label="Avance de tu solicitud"
       [attr.aria-valuenow]="porcentaje()"
