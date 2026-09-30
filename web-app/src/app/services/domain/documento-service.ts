@@ -9,8 +9,9 @@ import { SesionState } from '../../state/sesion/sesion.state';
 import { SimuladorState } from '../../state/simulador/simulador.state';
 import { SolicitudState } from '../../state/solicitud/solicitud.state';
 
-const PENDIENTE_DE_FIRMA =
-  '<p style="color:#8a5a1c; font-size:10px;">— pendiente de firma —</p>';
+/** Styled by `.pendiente` in `onp-hoja-documento`, not by an inline hex —
+ *  this string is rendered markup, and §3 allows no hex in one. */
+const PENDIENTE_DE_FIRMA = '<p class="pendiente">— pendiente de firma —</p>';
 
 /**
  * Rendering the solicitud the prospect reads and signs.

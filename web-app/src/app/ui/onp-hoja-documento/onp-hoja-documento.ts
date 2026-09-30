@@ -76,6 +76,11 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
       word-break: break-word;
     }
 
+    .hoja ::ng-deep .pendiente {
+      color: var(--color-warning);
+      font-size: 10px;
+    }
+
     .hoja ::ng-deep .firma-zona {
       margin-top: 26px;
       text-align: center;

@@ -1,0 +1,8 @@
+# Cloudflare Pages: serve index.html for every path so the Angular router
+# handles it. Without this, a deep link into the wizard 404s — which will
+# happen on stage the first time someone reloads mid-flow, or opens
+# /solicitud/simulador directly from a phone.
+#
+# 200, not 301: the URL must stay what the user asked for, or the router
+# loads the portada instead of the step they were on.
+/*  /index.html  200

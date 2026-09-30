@@ -60,6 +60,7 @@ Type scale, ported from the source and kept small because the viewport is 390px:
 
 | Token | Size | Used for |
 |---|---|---|
+| `wordmark` | 27px / 700 Charis | the portada wordmark, **and nowhere else** |
 | `topbar` | 14px / 600 Charis | the sticky bar title |
 | `h2` | 18px / 700 Charis | screen title |
 | `h3` | 14px / 700 Charis | section heading inside a screen |
@@ -98,6 +99,18 @@ tenant — no `--brand-*` indirection, no theming layer.
 | `success` | `#1e6b45` | |
 | `error` | `#8a2a2a` | required marker, validation |
 | `warning` | `#8a5a1c` | PEP section, pending status |
+
+Tinted grounds, added in CP-F2. The source paints alerts with raw hex, and its info
+blue (`#e3f2fd` on `#1565c0`) is Material's — a colour from a different company. Each
+of these is a low-chroma wash of a palette colour, so an alert reads as this product
+rather than as a framework default:
+
+| Token | Value | Role |
+|---|---|---|
+| `surface-warning` | `#fdf6e3` | `alert.warning`, the "Modo demostración" tips, a filled OTP box |
+| `surface-info` | `#eef2f7` | `alert.info` |
+| `surface-success` | `#eef6f1` | a field the OCR filled |
+| `surface-muted` | `#f9f8f5` | `leyenda`, `pep-section`, the "entre calles" fieldset |
 
 **No hex in a template, ever.** Tokens only. If a value is missing from the table, add
 it to the table first.
@@ -231,7 +244,22 @@ Reactive Forms, typed, **one `FormGroup` per step**.
 - The required marker is the label's `::after` asterisk in `error`, plus
   `[attr.aria-required]` — the asterisk alone is not accessible.
 - Validation messages appear inline under the field, in Spanish, naming the field:
-  *"Escribe tu CURP a 18 caracteres."* Never "Campo inválido."
+  *"Escribe tu CURP a 18 caracteres."* Never "Campo inválido." The message lives on the
+  validator's own error object and `onp-field` renders it, so adding a rule is not also
+  editing a lookup table somewhere else.
+
+Two more, established in CP-F7/F8 and worth stating because both are easy to get wrong
+the other way:
+
+- **A conditional block that does not apply is not rendered, and its form does not
+  exist.** The propietario real's four groups are built when "tercero" is chosen and
+  discarded when it is not. A form behind a hidden div still holds values, still
+  reaches the payload, and still needs someone to remember to clear it — which is how
+  an expediente ends up recording a public office for a person who declared they hold
+  none. Where a block must stay mounted (the PEP details), answering "No" clears it.
+- **A generated field only overwrites itself.** `form-generales` fills the CURP from
+  the name and birth date, and stops the moment the prospect edits it. The source
+  regenerates on every keystroke and silently undoes their correction.
 
 ---
 
@@ -239,7 +267,11 @@ Reactive Forms, typed, **one `FormGroup` per step**.
 
 - Every input has a real `<label for>`. Placeholders are never labels.
 - The step title is an `<h1>` per route and receives focus on navigation, so a screen
-  reader announces the new step.
+  reader announces the new step. It is the **screen** title, inside the body, set at
+  the `h2` size token — the topbar's text is chrome and must not be a second `<h1>`.
+  `ui/onp-titulo` is that element and handles the focus, so no page implements it.
+- The modal is the native `<dialog>`, which supplies the focus trap, the inert
+  background and Escape-to-close. Do not hand-roll one.
 - Progress bar carries `role="progressbar"` with `aria-valuenow`/`min`/`max`.
 - The modal traps focus, closes on Escape, restores focus to its trigger, and is
   `role="dialog" aria-modal="true"` with `aria-labelledby`.
