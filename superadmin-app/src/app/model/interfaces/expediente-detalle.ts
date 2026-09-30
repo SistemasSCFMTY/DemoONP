@@ -1,23 +1,43 @@
 import { EstadoExpediente } from './estado-expediente';
 
 /**
- * The eleven file slots an expediente can carry.
+ * What an `archivos` row's `tipo` carries, and what
+ * `GET /expedientes/:id/archivos/:tipo` takes.
  *
- * From `02-api-contract.md` → `POST /solicitudes` (the multipart parts) and
- * `GET /expedientes/:id/archivos/:tipo`.
+ * **This is the Postgres `tipo_archivo` enum, not the multipart part names.**
+ * The two vocabularies are different lists and the Worker translates between
+ * them on the way in (`backend/src/schemas/comunes.ts` →
+ * `TIPO_ARCHIVO_POR_PARTE`): the part `doc_curp` is stored as
+ * `constancia_curp`, `doc_domicilio` as `comprobante_domicilio`, and `doc_id`
+ * as `otro`. `GET /expedientes/:id` returns the *stored* value, so this union
+ * has to be the enum.
+ *
+ * It used to be the eleven part names, which is why eight of the eleven rows
+ * in "Archivos recibidos" rendered with no name at all against the real
+ * Worker — `NOMBRE_ARCHIVO` was keyed on a vocabulary the API never sends.
+ * `PanelApiSimulada` spoke the part names too, so the mock hid it. Found and
+ * fixed in CP-V3.
+ *
+ * `web-app/`'s copy of this name is the *upload* vocabulary and is a
+ * different list on purpose (`'video'`, not `'video_identificacion'`) — the
+ * duplication policy in `01-conventions.md` §12 keeps the values in step, not
+ * the spellings.
  */
 export type TipoArchivo =
   | 'id_frente'
   | 'id_reverso'
   | 'firma'
-  | 'doc_id'
-  | 'doc_curp'
-  | 'doc_fiscal'
-  | 'doc_fea'
-  | 'doc_domicilio'
-  | 'doc_poder'
-  | 'doc_id_propietario'
-  | 'doc_domicilio_propietario';
+  | 'video_identificacion'
+  | 'huella'
+  | 'rostro'
+  | 'comprobante_domicilio'
+  | 'constancia_curp'
+  | 'constancia_fiscal'
+  | 'constancia_fea'
+  | 'poder_notarial'
+  | 'id_propietario_real'
+  | 'domicilio_propietario_real'
+  | 'otro';
 
 /**
  * One stored file's metadata. No URL — `GET /expedientes/:id` deliberately

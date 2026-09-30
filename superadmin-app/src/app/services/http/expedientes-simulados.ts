@@ -18,6 +18,18 @@ import { ExpedienteDetalle } from '../../model/interfaces/expediente-detalle';
  * and tasa — §11 bans invented numbers, and a demo dataset is not an
  * exemption. `pago_estimado` is the French-system payment from `pagoMensual`
  * (`:2379`) computed for each row.
+ *
+ * `archivos[].tipo` carries **the Postgres enum**, which is what the Worker
+ * returns — `constancia_curp`, not the multipart part name `doc_curp`. These
+ * fixtures used the part names, so the mock disagreed with the API about the
+ * one field the detail view looks a label up by, and hid a bug that only
+ * appeared against the real backend (CP-V3). A mock that is more convenient
+ * than the thing it stands in for is worse than no mock.
+ *
+ * The second expediente declares `video_grabado: true` and carries no
+ * `video_identificacion` row on purpose: that is the state a rejected or
+ * stalled video upload leaves behind, and the detail view has to be able to
+ * say so.
  */
 
 /** Anchored to the demo date so the list always reads as "this week". */
@@ -255,25 +267,31 @@ export const EXPEDIENTES_SIMULADOS: readonly ExpedienteDetalle[] = [
         capturado_en: haceHoras(3.38),
       },
       {
+        tipo: 'video_identificacion',
+        tamano_bytes: 2_615_880,
+        hash_sha256: 'b93e47aa5d6c81f0e2b7439ac51de0a7f6b32c943f1c0a9d84b2e6570fd1c2a8',
+        capturado_en: haceHoras(3.12),
+      },
+      {
         tipo: 'firma',
         tamano_bytes: 22_140,
         hash_sha256: '70fd1c2a8b93e47aa5d6c81f0e2b7439ac51de0a7f6b32c943f1c0a9d84b2e65',
         capturado_en: haceHoras(3.05),
       },
       {
-        tipo: 'doc_id',
+        tipo: 'otro',
         tamano_bytes: 1_204_551,
         hash_sha256: 'aa5d6c81f0e2b7439ac51de0a7f6b32c943f1c0a9d84b2e6570fd1c2a8b93e47',
         capturado_en: haceHoras(3.3),
       },
       {
-        tipo: 'doc_curp',
+        tipo: 'constancia_curp',
         tamano_bytes: 188_902,
         hash_sha256: 'e2b7439ac51de0a7f6b32c943f1c0a9d84b2e6570fd1c2a8b93e47aa5d6c81f0',
         capturado_en: haceHoras(3.28),
       },
       {
-        tipo: 'doc_domicilio',
+        tipo: 'comprobante_domicilio',
         tamano_bytes: 642_017,
         hash_sha256: 'de0a7f6b32c943f1c0a9d84b2e6570fd1c2a8b93e47aa5d6c81f0e2b7439ac51',
         capturado_en: haceHoras(3.25),
@@ -440,13 +458,13 @@ export const EXPEDIENTES_SIMULADOS: readonly ExpedienteDetalle[] = [
         capturado_en: haceHoras(29.1),
       },
       {
-        tipo: 'doc_fiscal',
+        tipo: 'constancia_fiscal',
         tamano_bytes: 331_408,
         hash_sha256: 'b2e91f473a054c8d91be7d4a60c3f2153f1c0a9d84b2e6570fd1c2a8b93e47aa',
         capturado_en: haceHoras(29.4),
       },
       {
-        tipo: 'doc_id_propietario',
+        tipo: 'id_propietario_real',
         tamano_bytes: 445_120,
         hash_sha256: '4c8d91be7d4a60c3f215b2e91f473a05d84b2e6570fd1c2a8b93e47aa5d6c81f',
         capturado_en: haceHoras(29.35),

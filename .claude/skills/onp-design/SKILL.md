@@ -183,6 +183,13 @@ The expediente detail view displays more PII than anything else in the product. 
 field value in a URL, a log, or an analytics event; signed URLs for media are
 short-lived and never persisted.
 
+Evidence media is one component per medium — an `<img>` pane and a `<video>` pane,
+sharing the signed-URL path and nothing else. A `<video>` gets `controls`,
+`preload="metadata"` (never `auto` — opening an expediente must not pull the whole
+recording), `playsinline`, and `w-full max-w-full` so an intrinsic video width can
+never push the page sideways. The expedientes table is the only thing in the panel
+allowed to scroll horizontally.
+
 **Stored HTML is untrusted on display.** The solicitud in `documentos.contenido_html`
 was interpolated from form values without escaping by the original app, so it can
 carry a prospect's `<script>` into an authenticated staff session. Sanitise on render
