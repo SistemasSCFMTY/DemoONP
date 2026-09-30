@@ -6,6 +6,7 @@ import type { Env } from './env';
 import { ApiError, internal } from './lib/errors';
 import { log } from './lib/log';
 import { admin } from './routes/admin';
+import { clientes } from './routes/clientes';
 import { expedientes } from './routes/expedientes';
 import { otp } from './routes/otp';
 import { plantillas } from './routes/plantillas';
@@ -82,6 +83,7 @@ app.route('/expedientes', expedientes);
 app.route('/otp', otp);
 app.route('/prospectos', prospectos);
 app.route('/producto', producto);
+app.route('/clientes', clientes);
 app.route('/sofom', sofom);
 app.route('/plantillas', plantillas);
 

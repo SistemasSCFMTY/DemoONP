@@ -1,7 +1,11 @@
 import { Hono } from 'hono';
+import type { SesionProspecto } from '../lib/sesion-prospecto';
+import { requireProspecto } from '../middleware/prospecto';
+import { GuardarPasoSchema, PasoActualSchema } from '../schemas/cliente';
+import { guardarPaso, leerPaso } from '../services/clientes';
 import type { Env } from '../env';
 import { badRequest } from '../lib/errors';
-import { responder } from '../lib/respuesta';
+import { cuerpoJson, responder } from '../lib/respuesta';
 import { supabaseDe } from '../lib/supabase';
 import { SolicitudCreadaSchema } from '../schemas/expediente';
 import { correoConfirmacion } from '../services/correo/confirmacion';
@@ -14,7 +18,34 @@ import { recibirSolicitud } from '../services/solicitudes';
  * La ruta es delgada a propósito (01-conventions.md §10): lee el
  * multipart y delega. Toda la lógica vive en `services/solicitudes.ts`.
  */
-export const solicitudes = new Hono<{ Bindings: Env }>();
+export const solicitudes = new Hono<{
+  Bindings: Env;
+  Variables: { prospecto: SesionProspecto };
+}>();
+
+/**
+ * Dónde se quedó el flujo — `PATCH` para guardar, `GET` para retomar.
+ *
+ * **El expediente sale de la cookie, no de la URL.** No hay un id que
+ * un curioso pueda cambiar, así que no hay expediente ajeno al que
+ * apuntar. La cookie la emite `POST /otp/validar` y sólo después de
+ * que la persona probó tener el teléfono del expediente.
+ *
+ * Guardar el avance no puede tumbar el flujo: si esto falla, el front
+ * lo ignora y la persona sigue llenando. Por eso no hay nada aquí que
+ * el cliente tenga que esperar.
+ */
+solicitudes.patch('/paso', requireProspecto, async (c) => {
+  const { paso } = await cuerpoJson(c, GuardarPasoSchema);
+  await guardarPaso(supabaseDe(c.env), c.get('prospecto').sub, paso);
+  return c.body(null, 204);
+});
+
+solicitudes.get('/paso', requireProspecto, async (c) => {
+  const expedienteId = c.get('prospecto').sub;
+  const paso = await leerPaso(supabaseDe(c.env), expedienteId);
+  return responder(c, PasoActualSchema, { expedienteId, paso });
+});
 
 solicitudes.post('/', async (c) => {
   let form: FormData;

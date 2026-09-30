@@ -59,6 +59,47 @@ column for it, and the source never stored one either. A prospect does not sign 
 Triggers the Resend welcome email (CP-B6). **The email must never fail this request** —
 log the failure and return 201 anyway.
 
+### `POST /clientes/verificar`
+`{ numeroCliente, nombreCompleto, curp }`
+`200 → { encontrado, telefonoEnmascarado?, expiraEn?, codigo? }`
+
+The "Verifica tu identidad" screen (`:1600`). **Looks up by CURP only** — the source
+collects all three fields and queries on `curp` alone (`:2597`); matching on three
+would reject people over a mistyped second surname.
+
+Finding the expediente and sending the code are one call on purpose: splitting them
+would let someone ask "is this CURP a client?" without spending a send. Rate-limited by
+IP before the lookup and by phone before the send. `codigo` echoes only under
+`DEMO_MODE`, as `/otp/enviar` does. Never returns the expediente — knowing a CURP is a
+client must not be enough to read their address.
+
+### `POST /otp/validar`
+`200 → { valido: true, expedienteId?, paso? }`
+
+On success, if the phone has an expediente in `borrador`, this **sets the
+`onp_prospecto` cookie** and returns where to resume. Proving the phone is exactly what
+authorises touching that expediente. A plain registration OTP gets the old shape back,
+unchanged.
+
+The prospect session is a separate module and a separate cookie from the panel's
+(`lib/sesion-prospecto.ts`): two-hour life, and a `tipo: 'prospecto'` claim that is
+verified. Both are signed with `JWT_SECRET`, so the claim is what stops a panel token
+being replayed as a prospect one — tested against a running Worker, a valid panel token
+is rejected here with 401 while still working on `/admin/me`.
+
+### `PATCH /solicitudes/paso` · `GET /solicitudes/paso`
+`PATCH { paso } → 204` · `GET → { expedienteId, paso }`
+
+Behind `requireProspecto`. **The expediente comes from the cookie, never the URL**, so
+there is no id to tamper with and no IDOR to have. Writes only while the expediente is
+`borrador`.
+
+`paso` is validated as a slug, not against the screen list: that list lives in
+`web-app/src/app/model/interfaces/paso.ts` and duplicating it here would condemn it to
+drift. An unknown value should make the app fall back to the first step, not fail a
+submission. `expedientes.paso_actual` is added by migration `0003` — nullable and
+additive, so the original app is untouched — and is cleared on submission.
+
 ### `POST /solicitudes`
 `multipart/form-data`:
 

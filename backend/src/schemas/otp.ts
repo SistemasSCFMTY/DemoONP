@@ -26,4 +26,16 @@ export const ValidarOtpSchema = z.object({
   codigo: z.string().regex(/^\d{6}$/, 'El código son 6 dígitos.'),
 });
 
-export const OtpValidoSchema = z.object({ valido: z.literal(true) });
+/**
+ * Validar el código también devuelve dónde retomar, cuando hay dónde.
+ *
+ * `expedienteId` y `paso` sólo aparecen si el teléfono corresponde a un
+ * expediente en borrador. Un OTP validado durante el registro normal no
+ * trae nada de esto y la respuesta sigue siendo la de antes.
+ */
+export const OtpValidoSchema = z.object({
+  valido: z.literal(true),
+  expedienteId: z.string().uuid().optional(),
+  /** `PasoId` de web-app, o `null` si nunca guardó avance. */
+  paso: z.string().nullable().optional(),
+});

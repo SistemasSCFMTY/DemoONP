@@ -43,6 +43,11 @@ function renglonExpediente(
   renglon['curp_verificada_renapo'] = false;
   renglon['ine_verificada'] = false;
 
+  // El expediente deja de estar «en un paso» al enviarse. Dejar el
+  // último paso puesto haría que el panel mostrara como pendiente de
+  // llenar algo que ya llegó completo.
+  renglon['paso_actual'] = null;
+
   // Herencia de la etapa multi-tenant. La columna existe y es NOT NULL
   // con llave foránea a `sofoms`, así que **sin DEMO_SOFOM_ID no hay
   // envío que funcione**: el insert falla con un 23502. Somos un solo

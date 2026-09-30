@@ -5,6 +5,8 @@ import { cuerpoJson, responder } from '../lib/respuesta';
 import { supabaseDe } from '../lib/supabase';
 import { consumirLimite, ipDe } from '../middleware/limite';
 import { EnviarOtpSchema, OtpEnviadoSchema, OtpValidoSchema, ValidarOtpSchema } from '../schemas/otp';
+import { emitirSesionProspecto } from '../lib/sesion-prospecto';
+import { buscarBorradorPorTelefono } from '../services/clientes';
 import { emitirCodigo, validarCodigo } from '../services/otp';
 
 /**
@@ -64,5 +66,20 @@ otp.post('/validar', async (c) => {
   );
 
   await validarCodigo(supabaseDe(c.env), telefono, codigo);
-  return responder(c, OtpValidoSchema, { valido: true });
+
+  // Validado el teléfono, se emite la sesión del prospecto y se dice
+  // dónde retomar. Es aquí y no antes: probar el código es exactamente
+  // lo que autoriza a tocar ese expediente.
+  //
+  // Si no hay borrador para este número, la respuesta es la de siempre.
+  // El registro normal pasa por aquí igual y no debe cambiar de forma.
+  const borrador = await buscarBorradorPorTelefono(supabaseDe(c.env), telefono);
+  if (!borrador) return responder(c, OtpValidoSchema, { valido: true });
+
+  await emitirSesionProspecto(c, borrador.expedienteId);
+  return responder(c, OtpValidoSchema, {
+    valido: true,
+    expedienteId: borrador.expedienteId,
+    paso: borrador.paso,
+  });
 });
