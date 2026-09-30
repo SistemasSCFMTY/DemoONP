@@ -13,16 +13,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
  */
 @Component({
   selector: 'panel-seccion',
-  template: `
-    <section class="rounded-card bg-surface p-5 shadow-ring">
-      <h2 class="border-b-2 border-gold-light pb-2 font-heading text-base font-bold">
-        {{ titulo() }}
-      </h2>
-      <div class="mt-3">
-        <ng-content />
-      </div>
-    </section>
-  `,
+  templateUrl: './seccion.html',
   host: { class: 'block' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

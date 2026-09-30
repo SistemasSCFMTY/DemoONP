@@ -1,0 +1,29 @@
+<span
+  class="inline-flex items-center gap-1.5 rounded-control px-2 py-1 text-status font-semibold"
+  [class]="definicion().clases"
+>
+  @switch (definicion().icono) {
+    @case ('PencilLine') {
+      <svg lucidePencilLine class="size-3.5 shrink-0" aria-hidden="true"></svg>
+    }
+    @case ('Clock') {
+      <svg lucideClock class="size-3.5 shrink-0" aria-hidden="true"></svg>
+    }
+    @case ('Search') {
+      <svg lucideSearch class="size-3.5 shrink-0" aria-hidden="true"></svg>
+    }
+    @case ('Check') {
+      <svg lucideCheck class="size-3.5 shrink-0" aria-hidden="true"></svg>
+    }
+    @case ('X') {
+      <svg lucideX class="size-3.5 shrink-0" aria-hidden="true"></svg>
+    }
+    @case ('Ban') {
+      <svg lucideBan class="size-3.5 shrink-0" aria-hidden="true"></svg>
+    }
+    @default {
+      <svg lucideCircleHelp class="size-3.5 shrink-0" aria-hidden="true"></svg>
+    }
+  }
+  {{ definicion().etiqueta }}
+</span>
