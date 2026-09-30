@@ -1,0 +1,146 @@
+<div class="h-full overflow-y-auto">
+  <div class="mx-auto max-w-3xl px-8 py-7">
+    <header>
+      <h1 #titulo tabindex="-1" class="font-heading text-2xl font-bold outline-none">Ajustes</h1>
+      <p class="mt-1 text-sm text-text-soft">
+        Datos de la SOFOM y mantenimiento del expediente.
+      </p>
+    </header>
+
+    @if (cargando()) {
+      <div class="mt-8 flex items-center gap-3" aria-live="polite">
+        <svg lucideLoaderCircle class="size-5 animate-spin text-text-soft" aria-hidden="true"></svg>
+        <p class="text-sm text-text-soft">Cargando los datos…</p>
+      </div>
+    } @else {
+      <div class="mt-6 flex flex-col gap-5">
+        <panel-seccion titulo="Datos de la SOFOM">
+          <!-- Verbatim from the source (`:2032`). -->
+          <p class="mb-4 text-status text-text-soft">
+            Se usan en los documentos mediante sus claves.
+          </p>
+
+          <form [formGroup]="formulario" (ngSubmit)="guardar()">
+            <div class="mb-4">
+              <label for="razon-social" class="mb-1.5 block text-label font-semibold">
+                Razón social
+              </label>
+              <input
+                id="razon-social"
+                type="text"
+                formControlName="razon_social"
+                placeholder="ONP FER, S.A. de C.V., SOFOM E.N.R."
+                class="w-full rounded-control border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-soft/60 focus:border-navy"
+              />
+            </div>
+
+            <div class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label for="rfc-sofom" class="mb-1.5 block text-label font-semibold">
+                  RFC de la SOFOM
+                </label>
+                <input
+                  id="rfc-sofom"
+                  type="text"
+                  formControlName="rfc"
+                  placeholder="ONP123456ABC"
+                  class="w-full rounded-control border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-soft/60 focus:border-navy"
+                />
+              </div>
+
+              <div>
+                <label for="telefono-sofom" class="mb-1.5 block text-label font-semibold">
+                  Teléfono
+                </label>
+                <input
+                  id="telefono-sofom"
+                  type="tel"
+                  formControlName="telefono"
+                  placeholder="81 1234 5678"
+                  class="w-full rounded-control border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-soft/60 focus:border-navy"
+                />
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label for="domicilio-sofom" class="mb-1.5 block text-label font-semibold">
+                Domicilio
+              </label>
+              <input
+                id="domicilio-sofom"
+                type="text"
+                formControlName="domicilio"
+                placeholder="Av. Ejemplo 100, Col. Centro, Monterrey, N.L."
+                class="w-full rounded-control border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-soft/60 focus:border-navy"
+              />
+            </div>
+
+            <div class="mb-4">
+              <label for="correo-sofom" class="mb-1.5 block text-label font-semibold">
+                Correo de contacto
+              </label>
+              <input
+                id="correo-sofom"
+                type="email"
+                formControlName="correo_contacto"
+                placeholder="contacto@tusofom.mx"
+                class="w-full rounded-control border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-soft/60 focus:border-navy"
+              />
+            </div>
+
+            @if (aviso(); as mensaje) {
+              <p
+                role="alert"
+                class="mb-4 flex items-start gap-2 rounded-control px-3 py-2 text-sm"
+                [class]="mensaje.clases"
+              >
+                @if (mensaje.ok) {
+                  <svg lucideCircleCheck class="mt-0.5 size-4 shrink-0" aria-hidden="true"></svg>
+                } @else {
+                  <svg lucideCircleAlert class="mt-0.5 size-4 shrink-0" aria-hidden="true"></svg>
+                }
+                {{ mensaje.texto }}
+              </p>
+            }
+
+            <button
+              type="submit"
+              [disabled]="guardando()"
+              class="rounded-control bg-navy px-4 py-2.5 text-sm font-semibold text-surface transition-colors hover:bg-navy-deep disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {{ textoGuardar() }}
+            </button>
+          </form>
+        </panel-seccion>
+
+        <panel-seccion titulo="Mantenimiento">
+          <p class="mb-4 text-status leading-relaxed text-text-soft">
+            La exportación descarga todos los expedientes en un solo archivo, con los
+            datos personales de cada solicitante. Guárdalo donde corresponda y bórralo
+            cuando termines de usarlo.
+          </p>
+
+          <button
+            type="button"
+            (click)="exportar()"
+            [disabled]="exportando()"
+            class="inline-flex items-center gap-2 rounded-control border border-border bg-surface px-3.5 py-2 text-sm font-semibold text-navy transition-colors hover:bg-bg disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <svg lucideDownload class="size-4" aria-hidden="true"></svg>
+            {{ textoExportar() }}
+          </button>
+
+          @if (errorExportar(); as mensaje) {
+            <p
+              role="alert"
+              class="mt-3 flex items-start gap-2 rounded-control bg-error/10 px-3 py-2 text-sm text-error"
+            >
+              <svg lucideCircleAlert class="mt-0.5 size-4 shrink-0" aria-hidden="true"></svg>
+              {{ mensaje }}
+            </p>
+          }
+        </panel-seccion>
+      </div>
+    }
+  </div>
+</div>

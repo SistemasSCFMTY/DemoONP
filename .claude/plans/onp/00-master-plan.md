@@ -217,11 +217,11 @@ changing one copy changes the other.
 Single tenant. The folder keeps its name; the cross-SOFOM tier is gone with the
 descope — no SOFOM management, no panel-user management, no cross-tenant search.
 
-- [ ] **CP-S1 · P0 — Scaffold, shell, login.** The `superadmin-app/` project wired up:
+- [x] **CP-S1 · P0 — Scaffold, shell, login.** The `superadmin-app/` project wired up:
       tokens from CP-0.2, PrimeNG 21.1.10 + `@angular/cdk@21.2.14`, stock Aura plus an
       ONP preset built from the §3 tokens, login against CP-B7, the session guard,
       `PanelState`, the nav shell. Desktop-first — do not apply the 390px shell.
-- [ ] **CP-S2 · P0 — Expedientes list.** A `p-table` with header/body templates,
+- [x] **CP-S2 · P0 — Expedientes list.** A `p-table` with header/body templates,
       `rowHover`, whole-row click into detail, `[scrollable]` + `scrollHeight`,
       `emptymessage` — never a hand-rolled row list. Search per `pintarExpedientes`
       (`:5426`). Filters persist as URL query params.
@@ -229,14 +229,33 @@ descope — no SOFOM management, no panel-user management, no cross-tenant searc
       INE photos and signature via CP-B4 signed URLs, estado changes (`:5640`), PDF
       download. **This is the payoff shot of the demo** — the submission the audience
       just watched being made, arriving with its photos. Make it look finished.
-- [ ] **CP-S4 · P0 — Deploy to Pages.** Build, deploy, confirm login works against the
+- [x] **CP-S4 · P0 — Deploy to Pages.** Build, deploy, confirm login works against the
       deployed Worker and the detail view renders real uploaded images.
-- [ ] **CP-S5 · P1 — Producto.** The simulator parameters (`:5354`) against CP-B9, with
-      a preview of the catálogo copy they generate.
-- [ ] **CP-S6 · P2 — Formatos and Ajustes.** `.docx` upload and the sofom identity
-      editor. **Expected to be cut** — branding is `brand.config.ts` now, and the
-      Ajustes tab's connection-string fields are gone with the Worker owning the
-      credentials.
+      **Config and documentation only — not deployed.** The Cloudflare account is the
+      owner's and is not the one `wrangler` is authenticated against here; they run it
+      on their own signal. Landed: `wrangler@^4` as a devDependency, the `deploy`
+      script (`wrangler pages deploy dist/superadmin-app/browser
+      --project-name=onp-panel`), `public/_redirects` with `/*  /index.html  200` so a
+      reload on the detail view is not a CDN 404, and `superadmin-app/README.md` with
+      the build and deploy steps. Confirming login against the deployed Worker waits
+      on CP-B8.
+- [x] **CP-S5 · P1 — Producto.** The simulator parameters (`:5354`) against CP-B9, with
+      a preview of the catálogo copy they generate. Built against the contract's
+      `GET`/`PUT /producto` and the in-memory API until CP-B9 lands. `monto_paso`,
+      `plazo_paso`, `nombre` and `iva` are in `PRODUCTO` (`:2340`) but **not** in
+      `02-api-contract.md`; the source's screen edits two of them, so either the
+      contract grows or the simulator's step size stops being configurable —
+      `onp-backend` and the owner to decide.
+- [x] **CP-S6 · P2 — Formatos and Ajustes.** `.docx` upload and the sofom identity
+      editor. Uncut: the owner asked for both tabs back.
+      **Formatos** — the active formato, upload, "Ver cómo queda" and the searchable
+      catálogo de claves. The `.docx` is parsed in the browser with JSZip and only the
+      resulting HTML is sent (same platform constraint as the OCR — see the Cloudflare
+      section above). **Ajustes** — datos de la SOFOM and the export, two cards only.
+      **Not ported, by the owner's decision:** the "Dónde se guarda la información"
+      card (`:2048`), whose Project URL and anon key fields would put a Supabase
+      credential in a browser, and "Borrar todos los datos" (`:6025`), an unguarded
+      mass delete against a live database.
 
 ---
 
@@ -272,14 +291,14 @@ descope — no SOFOM management, no panel-user management, no cross-tenant searc
 | F11 | Solicitud, firma, envío | P0 | frontend | F8, B3 | ☐ |
 | F12 | Deploy to Pages | P0 | frontend | F1–F11, B8 | ☐ |
 | F13 | QA pass | P2 | frontend | F12 | ☐ |
-| S1 | Scaffold, shell, login | P0 | superadmin | 0.2, B7 | ☐ |
-| S2 | Expedientes list | P0 | superadmin | S1, B4 | ☐ |
-| S3 | Expediente detail | P0 | superadmin | S2, B4 | ☐ |
-| S4 | Deploy to Pages | P0 | superadmin | S3, B8 | ☐ |
-| S5 | Producto | P1 | superadmin | S1, B9 | ☐ |
-| S6 | Formatos and Ajustes | P2 | superadmin | S1 | ☐ |
+| S1 | Scaffold, shell, login | P0 | superadmin | 0.2, B7 | ☑ |
+| S2 | Expedientes list | P0 | superadmin | S1, B4 | ☑ |
+| S3 | Expediente detail | P0 | superadmin | S2, B4 | ☑ |
+| S4 | Deploy to Pages | P0 | superadmin | S3, B8 | ◐ |
+| S5 | Producto | P1 | superadmin | S1, B9 | ☑ |
+| S6 | Formatos and Ajustes | P2 | superadmin | S1 | ☑ |
 
-**26 P0 · 4 P1 · 5 P2.**
+**26 P0 · 4 P1 · 5 P2.** ◐ = built and documented, waiting on a dependency to close.
 
 ---
 
@@ -366,6 +385,28 @@ Cleared with the owner, or following directly from a decision they made.
     no longer does, so CP-B2 revokes public access instead of reproducing it.
 12. `sofoms`, multi-tenancy and the whole superadmin tier are dropped. One whitelabel,
     one config file — owner's call, 2026-09-30.
+
+13. **The panel's estado chip shows an unrecognised estado instead of relabelling
+    it.** The source falls back to `pendiente` (`:5444`), which puts a record in a
+    state it is not in. (The slug itself is *not* a departure: `revision` is the
+    Postgres enum value and the panel transmits it verbatim. An earlier version of
+    `02-api-contract.md` said `en_revision`, the panel followed it, and the deployed
+    Worker rejected every estado change — corrected here and in PR #4.)
+14. **The panel's "Eliminar expediente" (`:5652`) is not built.** There is no delete
+    endpoint in `02-api-contract.md`, and what an operator may destroy on a regulated
+    KYC file is the owner's call. Recorded as the open question in
+    `01-conventions.md` §12.
+15. **The detail view drops the Producto, Comisión de apertura, Total estimado and
+    CAT estimado rows** (`:5497`). The source printed them from its flattened
+    template data; the contract's expediente does not carry them and they cannot be
+    recomputed without live product parameters. §11 bans a figure with no source, and
+    in a credit UI that is a compliance problem rather than a design one. They return
+    with CP-S5.
+16. **The panel's "Descargar PDF" opens a print view rather than rasterising with
+    `html2pdf`** (`:5661`). Half a megabyte in a staff tool to do worse than the
+    browser's own Save as PDF, which keeps the document as selectable text.
+17. **The panel's login drops "Volver a la solicitud"** (`:1912`). It is a separate
+    deployment now; there is no prospect flow behind it to go back to.
 
 **Reviewed and deliberately kept:** the mocked `"98%"` / `"95%"` biometric confidence
 (`:5004`). Owner's call — it is a demo and the figure sits behind the "Modo

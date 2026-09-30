@@ -1,4 +1,21 @@
 /* ==========================================================================
+   Cascade layer order — PANEL ONLY, not part of the shared token block below.
+   ==========================================================================
+   This is layout integration, not looks (01-conventions.md §12): PrimeNG emits
+   its theme into a `primeng` layer, and a layer's position in the cascade is
+   fixed by where it is FIRST named. Declaring the order here, above the
+   imports, puts `primeng` below Tailwind's `components` and `utilities` so a
+   utility class on a PrimeNG element wins without an `!important` anywhere.
+
+   A layer statement is one of the few rules CSS allows before `@import`.
+   The name and order must stay in step with the `cssLayer` option passed to
+   `providePrimeNG` in src/app/app.config.ts.
+
+   `web-app/` has no PrimeNG and therefore no such line.
+   ========================================================================== */
+@layer theme, base, primeng, components, utilities;
+
+/* ==========================================================================
    ONP FER — design tokens
    ==========================================================================
    SOURCE OF TRUTH: .claude/plans/onp/01-conventions.md §3 (colour), §4 (shape
@@ -33,6 +50,18 @@
   --color-error: #8a2a2a;
   --color-warning: #8a5a1c;
 
+  /* Tinted grounds for alerts, the leyenda and the PEP block. Added in
+     CP-F2 because the source paints these with raw hex (#fffacd, #e3f2fd,
+     #f9f9f9) and #e3f2fd/#1565c0 is Material blue — a colour from a
+     different company. Each is a low-chroma wash of a palette colour, so
+     an alert reads as this product rather than as a framework default.
+     Registered in 01-conventions.md §3 before being used (no hex in a
+     template, ever). */
+  --color-surface-warning: #fdf6e3; /* warning wash — alert.warning       */
+  --color-surface-info: #eef2f7;    /* navy wash    — alert.info          */
+  --color-surface-success: #eef6f1; /* success wash — OCR-detected field  */
+  --color-surface-muted: #f9f8f5;   /* cream wash   — leyenda, pep-section */
+
   /* --- Typography (§2). Charis SIL headings, Archivo body. ---
      Confirmed by the owner 2026-09-30: Charis SIL for main headings,
      Archivo for the declaratoria and all body copy. */
@@ -46,6 +75,9 @@
   --text-h3: 0.875rem;        /* 14px — section heading                  */
   --text-topbar: 0.875rem;    /* 14px — sticky bar title                 */
   --text-h2: 1.125rem;        /* 18px — screen title                     */
+  --text-wordmark: 1.6875rem; /* 27px — the portada wordmark, and only
+                                 there. Weight 700, which the §2 ladder
+                                 already reserves for the wordmark.      */
 
   /* --- Shape (§4). Radius keyed to what the element IS, never one token
      applied everywhere. Buttons are rounded rectangles, not pills. --- */
@@ -111,4 +143,139 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ==========================================================================
+   PANEL ONLY — everything below this line is `superadmin-app/`'s and must NOT
+   be copied into web-app/. The shared token block ends above.
+   ==========================================================================
+   01-conventions.md §12: this is the one surface in the product that is not
+   mobile-first. It is a desktop tool for staff, so it gets desktop reading
+   sizes and a two-column shell instead of the 390px column. Same faces, same
+   §3 tokens, same §4 ladders — a different viewport is not a different
+   company.
+   ========================================================================== */
+
+@layer base {
+  /* The panel fills the viewport; the shell owns its own scrolling regions so
+     the sidebar and the table header can stay put while rows scroll. */
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    /* §2 says 13px because the prospect viewport is 390px. A staff member
+       reading a table of CURPs on a 27" monitor is a different job. */
+    font-size: 0.875rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   PrimeNG layout integration — NOT looks.
+   --------------------------------------------------------------------------
+   Every rule here exists because a PrimeNG component needs to fit this app's
+   layout, and each one says why. Colour, radius and elevation come from the
+   preset in src/app/theme/onp-preset.ts, never from here (§12).
+   -------------------------------------------------------------------------- */
+
+/* The scrollable table renders its own flex column; without an explicit
+   min-height of 0 the body region refuses to shrink inside the page grid and
+   `scrollHeight` is ignored. Pure layout plumbing. */
+.p-datatable-table-container {
+  min-height: 0;
+}
+
+/* Charis SIL is the heading face (§2). PrimeNG sets `font-family: inherit` on
+   its table cells, which would inherit the heading face from any ancestor
+   heading context — pin the body face so numerals and CURPs stay in Archivo. */
+.p-datatable {
+  font-family: var(--font-body);
+}
+
+/* --------------------------------------------------------------------------
+   The signed solicitud, rendered inline in the expediente detail.
+   --------------------------------------------------------------------------
+   Global rather than component-scoped for a mechanical reason: the markup
+   arrives from the Worker as `documento.contenido_html` and is written with
+   `[innerHTML]`, so Angular's view encapsulation never stamps its attribute
+   onto those elements and a scoped rule cannot reach them.
+
+   Ported from the source's `.doc-hoja` (onp_fer_etapa2_pf.html:136–149). The
+   same rules exist a second time in ImpresionDocumento, restated for paper —
+   the printed solicitud is a legal document with its own measure, not a
+   component of the panel.
+   -------------------------------------------------------------------------- */
+.doc-hoja {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 26px 22px;
+  font-size: 0.75rem;
+  line-height: 1.65;
+  color: var(--color-text);
+}
+
+.doc-hoja p { margin: 0 0 9px 0; }
+.doc-hoja p.c { text-align: center; }
+.doc-hoja p.r { text-align: right; }
+.doc-hoja p.j { text-align: justify; }
+.doc-hoja p.b { font-weight: 700; }
+
+.doc-hoja h1,
+.doc-hoja h2,
+.doc-hoja h3 {
+  font-family: var(--font-heading);
+  color: var(--color-navy-deep);
+  margin: 14px 0 7px 0;
+}
+
+.doc-hoja h1 { font-size: 0.9375rem; text-align: center; }
+.doc-hoja h2 { font-size: 0.8125rem; }
+.doc-hoja h3 { font-size: 0.75rem; }
+
+.doc-hoja table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 9px 0;
+  font-size: 0.6875rem;
+}
+
+.doc-hoja td,
+.doc-hoja th {
+  border: 1px solid var(--color-border);
+  padding: 5px 7px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.doc-hoja .firma-zona { margin-top: 26px; text-align: center; }
+.doc-hoja .firma-zona img { max-width: 190px; display: block; margin: 0 auto 2px; }
+
+/* --------------------------------------------------------------------------
+   Motion — deferred content arriving.
+   --------------------------------------------------------------------------
+   `01-conventions.md` says motion tokens live in `src/animations.scss`. This
+   app has no SCSS pipeline (Tailwind 4, one `styles.css`), so the token lives
+   here instead of being invented inline in a component — which is the part of
+   that rule that matters: a named class in the stylesheet, not an ad-hoc
+   keyframe next to the markup. Divergence recorded rather than silent.
+
+   Used by `animate.enter` on the Formatos catalogue. The
+   `prefers-reduced-motion` block above already collapses it — it sets
+   `animation-duration` with `!important`, so this needs no guard of its own.
+   -------------------------------------------------------------------------- */
+@keyframes claves-entran {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.claves-entran {
+  animation: claves-entran 220ms cubic-bezier(0.2, 0, 0, 1) both;
 }

@@ -348,6 +348,121 @@ audience just watched being made, arriving with its photos and signature. It is 
 the screen that displays the most PII in the product: no field value in a URL, none in
 a log, none in an analytics event, and signed URLs short-lived and never persisted.
 
+### Settled in CP-S1 – CP-S3
+
+These were decided while building the panel. They are conventions now, not choices to
+revisit per screen.
+
+**Type size.** The §2 scale is the *390px* scale. The panel reads body at 14px and
+uses Tailwind's standard scale for desktop headings — page `h1` at `text-2xl`, section
+headings at `text-base`, rows at `text-sm`, chips and hashes at `text-status`. Same
+faces, same weights, same tokens; a desktop reading distance is not a different design
+language. The `@theme` token block stays byte-identical to `web-app/`'s — panel-only
+rules go **below** it in `styles.css`, under a banner saying so.
+
+**PrimeNG cascade layers.** `styles.css` opens, above the imports, with
+`@layer theme, base, primeng, components, utilities;` and `providePrimeNG` passes the
+same order as its `cssLayer`. That puts PrimeNG below Tailwind's utilities, so a
+utility class wins without `!important`. The two must be changed together.
+
+**Estado slugs.** `borrador | pendiente | revision | aprobado | rechazado |
+cancelado` — the Postgres enum `public.estado_expediente`, verbatim. Labels are Spanish
+for a human and need not match the slug: "En revisión" reads better than "Revisión" and
+transmits as `revision`. Short form in the table badge, long form in the detail
+selector; the four the source defines keep its wording.
+
+**The database is the referee over the contract.** The first
+`02-api-contract.md` listed four estados and spelled the third `en_revision`; the panel
+followed it, and the deployed Worker rejected every estado change. Nothing in either
+type system could catch it — both sides type-checked against a wrong agreement. The
+contract was corrected from the live database in PR #4, and
+`estados-expediente.spec.ts` now writes the enum out as a literal and compares what the
+app transmits against it. **Where a value crosses into Postgres, pin it in a test.**
+
+**An unknown estado degrades visibly.** The source falls back to `pendiente` for an
+unrecognised value (`:5444`), which labels a record with a state it is not in. The
+panel shows the raw value in a neutral chip instead — legible, and obviously unhandled.
+The enum gained two values between the contract being written and the database being
+read; this is what stops the next one from quietly mislabelling a KYC file.
+
+**What an operator may assign is narrower than what exists.** The detail selector
+offers the four the source offers. `borrador` is the prospect's own unsent draft;
+`cancelado` may belong there, but an estado transition is the owner's call and the
+source does not answer it. An expediente that arrives in a non-assignable estado shows
+it first and disabled, so the control never claims the record is somewhere it is not.
+
+**Estado colour.** Each estado tints a §3 token and pairs it with a Lucide icon, since
+colour must not carry meaning alone (§9): `borrador` muted + `PencilLine`, `pendiente`
+warning + `Clock`, `revision` navy + `Search`, `aprobado` success + `Check`,
+`rechazado` error + `X`, `cancelado` muted + `Ban`. The source's badge palette used
+five hexes that are not in §3 — rather than widen a shared palette for one chip, each
+estado tints a §3 token, and `revision` reads navy where the source read blue.
+
+**The list's URL contract.** `q`, `estado`, `desde`. `queryParamMap` is the single
+load path: a control writes to the URL and nothing else dispatches. `q` is an
+operator's own search term and is the only value this app puts in a URL — **no
+expediente field value ever is**, and the detail route carries the opaque id alone.
+
+**One API seam.** `PanelApi` is an abstract class with two implementations, chosen in
+`app.config.ts` from `environment.usarApiSimulada`. No service holds a base-URL
+literal. The mock is a full stand-in, not a happy path: it fails with the same
+`{ error: { code, message } }` shape and the same latency.
+
+**No storage plugin in this app, at all.** Not for the expediente, and not for the
+signed URLs, which live in `ExpedientesState` for the life of the detail view and are
+dropped on destroy.
+
+**"Descargar PDF" in the panel is a print view**, not `html2pdf`. The prospect app
+rasterises because it must; a staff tool should not take half a megabyte to do worse
+than the browser's own Save as PDF, which keeps the document as selectable text.
+
+**Stored HTML is untrusted on display.** `documentos.contenido_html` is rendered by
+the panel's detail view inside an authenticated staff session that can read every
+expediente. The source's `llenarPlantilla` (`:3716`) interpolates form values into the
+solicitud template without escaping, so a prospect who types `<script>` into a surname
+has it stored verbatim — a stored XSS with a payload written by an anonymous stranger.
+
+`web-app/` escapes at generation now, and that is the right fix, but it does not clear
+the rows the original single-file app already wrote. So the display side sanitises too,
+independently: `DomSanitizer.sanitize(SecurityContext.HTML, …)`, **never**
+`bypassSecurityTrustHtml`. One sanitisation point per view, feeding every sink —
+including `window.open` + `document.write`, which lands on `about:blank` and therefore
+inherits the app's origin. A service that writes HTML it did not sanitise states that
+contract at the top of the file, and the caller honours it.
+
+Two properties worth knowing when asserting on this: the sanitiser keeps `class` (so
+the `doc-hoja` sheet still styles the document) and returns accented characters as
+numeric entities, which the HTML parser decodes on the way back in — the printed
+solicitud keeps its accents.
+
+**The `.docx` is parsed in the browser.** JSZip plus a DOM parser is not what a 3 MB
+Worker bundle is for, and it is the same platform constraint that keeps Tesseract
+client-side (deviation D7). The panel converts the file and sends only the resulting
+HTML; the Worker never receives a `.docx`. Both halves of the result are untrusted on
+display — the template came out of an uploaded file, the values out of a prospect's
+form — so the preview sanitises like every other stored HTML in this app.
+
+**A template cannot contain `{{` as literal text**, and escaping it as `&#123;&#123;`
+does not help: Angular decodes HTML entities before it parses interpolation, so the
+braces come back and the expression fails to compile. The catalogue of claves builds
+those strings in TypeScript, through the `llaves` pipe.
+
+**Never point the panel at `wrangler dev` and press a write button.** That Worker
+talks to the owner's live production Supabase, not a local database: `PUT /sofom`
+overwrites the single tenant row whose razón social is printed in every email footer,
+and `POST /plantillas` writes rows the panel cannot clean up. Reads and login are
+safe and are how the session work was verified. Write paths are unit-tested against
+`PanelApiSimulada` — which is the reason to keep it now that the app runs on the real
+API — and confirmed against the backend once, deliberately, with the owner's say-so.
+
+### Open question for the owner
+
+**May an operator delete an expediente?** The source offers "Eliminar expediente"
+(`:5652`) behind a `confirm()`. There is no delete endpoint in `02-api-contract.md`,
+and destroying a KYC file with its evidentiary hashes is not a call to infer. The
+button is **not built** until the owner says otherwise. If the answer is yes, it needs
+a backend endpoint, a decision on soft versus hard delete, and a bitácora row (CP-B12).
+
 ### The duplication policy
 
 Three independent projects, no shared package — the owner's call. The design tokens

@@ -5,6 +5,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "deploy": "wrangler pages deploy dist/superadmin-app/browser --project-name=onp-panel",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
@@ -21,6 +22,7 @@
     "@lucide/angular": "^1.49.0",
     "@ngxs/store": "^21.0.0",
     "@primeuix/themes": "^1.0.0",
+    "jszip": "^3.10.2",
     "primeng": "^21.1.10",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
@@ -35,6 +37,7 @@
     "prettier": "^3.8.1",
     "tailwindcss": "^4.1.12",
     "typescript": "~5.9.2",
-    "vitest": "^4.0.8"
+    "vitest": "^4.0.8",
+    "wrangler": "^4.144.0"
   }
 }

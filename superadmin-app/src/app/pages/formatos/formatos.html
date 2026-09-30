@@ -1,0 +1,190 @@
+<div class="h-full overflow-y-auto">
+  <div class="mx-auto max-w-4xl px-8 py-7">
+    <header>
+      <!-- Heading and lede verbatim from the source (`:2006`). -->
+      <h1 #titulo tabindex="-1" class="font-heading text-2xl font-bold outline-none">
+        Formato de solicitud de crédito
+      </h1>
+      <p class="mt-1 text-sm leading-relaxed text-text-soft">
+        Sube el documento de Word con las claves entre llaves. La app las sustituye por
+        los datos de cada cliente.
+      </p>
+    </header>
+
+    <div class="mt-6 flex flex-col gap-5">
+      <panel-seccion titulo="Formato activo">
+        <p class="text-sm font-medium" aria-live="polite">{{ descripcionActivo() }}</p>
+
+        <!-- The input is driven by the button; a bare file input cannot be
+             styled and reads badly to a screen reader. -->
+        <input
+          #entradaArchivo
+          type="file"
+          accept=".docx"
+          class="sr-only"
+          (change)="archivoElegido($event)"
+        />
+
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            (click)="elegirArchivo()"
+            [disabled]="ocupado()"
+            class="inline-flex items-center gap-2 rounded-control bg-navy px-3.5 py-2 text-sm font-semibold text-surface transition-colors hover:bg-navy-deep disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <svg lucideUpload class="size-4" aria-hidden="true"></svg>
+            Subir documento de Word
+          </button>
+
+          <button
+            type="button"
+            (click)="alternarVistaPrevia()"
+            [disabled]="!hayActivo() || ocupado()"
+            [attr.aria-expanded]="vistaPreviaAbierta()"
+            aria-controls="vista-previa"
+            class="inline-flex items-center gap-2 rounded-control border border-border bg-surface px-3.5 py-2 text-sm font-semibold text-navy transition-colors hover:bg-bg disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <svg lucideEye class="size-4" aria-hidden="true"></svg>
+            Ver cómo queda
+          </button>
+
+          <button
+            type="button"
+            (click)="quitar()"
+            [disabled]="!hayActivo() || ocupado()"
+            class="inline-flex items-center gap-2 rounded-control border border-border bg-surface px-3.5 py-2 text-sm font-semibold text-navy transition-colors hover:bg-bg disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <svg lucideRotateCcw class="size-4" aria-hidden="true"></svg>
+            Quitar y usar el predeterminado
+          </button>
+        </div>
+
+        @if (!hayActivo()) {
+          <p class="mt-3 text-status text-text-soft">
+            La vista previa y el botón de quitar se activan cuando hay un formato subido.
+            Mientras tanto la solicitud se arma con el formato predeterminado del
+            servidor.
+          </p>
+        }
+
+        @if (estadoTexto(); as estado) {
+          <p
+            role="alert"
+            class="mt-4 flex items-start gap-2 rounded-control px-3 py-2 text-sm"
+            [class]="estado.clases"
+          >
+            @if (estado.ok) {
+              <svg lucideCircleCheck class="mt-0.5 size-4 shrink-0" aria-hidden="true"></svg>
+            } @else {
+              <svg lucideCircleAlert class="mt-0.5 size-4 shrink-0" aria-hidden="true"></svg>
+            }
+            {{ estado.texto }}
+          </p>
+        }
+
+        @if (clavesDesconocidas().length) {
+          <div class="mt-3 rounded-control bg-surface-warning px-3 py-2.5">
+            <p class="text-sm font-semibold text-warning">
+              Estas claves no existen en el catálogo
+            </p>
+            <p class="mt-1 text-status text-text-soft">
+              Se guardó el formato, pero estas aparecerán marcadas en el documento.
+              Revisa que estén bien escritas.
+            </p>
+            <ul class="mt-2 flex flex-wrap gap-1.5">
+              @for (clave of clavesDesconocidas(); track clave) {
+                <li>
+                  <code
+                    class="rounded-control bg-surface px-1.5 py-0.5 font-mono text-status text-warning"
+                    >{{ clave | llaves }}</code
+                  >
+                </li>
+              }
+            </ul>
+          </div>
+        }
+
+        <div id="vista-previa">
+          @if (cargandoVistaPrevia()) {
+            <p class="mt-4 flex items-center gap-2 text-sm text-text-soft" aria-live="polite">
+              <svg lucideLoaderCircle class="size-4 animate-spin" aria-hidden="true"></svg>
+              Armando la vista previa…
+            </p>
+          } @else if (htmlVistaPrevia(); as html) {
+            <p class="mt-4 text-status text-text-soft">
+              Así se verá con datos de ejemplo. Lo resaltado son claves sin dato o mal
+              escritas.
+            </p>
+            <!-- Sanitised in the component. The template came out of a file
+                 an operator uploaded, so it is untrusted on display like any
+                 other stored HTML (§12) — and it goes nowhere near a print
+                 window. -->
+            <div class="doc-hoja mt-2" [innerHTML]="html"></div>
+          }
+        </div>
+      </panel-seccion>
+
+      <panel-seccion titulo="Claves disponibles">
+        <p class="mb-4 text-status leading-relaxed text-text-soft">
+          Copia la clave y pégala en tu documento de Word donde quieras que aparezca ese
+          dato.
+        </p>
+
+        <div class="relative mb-5">
+          <svg
+            lucideSearch
+            class="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-text-soft"
+            aria-hidden="true"
+          ></svg>
+          <label for="buscar-clave" class="sr-only">Buscar clave</label>
+          <input
+            #campoBusqueda
+            id="buscar-clave"
+            type="search"
+            [formControl]="busqueda"
+            placeholder="Buscar clave..."
+            class="w-full rounded-control border border-border bg-surface py-2 pr-3 pl-9 text-sm text-text placeholder:text-text-soft/70 focus:border-navy"
+          />
+        </div>
+
+        <!--
+          The catalogue is 86 claves across twelve groups — the heaviest thing
+          on this screen and the one furthest down it. `@defer` keeps it out of
+          the Formatos chunk entirely (see `claves-catalogo.ts` for why it had
+          to become its own component) and brings it in on whichever comes
+          first: the section scrolling into view, or the operator touching the
+          search field above, which they can do while this is still absent.
+          `prefetch on idle` means the chunk is usually already in memory by
+          the time either fires.
+        -->
+        @defer (on viewport; on interaction(campoBusqueda); prefetch on idle) {
+          <panel-claves-catalogo
+            animate.enter="claves-entran"
+            [consulta]="consulta()"
+            (errorCopia)="avisarErrorCopia($event)"
+          />
+        } @placeholder {
+          <!-- One root node, because `on viewport` observes the placeholder.
+               It stands in for roughly the first group so the page does not
+               jump when the real list lands. -->
+          <div aria-hidden="true" class="flex flex-col gap-2">
+            @for (fila of filasFantasma; track fila) {
+              <div class="flex items-center gap-3 border-b border-border/60 py-1.5">
+                <div class="h-3 w-32 rounded-control bg-border/70"></div>
+                <div class="h-3 flex-1 rounded-control bg-border/40"></div>
+              </div>
+            }
+          </div>
+        } @loading (after 100ms; minimum 200ms) {
+          <p class="py-6 text-center text-sm text-text-soft" aria-live="polite">
+            Cargando el catálogo de claves…
+          </p>
+        } @error {
+          <p role="alert" class="py-6 text-center text-sm text-error">
+            No se pudo cargar el catálogo de claves. Recarga la página.
+          </p>
+        }
+      </panel-seccion>
+    </div>
+  </div>
+</div>

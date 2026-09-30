@@ -1,0 +1,194 @@
+<div class="h-full overflow-y-auto">
+  <div class="mx-auto max-w-5xl px-8 py-7">
+    <header>
+      <h1 #titulo tabindex="-1" class="font-heading text-2xl font-bold outline-none">
+        Crédito simple
+      </h1>
+      <!-- Verbatim from the source (`:1925`). -->
+      <p class="mt-1 text-sm text-text-soft">
+        Estos parámetros alimentan el simulador que ve el prospecto.
+      </p>
+    </header>
+
+    @if (cargando()) {
+      <div class="mt-8 flex items-center gap-3" aria-live="polite">
+        <svg lucideLoaderCircle class="size-5 animate-spin text-text-soft" aria-hidden="true"></svg>
+        <p class="text-sm text-text-soft">Cargando los parámetros…</p>
+      </div>
+    } @else {
+      <form [formGroup]="formulario" (ngSubmit)="guardar()" class="mt-6">
+        <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+          <panel-seccion titulo="Montos">
+            <div class="mb-4">
+              <label for="monto-min" class="mb-1.5 block text-label font-semibold">
+                Monto mínimo
+              </label>
+              <input
+                id="monto-min"
+                type="number"
+                inputmode="numeric"
+                formControlName="monto_min"
+                class="w-full rounded-control border border-border bg-surface px-3 py-2 text-sm text-text focus:border-navy"
+              />
+            </div>
+
+            <div class="mb-4">
+              <label for="monto-max" class="mb-1.5 block text-label font-semibold">
+                Monto máximo (tope)
+              </label>
+              <input
+                id="monto-max"
+                type="number"
+                inputmode="numeric"
+                formControlName="monto_max"
+                aria-describedby="nota-udis"
+                class="w-full rounded-control border border-border bg-surface px-3 py-2 text-sm text-text focus:border-navy"
+              />
+              <!-- Verbatim from the source (`:1936`). It is the only place in
+                   the product that explains the UDI ceiling, and it is right. -->
+              <p id="nota-udis" class="mt-1.5 text-status leading-relaxed text-text-soft">
+                El límite normativo está en UDIs y su valor cambia a diario. Fija aquí un
+                monto en pesos con holgura por debajo del equivalente a 30,000 UDIs, y
+                actualízalo periódicamente. Superarlo te obligaría a solicitar autorización
+                a la Comisión.
+              </p>
+            </div>
+          </panel-seccion>
+
+          <panel-seccion titulo="Plazos">
+            <div class="mb-4">
+              <label for="plazo-min" class="mb-1.5 block text-label font-semibold">
+                Plazo mínimo (meses)
+              </label>
+              <input
+                id="plazo-min"
+                type="number"
+                inputmode="numeric"
+                formControlName="plazo_min"
+                class="w-full rounded-control border border-border bg-surface px-3 py-2 text-sm text-text focus:border-navy"
+              />
+            </div>
+
+            <div>
+              <label for="plazo-max" class="mb-1.5 block text-label font-semibold">
+                Plazo máximo (meses)
+              </label>
+              <input
+                id="plazo-max"
+                type="number"
+                inputmode="numeric"
+                formControlName="plazo_max"
+                class="w-full rounded-control border border-border bg-surface px-3 py-2 text-sm text-text focus:border-navy"
+              />
+            </div>
+          </panel-seccion>
+
+          <panel-seccion titulo="Tasa y comisiones">
+            <div class="mb-4">
+              <label for="tasa" class="mb-1.5 block text-label font-semibold">
+                Tasa anual fija (%)
+              </label>
+              <input
+                id="tasa"
+                type="number"
+                inputmode="decimal"
+                step="0.01"
+                formControlName="tasa_anual"
+                class="w-full rounded-control border border-border bg-surface px-3 py-2 text-sm text-text focus:border-navy"
+              />
+            </div>
+
+            <div class="mb-4 flex items-center gap-2.5">
+              <input
+                id="comision-on"
+                type="checkbox"
+                formControlName="comision_apertura"
+                class="size-4 rounded-control border-border accent-navy"
+              />
+              <label for="comision-on" class="text-label font-semibold">
+                Cobrar comisión de apertura
+              </label>
+            </div>
+
+            @if (cobraComision()) {
+              <div class="mb-4">
+                <label for="comision-pct" class="mb-1.5 block text-label font-semibold">
+                  Porcentaje sobre el monto (%)
+                </label>
+                <input
+                  id="comision-pct"
+                  type="number"
+                  inputmode="decimal"
+                  step="0.01"
+                  formControlName="comision_pct"
+                  class="w-full rounded-control border border-border bg-surface px-3 py-2 text-sm text-text focus:border-navy"
+                />
+              </div>
+
+              <div>
+                <label for="comision-desde" class="mb-1.5 block text-label font-semibold">
+                  Cobrarla solo a partir de
+                </label>
+                <input
+                  id="comision-desde"
+                  type="number"
+                  inputmode="numeric"
+                  formControlName="comision_desde"
+                  aria-describedby="nota-comision"
+                  class="w-full rounded-control border border-border bg-surface px-3 py-2 text-sm text-text focus:border-navy"
+                />
+                <p id="nota-comision" class="mt-1.5 text-status text-text-soft">
+                  Los créditos por debajo de este monto no pagan comisión.
+                </p>
+              </div>
+            }
+          </panel-seccion>
+
+          <panel-seccion titulo="Cómo queda">
+            <p class="mb-3 text-status text-text-soft">
+              Vista rápida con los valores capturados arriba.
+            </p>
+            <!-- Every figure is amortised from the form above, live. §11: no
+                 invented numbers, least of all in a credit UI. -->
+            <dl class="m-0">
+              @for (ejemplo of ejemplos(); track ejemplo.monto) {
+                <panel-dato-fila [clave]="ejemplo.encabezado" [valor]="ejemplo.detalle" />
+              }
+            </dl>
+            @if (!ejemplos().length) {
+              <p class="text-sm text-text-soft">
+                Captura montos, plazos y tasa para ver el ejemplo.
+              </p>
+            }
+          </panel-seccion>
+        </div>
+
+        @if (aviso(); as mensaje) {
+          <div
+            role="alert"
+            class="mt-5 flex items-start gap-2 rounded-control px-4 py-3 text-sm"
+            [class]="aviso()!.clases"
+          >
+            @if (mensaje.ok) {
+              <svg lucideCircleCheck class="mt-0.5 size-4 shrink-0" aria-hidden="true"></svg>
+            } @else {
+              <svg lucideCircleAlert class="mt-0.5 size-4 shrink-0" aria-hidden="true"></svg>
+            }
+            <span>
+              <strong class="font-semibold">{{ mensaje.titulo }}</strong>
+              — {{ mensaje.texto }}
+            </span>
+          </div>
+        }
+
+        <button
+          type="submit"
+          [disabled]="guardando()"
+          class="mt-5 inline-flex items-center gap-2 rounded-control bg-navy px-4 py-2.5 text-sm font-semibold text-surface transition-colors hover:bg-navy-deep disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {{ textoBoton() }}
+        </button>
+      </form>
+    }
+  </div>
+</div>

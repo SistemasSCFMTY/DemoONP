@@ -1,0 +1,347 @@
+<div class="h-full overflow-y-auto">
+  @if (cargando()) {
+    <div class="flex h-full items-center justify-center" aria-live="polite">
+      <div class="flex flex-col items-center gap-3">
+        <svg lucideLoaderCircle class="size-6 animate-spin text-text-soft" aria-hidden="true"></svg>
+        <p class="text-sm text-text-soft">Cargando el expediente…</p>
+      </div>
+    </div>
+  } @else if (errorDetalle(); as mensaje) {
+    <div class="px-8 py-10">
+      <a
+        routerLink="/expedientes"
+        class="inline-flex items-center gap-1.5 text-sm font-medium text-navy hover:underline"
+      >
+        <svg lucideArrowLeft class="size-4" aria-hidden="true"></svg>
+        Volver a la lista
+      </a>
+      <p
+        role="alert"
+        class="mt-6 flex items-start gap-2 rounded-control bg-error/10 px-4 py-3 text-sm text-error"
+      >
+        <svg lucideCircleAlert class="mt-0.5 size-4 shrink-0" aria-hidden="true"></svg>
+        {{ mensaje }}
+      </p>
+    </div>
+  } @else if (expediente(); as e) {
+    <!-- Header. The folio and the estado are the two things an operator
+         checks first, so they sit above everything and stay put. -->
+    <header class="sticky top-0 z-10 border-b border-border bg-bg/95 px-8 pt-6 pb-4 backdrop-blur">
+      <a
+        routerLink="/expedientes"
+        [queryParams]="filtrosPrevios()"
+        class="inline-flex items-center gap-1.5 text-sm font-medium text-navy hover:underline"
+      >
+        <svg lucideArrowLeft class="size-4" aria-hidden="true"></svg>
+        Volver a la lista
+      </a>
+
+      <div class="mt-3 flex flex-wrap items-start justify-between gap-4">
+        <div class="min-w-0">
+          <h1 #titulo tabindex="-1" class="font-heading text-2xl font-bold outline-none">
+            {{ e.nombre_completo || 'Sin nombre' }}
+          </h1>
+          <p class="mt-1 text-sm text-text-soft">
+            Folio
+            <span class="font-semibold tracking-wide text-gold">{{ e.folio }}</span>
+            · {{ e.creado_en | fechaMx: 'fechaHora' }}
+          </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <panel-estado-badge [estado]="e.estado" />
+          @if (e.documento) {
+            <button
+              type="button"
+              (click)="descargarPdf()"
+              class="inline-flex items-center gap-2 rounded-control bg-navy px-3.5 py-2 text-sm font-semibold text-surface transition-colors hover:bg-navy-deep"
+            >
+              <svg lucideFileDown class="size-4" aria-hidden="true"></svg>
+              Descargar PDF
+            </button>
+          }
+        </div>
+      </div>
+    </header>
+
+    <div class="grid grid-cols-1 gap-5 px-8 py-6 xl:grid-cols-[minmax(0,1fr)_23rem]">
+      <!-- ── Evidence column. Photographs first: this is the thing the
+           audience just watched being captured. ─────────────────────────── -->
+      <div class="order-first flex flex-col gap-5 xl:order-last">
+        <panel-seccion titulo="Fotografías de la identificación">
+          @if (tieneFotos()) {
+            <div class="grid grid-cols-2 gap-3">
+              @if (tieneFrente()) {
+                <panel-archivo-imagen
+                  [expedienteId]="e.id"
+                  tipo="id_frente"
+                  pie="Frente"
+                />
+              }
+              @if (tieneReverso()) {
+                <panel-archivo-imagen
+                  [expedienteId]="e.id"
+                  tipo="id_reverso"
+                  pie="Reverso"
+                />
+              }
+            </div>
+          } @else {
+            <p class="text-sm text-text-soft">No se registraron fotografías.</p>
+          }
+        </panel-seccion>
+
+        <panel-seccion titulo="Firma del solicitante">
+          @if (tieneFirma()) {
+            <panel-archivo-imagen
+              [expedienteId]="e.id"
+              tipo="firma"
+              pie="Firma capturada en pantalla"
+              [contenerAlto]="true"
+            />
+          } @else {
+            <p class="text-sm text-text-soft">Sin firma registrada.</p>
+          }
+        </panel-seccion>
+
+        <panel-seccion titulo="Estado del expediente">
+          <label for="estado-exp" class="mb-1.5 block text-label font-semibold">
+            Cambiar el estado
+          </label>
+          <select
+            id="estado-exp"
+            [value]="e.estado"
+            [disabled]="guardandoEstado()"
+            (change)="cambiarEstado($event)"
+            class="w-full rounded-control border border-border bg-surface px-3 py-2 text-sm text-text focus:border-navy disabled:opacity-60"
+          >
+            @for (opcion of opcionesEstado(); track opcion.valor) {
+              <option [value]="opcion.valor" [disabled]="opcion.valor === estadoBloqueado()">
+                {{ opcion.etiquetaLarga }}
+              </option>
+            }
+          </select>
+          <p class="mt-2 text-status text-text-soft" aria-live="polite">
+            {{ mensajeEstado() }}
+          </p>
+        </panel-seccion>
+
+        <panel-seccion titulo="Archivos recibidos">
+          @if (e.archivos.length) {
+            <ul class="space-y-3">
+              @for (archivo of e.archivos; track archivo.tipo) {
+                <li class="border-b border-border/60 pb-3 last:border-b-0 last:pb-0">
+                  <p class="flex items-start gap-2 text-sm font-medium">
+                    <svg lucidePaperclip class="mt-0.5 size-4 shrink-0 text-text-soft" aria-hidden="true"></svg>
+                    {{ nombreArchivo[archivo.tipo] }}
+                  </p>
+                  <p class="mt-1 pl-6 text-status text-text-soft">
+                    {{ archivo.tamano_bytes | tamanoArchivo }} ·
+                    {{ archivo.capturado_en | fechaMx: 'fechaHora' }}
+                  </p>
+                  <!-- The SHA-256 is the evidentiary point of the whole
+                       exercise (§10). Shown in full, selectable, so it can be
+                       compared against the bucket. -->
+                  <p class="mt-1 pl-6 font-mono text-status break-all text-text-soft/80">
+                    {{ archivo.hash_sha256 }}
+                  </p>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="text-sm text-text-soft">No se recibieron archivos.</p>
+          }
+        </panel-seccion>
+      </div>
+
+      <!-- ── The expediente itself. ──────────────────────────────────────── -->
+      <div class="flex flex-col gap-5">
+        <panel-seccion titulo="Crédito solicitado">
+          <dl class="m-0">
+            <panel-dato-fila clave="Monto solicitado" [valor]="e.monto_solicitado | pesos" />
+            <panel-dato-fila clave="Plazo" [valor]="plazo()" />
+            <panel-dato-fila clave="Tasa anual" [valor]="tasa()" />
+            <panel-dato-fila
+              clave="Pago mensual estimado"
+              [valor]="e.pago_estimado | pesos"
+            />
+            <panel-dato-fila clave="Tipo de solicitante" [valor]="tipoSolicitante()" />
+            <panel-dato-fila clave="Número de cliente" [valor]="e.numero_cliente" />
+          </dl>
+        </panel-seccion>
+
+        <panel-seccion titulo="Datos generales">
+          <dl class="m-0">
+            <panel-dato-fila clave="Nombre completo" [valor]="e.nombre_completo" />
+            <panel-dato-fila clave="Género" [valor]="e.genero" />
+            <panel-dato-fila
+              clave="Fecha de nacimiento"
+              [valor]="e.fecha_nacimiento | fechaMx"
+            />
+            <panel-dato-fila clave="Entidad de nacimiento" [valor]="e.entidad_nacimiento" />
+            <panel-dato-fila clave="País de nacimiento" [valor]="e.pais_nacimiento" />
+            <panel-dato-fila clave="Nacionalidad" [valor]="e.nacionalidad" />
+            <panel-dato-fila clave="CURP" [valor]="e.curp" />
+            <panel-dato-fila clave="RFC" [valor]="e.rfc" />
+            <panel-dato-fila clave="Serie de FEA" [valor]="e.serie_fea" />
+          </dl>
+        </panel-seccion>
+
+        <panel-seccion titulo="Domicilio">
+          <dl class="m-0">
+            <panel-dato-fila clave="Domicilio" [valor]="e.domicilio_completo" />
+            <panel-dato-fila clave="Entre calles" [valor]="e.entre_calles" />
+            <panel-dato-fila clave="Código postal" [valor]="e.codigo_postal" />
+            <panel-dato-fila clave="Colonia" [valor]="e.colonia" />
+            <panel-dato-fila clave="Municipio" [valor]="e.municipio" />
+            <panel-dato-fila clave="Ciudad" [valor]="e.ciudad" />
+            <panel-dato-fila clave="Entidad federativa" [valor]="e.entidad_federativa" />
+          </dl>
+        </panel-seccion>
+
+        <panel-seccion titulo="Contacto">
+          <dl class="m-0">
+            <panel-dato-fila clave="Teléfono celular" [valor]="e.telefono_celular" />
+            <panel-dato-fila clave="Teléfono fijo" [valor]="e.telefono_fijo" />
+            <panel-dato-fila clave="Correo electrónico" [valor]="e.correo" />
+          </dl>
+        </panel-seccion>
+
+        <panel-seccion titulo="Actividad económica">
+          <dl class="m-0">
+            <panel-dato-fila clave="Empleo" [valor]="e.empleo" />
+            <panel-dato-fila clave="Puesto" [valor]="e.puesto" />
+            <panel-dato-fila clave="Empresa" [valor]="e.empresa" />
+            <panel-dato-fila clave="Giro" [valor]="e.giro_empresa" />
+            <panel-dato-fila clave="Antigüedad" [valor]="e.antiguedad" />
+            <panel-dato-fila clave="Ingreso mensual" [valor]="e.ingreso_mensual | pesos" />
+            <panel-dato-fila clave="Otros ingresos" [valor]="e.otros_ingresos" />
+          </dl>
+        </panel-seccion>
+
+        <panel-seccion titulo="Funciones públicas">
+          <dl class="m-0">
+            <panel-dato-fila clave="El solicitante" [valor]="e.pep_propio | siNo" />
+            @if (e.pep_propio) {
+              <panel-dato-fila clave="Ámbito" [valor]="e.pep_propio_ambito" />
+              <panel-dato-fila clave="Institución" [valor]="e.pep_propio_institucion" />
+              <panel-dato-fila clave="Puesto" [valor]="e.pep_propio_puesto" />
+              <panel-dato-fila clave="Inicio" [valor]="e.pep_propio_inicio | fechaMx" />
+              <panel-dato-fila clave="Terminación" [valor]="terminacionPropio()" />
+            }
+            <panel-dato-fila clave="Algún familiar" [valor]="e.pep_familia | siNo" />
+            @if (e.pep_familia) {
+              <panel-dato-fila clave="Parentesco" [valor]="e.pep_familia_parentesco" />
+              <panel-dato-fila clave="Ámbito" [valor]="e.pep_familia_ambito" />
+              <panel-dato-fila clave="Institución" [valor]="e.pep_familia_institucion" />
+              <panel-dato-fila clave="Puesto" [valor]="e.pep_familia_puesto" />
+              <panel-dato-fila clave="Inicio" [valor]="e.pep_familia_inicio | fechaMx" />
+              <panel-dato-fila clave="Terminación" [valor]="terminacionFamilia()" />
+            }
+          </dl>
+        </panel-seccion>
+
+        <panel-seccion titulo="Propietario real">
+          <dl class="m-0">
+            <panel-dato-fila clave="Actúa por cuenta" [valor]="actuaPorCuenta()" />
+            @if (e.propietario_real; as pr) {
+              <panel-dato-fila clave="Nombre" [valor]="pr.nombre_completo" />
+              <panel-dato-fila
+                clave="Fecha de nacimiento"
+                [valor]="pr.fecha_nacimiento | fechaMx"
+              />
+              <panel-dato-fila clave="Nacionalidad" [valor]="pr.nacionalidad" />
+              <panel-dato-fila clave="CURP" [valor]="pr.curp" />
+              <panel-dato-fila clave="RFC" [valor]="pr.rfc" />
+              <panel-dato-fila clave="Domicilio" [valor]="pr.domicilio_completo" />
+              <panel-dato-fila clave="Teléfono" [valor]="pr.telefono" />
+              <panel-dato-fila clave="Correo" [valor]="pr.correo" />
+              <panel-dato-fila clave="Empleo" [valor]="pr.empleo" />
+              <panel-dato-fila clave="Puesto" [valor]="pr.puesto" />
+            }
+          </dl>
+        </panel-seccion>
+
+        <panel-seccion titulo="Identificación presentada">
+          <dl class="m-0">
+            <panel-dato-fila clave="Tipo" [valor]="e.tipo_identificacion" />
+            @if (esIne()) {
+              <panel-dato-fila clave="Clave de elector" [valor]="e.ine_clave_elector" />
+              <panel-dato-fila clave="Año de registro" [valor]="e.ine_anio_registro" />
+              <panel-dato-fila clave="Número de emisión" [valor]="e.ine_num_emision" />
+              <panel-dato-fila clave="CIC" [valor]="e.ine_cic" />
+              <panel-dato-fila clave="OCR" [valor]="e.ine_ocr" />
+            }
+          </dl>
+        </panel-seccion>
+
+        <panel-seccion titulo="Evidencias del proceso">
+          <dl class="m-0">
+            <panel-dato-fila clave="Huella dactilar" [valor]="huella()" />
+            <panel-dato-fila clave="Rostro" [valor]="rostro()" />
+            <panel-dato-fila clave="Videograbación" [valor]="video()" />
+            <panel-dato-fila clave="Autorizó buró" [valor]="e.autoriza_buro | siNo" />
+            <panel-dato-fila
+              clave="Autorizó geolocalización"
+              [valor]="e.autoriza_geolocalizacion | siNo"
+            />
+            <panel-dato-fila clave="Autorizó grabación" [valor]="e.autoriza_grabacion | siNo" />
+          </dl>
+        </panel-seccion>
+
+        <panel-seccion titulo="Ubicaciones registradas">
+          @if (ubicaciones().length) {
+            <dl class="m-0">
+              @for (u of ubicaciones(); track u.clave) {
+                <panel-dato-fila [clave]="u.clave" [valor]="u.valor" />
+              }
+            </dl>
+          } @else {
+            <p class="text-sm text-text-soft">No se registraron ubicaciones.</p>
+          }
+        </panel-seccion>
+
+        <panel-seccion titulo="Solicitud firmada">
+          @if (e.documento; as doc) {
+            <div class="flex flex-wrap gap-2">
+              <button
+                type="button"
+                (click)="alternarDocumento()"
+                [attr.aria-expanded]="documentoVisible()"
+                aria-controls="doc-inline"
+                class="inline-flex items-center gap-2 rounded-control border border-border bg-surface px-3.5 py-2 text-sm font-semibold text-navy transition-colors hover:bg-bg"
+              >
+                <svg lucideFileText class="size-4" aria-hidden="true"></svg>
+                {{ textoVerDocumento() }}
+              </button>
+              <button
+                type="button"
+                (click)="descargarPdf()"
+                class="inline-flex items-center gap-2 rounded-control border border-border bg-surface px-3.5 py-2 text-sm font-semibold text-navy transition-colors hover:bg-bg"
+              >
+                <svg lucideFileDown class="size-4" aria-hidden="true"></svg>
+                Descargar PDF
+              </button>
+            </div>
+
+            @if (avisoImpresion(); as aviso) {
+              <p role="alert" class="mt-3 text-status text-warning">{{ aviso }}</p>
+            }
+
+            <div id="doc-inline" class="mt-3">
+              @if (documentoVisible()) {
+                <!-- Sanitised in the component, not here — see
+                     `documentoHtml`. Stored HTML is untrusted on display:
+                     the original app interpolated form values into this
+                     template without escaping. -->
+                <div class="doc-hoja" [innerHTML]="documentoHtml()"></div>
+              }
+            </div>
+          } @else {
+            <p class="text-sm text-text-soft">Todavía no hay una solicitud firmada.</p>
+          }
+        </panel-seccion>
+      </div>
+    </div>
+  }
+</div>

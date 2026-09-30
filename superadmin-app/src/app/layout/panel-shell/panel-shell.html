@@ -1,0 +1,63 @@
+<!--
+  Desktop shell: a fixed nav rail beside a scrolling work area (§12).
+  There is no 390px column here and no phone layout to degrade from — a staff
+  member reviewing expedientes is at a desk.
+-->
+<div class="grid h-full grid-cols-[15rem_1fr]">
+  <aside class="flex flex-col bg-navy-deep text-surface">
+    <div class="px-6 pt-6 pb-5">
+      <p class="font-heading text-xl leading-none font-bold">ONP FER</p>
+      <div class="mt-3 h-px w-10 bg-gold"></div>
+      <p class="mt-3 text-xs text-surface/60">Panel administrativo</p>
+    </div>
+
+    <nav class="flex-1 px-3" aria-label="Secciones del panel">
+      <ul class="space-y-1">
+        @for (seccion of secciones; track seccion.ruta) {
+          <li>
+            <a
+              [routerLink]="seccion.ruta"
+              routerLinkActive="bg-white/10 text-surface"
+              class="flex items-center gap-3 rounded-control px-3 py-2 text-sm font-medium text-surface/70 transition-colors hover:bg-white/5 hover:text-surface"
+            >
+              @switch (seccion.icono) {
+                @case ('expedientes') {
+                  <svg lucideFolderOpen class="size-5 shrink-0" aria-hidden="true"></svg>
+                }
+                @case ('producto') {
+                  <svg lucideSlidersHorizontal class="size-5 shrink-0" aria-hidden="true"></svg>
+                }
+                @case ('formatos') {
+                  <svg lucideFileText class="size-5 shrink-0" aria-hidden="true"></svg>
+                }
+                @case ('ajustes') {
+                  <svg lucideSettings class="size-5 shrink-0" aria-hidden="true"></svg>
+                }
+              }
+              {{ seccion.etiqueta }}
+            </a>
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <div class="border-t border-white/10 px-3 py-4">
+      @if (sesion(); as usuario) {
+        <p class="truncate px-3 text-sm font-medium">{{ usuario.nombre_completo }}</p>
+        <p class="truncate px-3 text-xs text-surface/60">{{ usuario.correo }}</p>
+      }
+      <button
+        type="button"
+        (click)="salir()"
+        class="mt-3 flex w-full items-center gap-3 rounded-control px-3 py-2 text-sm font-medium text-surface/70 transition-colors hover:bg-white/5 hover:text-surface"
+      >
+        <svg lucideLogOut class="size-5 shrink-0" aria-hidden="true"></svg>
+        Cerrar sesión
+      </button>
+    </div>
+  </aside>
+
+  <main class="min-w-0 overflow-hidden">
+    <router-outlet />
+  </main>
+</div>
