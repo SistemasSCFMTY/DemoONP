@@ -7,8 +7,23 @@
 export const environment = {
   produccion: false,
 
-  /** The Worker from CP-B1. `wrangler dev` serves it here by default. */
-  apiBaseUrl: 'http://127.0.0.1:8787',
+  /**
+   * The deployed Worker, not `wrangler dev`.
+   *
+   * Owner decision (2026-09-30): **datos reales siempre**, también en
+   * desarrollo, para que quien corra el panel localmente vea lo mismo que ven
+   * los stakeholders. Pointing dev at a local Worker meant a local checkout
+   * showed different expedientes than the deployed panel, which makes those
+   * conversations useless.
+   *
+   * Nothing is needed on the backend: the CORS allowlist in `backend/src/app.ts`
+   * already admits `localhost:4201` and `127.0.0.1:4201`, both forms, because
+   * they are distinct origins.
+   *
+   * Point it back at `http://127.0.0.1:8787` to work against a local
+   * `wrangler dev` — a deliberate edit, not a default.
+   */
+  apiBaseUrl: 'https://demo-onp-api.emnsistemas.workers.dev',
 
   /**
    * The panel talks to the Worker.

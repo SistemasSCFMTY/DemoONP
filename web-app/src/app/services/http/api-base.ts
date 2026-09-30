@@ -37,13 +37,18 @@ export class ApiBase {
 }
 
 /**
- * The backend is built in parallel and may not exist yet.
+ * A stand-in for a call whose backend was not built yet.
  *
- * Every call that has a sensible stand-in falls back to it rather than
- * dead-ending the prospect mid-wizard. The fallback is only taken when
- * `permitirMocks` is on, and every screen that takes one says
- * "Modo demostración" out loud — a simulation that does not admit it is a lie,
- * not a fallback (01-conventions.md §11).
+ * **Dead by default since 2026-09-30**: `permitirMocks` is false in every
+ * environment, so this rethrows and the screen shows a real error. It exists
+ * for a deliberate offline session, nothing else.
+ *
+ * The comment here used to promise that every screen taking a fallback said
+ * "Modo demostración" out loud. It did not: with the Worker unreachable the
+ * simulador rendered invented product parameters in silence. Do not restore
+ * that claim without restoring the label to go with it (01-conventions.md
+ * §11) — and note the catch below is indiscriminate, so a 401, a 500 and a
+ * rate-limit all become a fallback, not just an unreachable Worker.
  */
 export function conRespaldo<T>(respaldo: () => T): MonoTypeOperatorFunction<T> {
   return catchError<T, Observable<T>>((err: unknown) => {
