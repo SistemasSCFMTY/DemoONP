@@ -6,8 +6,14 @@ import {
   FiltrosExpedientes,
   PaginaExpedientes,
 } from '../../model/interfaces/expediente-resumen';
+import { NuevaPlantilla, Plantilla, PlantillaResumen } from '../../model/interfaces/plantilla';
 import { Producto } from '../../model/interfaces/producto';
-import { CredencialesPanel, SesionPanel } from '../../model/interfaces/sesion-panel';
+import { DatosSofom } from '../../model/interfaces/sofom';
+import {
+  CredencialesPanel,
+  RespuestaLogin,
+  SesionPanel,
+} from '../../model/interfaces/sesion-panel';
 
 /**
  * The panel's whole surface onto the backend.
@@ -26,8 +32,12 @@ import { CredencialesPanel, SesionPanel } from '../../model/interfaces/sesion-pa
  * and reads a selector; it never reaches an http service directly.
  */
 export abstract class PanelApi {
-  /** `POST /admin/login` — sets the httpOnly session cookie. */
-  abstract iniciarSesion(credenciales: CredencialesPanel): Observable<SesionPanel>;
+  /**
+   * `POST /admin/login` — sets the httpOnly session cookie.
+   *
+   * Answers with the name only; the full profile comes from `sesionActual()`.
+   */
+  abstract iniciarSesion(credenciales: CredencialesPanel): Observable<RespuestaLogin>;
 
   /** `GET /admin/me` — restores a session from the cookie on a cold load. */
   abstract sesionActual(): Observable<SesionPanel>;
@@ -56,4 +66,35 @@ export abstract class PanelApi {
 
   /** `PUT /producto` — edits what the prospect's simulator shows. */
   abstract guardarProducto(producto: Producto): Observable<Producto>;
+
+  /** `GET /sofom` — the identity substituted into the solicitud. */
+  abstract obtenerSofom(): Observable<DatosSofom>;
+
+  /** `PUT /sofom`. Requires `rol === 'administrador'`; 403 otherwise. */
+  abstract guardarSofom(datos: DatosSofom): Observable<DatosSofom>;
+
+  /** `GET /plantillas` — without `contenido_html`. */
+  abstract listarPlantillas(): Observable<readonly PlantillaResumen[]>;
+
+  /** `GET /plantillas/:id` — the row, with its converted body. */
+  abstract obtenerPlantilla(id: string): Observable<Plantilla>;
+
+  /**
+   * `POST /plantillas`. The `.docx` is parsed in the browser (JSZip cannot
+   * ride in a Worker, same platform constraint as the OCR) and only the
+   * resulting HTML is sent.
+   */
+  abstract crearPlantilla(plantilla: NuevaPlantilla): Observable<Plantilla>;
+
+  /** `DELETE /plantillas/:id` — a soft deactivate, not a delete. */
+  abstract desactivarPlantilla(id: string): Observable<void>;
+
+  /**
+   * `GET /expedientes/exportar` — the full expediente set.
+   *
+   * A `Blob`, never a parsed object: this is bulk PII on its way to a file on
+   * the operator's disk and nothing in the app should be able to read it, log
+   * it, or hold it in a store.
+   */
+  abstract exportarExpedientes(): Observable<Blob>;
 }

@@ -13,8 +13,14 @@ import {
   FiltrosExpedientes,
   PaginaExpedientes,
 } from '../../model/interfaces/expediente-resumen';
+import { NuevaPlantilla, Plantilla, PlantillaResumen } from '../../model/interfaces/plantilla';
 import { Producto } from '../../model/interfaces/producto';
-import { CredencialesPanel, SesionPanel } from '../../model/interfaces/sesion-panel';
+import { DatosSofom } from '../../model/interfaces/sofom';
+import {
+  CredencialesPanel,
+  RespuestaLogin,
+  SesionPanel,
+} from '../../model/interfaces/sesion-panel';
 import { PanelApi } from './panel-api';
 
 /**
@@ -35,8 +41,8 @@ export class PanelApiHttp extends PanelApi {
   readonly #http = inject(HttpClient);
   readonly #base = environment.apiBaseUrl;
 
-  override iniciarSesion(credenciales: CredencialesPanel): Observable<SesionPanel> {
-    return this.#http.post<SesionPanel>(`${this.#base}/admin/login`, credenciales, {
+  override iniciarSesion(credenciales: CredencialesPanel): Observable<RespuestaLogin> {
+    return this.#http.post<RespuestaLogin>(`${this.#base}/admin/login`, credenciales, {
       withCredentials: true,
     });
   }
@@ -95,6 +101,57 @@ export class PanelApiHttp extends PanelApi {
 
   override guardarProducto(producto: Producto): Observable<Producto> {
     return this.#http.put<Producto>(`${this.#base}/producto`, producto, {
+      withCredentials: true,
+    });
+  }
+
+  override obtenerSofom(): Observable<DatosSofom> {
+    return this.#http.get<DatosSofom>(`${this.#base}/sofom`, { withCredentials: true });
+  }
+
+  override guardarSofom(datos: DatosSofom): Observable<DatosSofom> {
+    return this.#http.put<DatosSofom>(`${this.#base}/sofom`, datos, {
+      withCredentials: true,
+    });
+  }
+
+  override listarPlantillas(): Observable<readonly PlantillaResumen[]> {
+    return this.#http.get<PlantillaResumen[]>(`${this.#base}/plantillas`, {
+      withCredentials: true,
+    });
+  }
+
+  override obtenerPlantilla(id: string): Observable<Plantilla> {
+    return this.#http.get<Plantilla>(`${this.#base}/plantillas/${encodeURIComponent(id)}`, {
+      withCredentials: true,
+    });
+  }
+
+  override crearPlantilla(plantilla: NuevaPlantilla): Observable<Plantilla> {
+    return this.#http.post<Plantilla>(`${this.#base}/plantillas`, plantilla, {
+      withCredentials: true,
+    });
+  }
+
+  override desactivarPlantilla(id: string): Observable<void> {
+    return this.#http
+      .delete<void>(`${this.#base}/plantillas/${encodeURIComponent(id)}`, {
+        withCredentials: true,
+      })
+      .pipe(map(() => undefined));
+  }
+
+  /**
+   * The export arrives as a `Blob` and is handed straight to a download.
+   *
+   * `responseType: 'blob'` so the payload is never parsed into JavaScript
+   * objects: it is every expediente in the database — CURP, RFC, addresses,
+   * incomes — and the less of it that exists as readable state, the smaller
+   * the surface for it to end up somewhere it should not. Nothing logs it.
+   */
+  override exportarExpedientes(): Observable<Blob> {
+    return this.#http.get(`${this.#base}/expedientes/exportar`, {
+      responseType: 'blob',
       withCredentials: true,
     });
   }

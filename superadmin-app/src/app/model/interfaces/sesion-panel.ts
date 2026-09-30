@@ -16,6 +16,19 @@ export interface SesionPanel {
   readonly nombre_completo: string;
 }
 
+/**
+ * What `POST /admin/login` actually returns: the name, and a `Set-Cookie`.
+ *
+ * **Not** a `SesionPanel` — there is no `correo` in the body. Verified
+ * against the running Worker, 2026-09-30. The full profile comes from
+ * `GET /admin/me`, which `PanelState` calls straight after a successful
+ * login so one code path builds the session and the cookie is proven to work
+ * before the operator is let in.
+ */
+export interface RespuestaLogin {
+  readonly nombre_completo: string;
+}
+
 /** `POST /admin/login` request body. */
 export interface CredencialesPanel {
   readonly correo: string;

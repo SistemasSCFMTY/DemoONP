@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Action, Selector, State, StateContext } from '@ngxs/store';
-import { catchError, of, tap } from 'rxjs';
+import { catchError, of, switchMap, tap, throwError } from 'rxjs';
 
 import { ErrorApi } from '../../model/interfaces/error-api';
 import { SesionPanel } from '../../model/interfaces/sesion-panel';
@@ -74,6 +74,31 @@ export class PanelState {
     ctx.patchState({ cargando: true, error: null });
 
     return this.#api.iniciarSesion(credenciales).pipe(
+      // `POST /admin/login` answers with the name and a `Set-Cookie`, nothing
+      // else — verified against the running Worker. `GET /admin/me` is what
+      // returns the profile, so the session is built from one place whether
+      // it came from a login or from a reload. It also proves the cookie was
+      // accepted before the operator is let in: if the browser dropped it,
+      // this second call 401s here rather than on the first table load.
+      switchMap(() =>
+        this.#api.sesionActual().pipe(
+          catchError(() =>
+            // Login was accepted and this still failed, so the credentials
+            // were right and the cookie did not stick. The generic "tu sesión
+            // terminó" would send someone to re-type a password that was
+            // never the problem. The session cookie is `Secure; SameSite=None`
+            // and the panel is on a different origin from the Worker, so this
+            // is what blocked third-party cookies looks like.
+            throwError(
+              (): ErrorApi => ({
+                code: 'NO_AUTORIZADO',
+                message:
+                  'Tu correo y contraseña son correctos, pero el navegador no conservó la sesión. Revisa que no estés bloqueando las cookies de este sitio e inténtalo de nuevo.',
+              }),
+            ),
+          ),
+        ),
+      ),
       tap((sesion) => ctx.patchState({ sesion, cargando: false, resuelta: true })),
       catchError((fallo: ErrorApi) => {
         ctx.patchState({ sesion: null, cargando: false, resuelta: true, error: fallo.message });

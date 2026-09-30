@@ -13,6 +13,7 @@ import { PanelApiSimulada } from './services/http/panel-api-simulada.service';
 import { ExpedientesState } from './state/expedientes/expedientes.state';
 import { PanelState } from './state/panel/panel.state';
 import { ProductoState } from './state/producto/producto.state';
+import { SofomState } from './state/sofom/sofom.state';
 import { ONP_PRESET } from './theme/onp-preset';
 
 export const appConfig: ApplicationConfig = {
@@ -52,7 +53,7 @@ export const appConfig: ApplicationConfig = {
       },
     }),
 
-    provideStore([PanelState, ExpedientesState, ProductoState]),
+    provideStore([PanelState, ExpedientesState, ProductoState, SofomState]),
 
     // The seam between the mock and the Worker. `PanelApiSimulada` exists
     // because the backend track (CP-B4, CP-B7) is being built in parallel;

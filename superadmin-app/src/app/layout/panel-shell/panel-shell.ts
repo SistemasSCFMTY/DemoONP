@@ -1,6 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { LucideFolderOpen, LucideLogOut, LucideSlidersHorizontal } from '@lucide/angular';
+import {
+  LucideFileText,
+  LucideFolderOpen,
+  LucideLogOut,
+  LucideSettings,
+  LucideSlidersHorizontal,
+} from '@lucide/angular';
 import { Store, select } from '@ngxs/store';
 
 import { CerrarSesion } from '../../state/panel/panel.actions';
@@ -9,16 +15,19 @@ import { PanelState } from '../../state/panel/panel.state';
 interface SeccionNav {
   readonly ruta: string;
   readonly etiqueta: string;
-  readonly icono: 'expedientes' | 'producto';
+  readonly icono: 'expedientes' | 'producto' | 'formatos' | 'ajustes';
 }
 
 /**
  * The signed-in chrome: nav rail, the operator's identity, logout.
  *
- * The source's four tabs (`onp_fer_etapa2_pf.html:1918`) are down to two.
- * *Formatos* and *Ajustes* are CP-S6 and expected to be cut: branding lives in
- * `brand.config.ts` now, and the Ajustes tab's connection-string fields went
- * with the Worker taking ownership of the credentials.
+ * All four of the source's tabs (`onp_fer_etapa2_pf.html:1918`), as a rail
+ * rather than a tab strip — this is a desktop tool and the nav does not need
+ * to fit a phone.
+ *
+ * Two cards inside those tabs are deliberately gone and are not coming back:
+ * the Ajustes storage-mode card with its Supabase URL and anon key
+ * (`:2048`), and "Borrar todos los datos" (`:6025`).
  */
 @Component({
   selector: 'panel-shell',
@@ -28,6 +37,8 @@ interface SeccionNav {
     RouterLinkActive,
     LucideFolderOpen,
     LucideSlidersHorizontal,
+    LucideFileText,
+    LucideSettings,
     LucideLogOut,
   ],
   templateUrl: './panel-shell.html',
@@ -43,6 +54,7 @@ export class PanelShell {
   protected readonly secciones: readonly SeccionNav[] = [
     { ruta: '/expedientes', etiqueta: 'Expedientes', icono: 'expedientes' },
     { ruta: '/producto', etiqueta: 'Producto', icono: 'producto' },
+    { ruta: '/ajustes', etiqueta: 'Ajustes', icono: 'ajustes' },
   ];
 
   protected salir(): void {

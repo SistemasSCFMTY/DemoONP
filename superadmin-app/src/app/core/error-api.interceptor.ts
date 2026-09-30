@@ -55,9 +55,18 @@ export const errorApiInterceptor: HttpInterceptorFn = (peticion, siguiente) =>
           ? 'No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.'
           : fallo.status === 401
             ? 'Tu sesión terminó. Vuelve a entrar.'
-            : 'Ocurrió un error inesperado. Inténtalo de nuevo en un momento.';
+            : fallo.status === 403
+              ? // Writes to /sofom and /plantillas need `rol === 'administrador'`.
+                // The panel cannot know the role: `GET /admin/me` does not return
+                // it, and adding it would be contract drift — so the attempt is
+                // made and the refusal is shown. That is the right shape anyway:
+                // authorization is the Worker's, and a UI that hides a button is
+                // a convenience, never the boundary (§12).
+                'Tu cuenta no tiene permiso para hacer este cambio. Pide a un administrador que lo haga.'
+              : 'Ocurrió un error inesperado. Inténtalo de nuevo en un momento.';
 
-      const code: CodigoError = fallo.status === 401 ? 'NO_AUTORIZADO' : 'ERROR_INTERNO';
+      const code: CodigoError =
+        fallo.status === 401 || fallo.status === 403 ? 'NO_AUTORIZADO' : 'ERROR_INTERNO';
       return throwError((): ErrorApi => ({ code, message }));
     }),
   );

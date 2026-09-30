@@ -13,8 +13,14 @@ import {
   FiltrosExpedientes,
   PaginaExpedientes,
 } from '../../model/interfaces/expediente-resumen';
+import { NuevaPlantilla, Plantilla, PlantillaResumen } from '../../model/interfaces/plantilla';
 import { Producto } from '../../model/interfaces/producto';
-import { CredencialesPanel, SesionPanel } from '../../model/interfaces/sesion-panel';
+import { DatosSofom } from '../../model/interfaces/sofom';
+import {
+  CredencialesPanel,
+  RespuestaLogin,
+  SesionPanel,
+} from '../../model/interfaces/sesion-panel';
 import { EXPEDIENTES_SIMULADOS } from './expedientes-simulados';
 import { IMAGENES_SIMULADAS } from './imagenes-simuladas';
 import { PanelApi } from './panel-api';
@@ -55,18 +61,34 @@ export class PanelApiSimulada extends PanelApi {
     comision_desde: 10000,
   };
 
-  override iniciarSesion(credenciales: CredencialesPanel): Observable<SesionPanel> {
+  /**
+   * The placeholders from `brand.config.ts`, so the demo shows the shape of
+   * the card without inventing a real company's details.
+   */
+  #sofom: DatosSofom = {
+    razon_social: 'ONP FER, S.A. de C.V., SOFOM, E.N.R.',
+    rfc: '',
+    domicilio: '',
+    telefono: '',
+    correo_contacto: '',
+  };
+
+  /** Uploaded templates, newest first. Empty until one is uploaded. */
+  #plantillas: Plantilla[] = [];
+
+  #siguienteVersion = 1;
+
+  override iniciarSesion(credenciales: CredencialesPanel): Observable<RespuestaLogin> {
     const correo = credenciales.correo.trim();
 
     if (!correo || !credenciales.password) {
       return this.#falla('VALIDACION', 'Escribe tu correo y tu contraseña', 260);
     }
 
-    this.#sesion = {
-      correo,
-      nombre_completo: 'Personal de demostración',
-    };
-    return of(this.#sesion).pipe(delay(420));
+    this.#sesion = { correo, nombre_completo: 'Personal de demostración' };
+    // The real endpoint answers with the name only — the mock must not be
+    // more generous than the thing it stands in for, or it hides a bug.
+    return of({ nombre_completo: this.#sesion.nombre_completo }).pipe(delay(420));
   }
 
   override sesionActual(): Observable<SesionPanel> {
@@ -153,6 +175,59 @@ export class PanelApiSimulada extends PanelApi {
     return of(producto).pipe(delay(380));
   }
 
+  override obtenerSofom(): Observable<DatosSofom> {
+    return of(this.#sofom).pipe(delay(200));
+  }
+
+  override guardarSofom(datos: DatosSofom): Observable<DatosSofom> {
+    this.#sofom = datos;
+    return of(datos).pipe(delay(340));
+  }
+
+  override listarPlantillas(): Observable<readonly PlantillaResumen[]> {
+    return of(this.#plantillas.map(sinContenido)).pipe(delay(220));
+  }
+
+  override obtenerPlantilla(id: string): Observable<Plantilla> {
+    const encontrada = this.#plantillas.find((p) => p.id === id);
+    return encontrada
+      ? of(encontrada).pipe(delay(220))
+      : this.#falla('NO_ENCONTRADO', 'Ese formato ya no existe.', 180);
+  }
+
+  override crearPlantilla(nueva: NuevaPlantilla): Observable<Plantilla> {
+    // A new upload supersedes the active one, the way a soft-versioned table
+    // does: the previous row stays, deactivated.
+    this.#plantillas = this.#plantillas.map((p) =>
+      p.clave === nueva.clave ? { ...p, activa: false } : p,
+    );
+
+    const creada: Plantilla = {
+      ...nueva,
+      id: `plantilla-${this.#siguienteVersion}`,
+      version: this.#siguienteVersion++,
+      activa: true,
+      creado_en: new Date().toISOString(),
+    };
+    this.#plantillas = [creada, ...this.#plantillas];
+
+    // The Worker answers with the whole row, contenido_html included.
+    return of(creada).pipe(delay(420));
+  }
+
+  override desactivarPlantilla(id: string): Observable<void> {
+    if (!this.#plantillas.some((p) => p.id === id)) {
+      return this.#falla('NO_ENCONTRADO', 'Ese formato ya no existe.', 180);
+    }
+    this.#plantillas = this.#plantillas.map((p) => (p.id === id ? { ...p, activa: false } : p));
+    return of(undefined).pipe(delay(300));
+  }
+
+  override exportarExpedientes(): Observable<Blob> {
+    const cuerpo = JSON.stringify(EXPEDIENTES_SIMULADOS, null, 2);
+    return of(new Blob([cuerpo], { type: 'application/json' })).pipe(delay(480));
+  }
+
   #estadoDe(expediente: ExpedienteDetalle): EstadoExpediente {
     return this.#estados.get(expediente.id) ?? expediente.estado;
   }
@@ -186,4 +261,10 @@ export class PanelApiSimulada extends PanelApi {
   #falla<T>(code: ErrorApi['code'], message: string, ms: number): Observable<T> {
     return timer(ms).pipe(switchMap(() => throwError((): ErrorApi => ({ code, message }))));
   }
+}
+
+/** `GET /plantillas` omits the body; the list has no use for a document. */
+function sinContenido(plantilla: Plantilla): PlantillaResumen {
+  const { contenido_html: _omitido, ...resumen } = plantilla;
+  return resumen;
 }

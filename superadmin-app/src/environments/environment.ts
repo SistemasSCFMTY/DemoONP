@@ -11,11 +11,15 @@ export const environment = {
   apiBaseUrl: 'http://127.0.0.1:8787',
 
   /**
-   * The backend track (CP-B4, CP-B7) is being built in parallel with this one,
-   * so the panel develops against `PanelApiSimulada` — an in-memory service
-   * behind the same `PanelApi` interface, seeded with three expedientes.
+   * The panel talks to the Worker.
    *
-   * Swapping to the real API is this one line plus `apiBaseUrl` above.
+   * It ran on `PanelApiSimulada` while the backend was being built, and that
+   * cost a bug worth remembering: the mock keeps its session in a field on the
+   * service instance, so a reload rebuilt the injector, the field was null,
+   * and the guard bounced every refresh to `/acceso`. It looked like a cookie
+   * problem and there was no cookie involved.
+   *
+   * Set it to true only to work offline, and expect that behaviour back.
    */
-  usarApiSimulada: true,
+  usarApiSimulada: false,
 };
