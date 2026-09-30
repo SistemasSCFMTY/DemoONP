@@ -20,13 +20,16 @@ export const app = new Hono<{ Bindings: Env }>();
 app.use('*', requestId());
 
 /**
- * Exactamente los dos orígenes de Pages, más localhost para
- * desarrollo. Nunca `*`: con `credentials: true` el navegador lo
- * rechaza, y aun sin eso, una API que devuelve fotos de INE no anuncia
- * que cualquiera puede llamarla.
+ * Los orígenes reales de Pages, más localhost para desarrollo. Nunca
+ * `*`: con `credentials: true` el navegador lo rechaza, y aun sin eso,
+ * una API que devuelve fotos de INE no anuncia que cualquiera puede
+ * llamarla.
  *
- * Actualiza los dominios cuando los despliegues tengan nombre
- * definitivo (CP-F12 y CP-S4).
+ * Decía `onp-web.pages.dev` y `onp-panel.pages.dev`. Ninguno de los dos
+ * existe: la cuenta tiene un solo proyecto de Pages, `demo-onp`. Con los
+ * nombres inventados, cada llamada del front desplegado moría en el
+ * preflight — y curl no lo habría visto nunca, porque curl no manda
+ * preflight ni respeta CORS.
  */
 app.use(
   '*',
@@ -42,8 +45,14 @@ app.use(
       'http://127.0.0.1:4200',
       'http://localhost:4201',
       'http://127.0.0.1:4201',
-      'https://onp-web.pages.dev',
-      'https://onp-panel.pages.dev',
+      // El proyecto de Pages que existe hoy; sirve `web-app`.
+      'https://demo-onp.pages.dev',
+      // El panel todavía no tiene proyecto propio. Cuando lo tenga, su
+      // dominio va aquí, o no podrá hablarle al Worker desde un navegador.
+      //
+      // Los despliegues de vista previa salen en `<hash>.demo-onp.pages.dev`
+      // y NO entran por esta lista, que compara texto exacto. Es a
+      // propósito: producción es la que importa mañana.
     ],
     credentials: true,
     // DELETE está aquí por `DELETE /plantillas/:id` («Quitar y usar el

@@ -11,8 +11,8 @@
  */
 export const environment = {
   production: true,
-  /** Point this at the deployed Worker before CP-F12. */
-  apiBaseUrl: 'https://onp-fer-api.workers.dev',
+  /** El Worker desplegado. `onp-fer-api.workers.dev` nunca existió. */
+  apiBaseUrl: 'https://demo-onp-api.emnsistemas.workers.dev',
   /**
    * When the Worker cannot be reached, the http services fall back to an
    * in-memory stand-in so the wizard still runs end to end on stage. Every

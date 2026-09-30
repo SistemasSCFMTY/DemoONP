@@ -1,6 +1,9 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "onp-backend",
+  // El Worker que ya existe en la cuenta. Se llamaba "onp-backend" aquí, y
+  // ese Worker no existe: `wrangler deploy` habría creado uno nuevo y vacío
+  // en vez de desplegar sobre el que tiene los secretos.
+  "name": "demo-onp-api",
   "main": "src/index.ts",
   "compatibility_date": "2026-09-30",
   "compatibility_flags": ["nodejs_compat"],
