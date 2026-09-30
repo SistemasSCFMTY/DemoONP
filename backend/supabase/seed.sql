@@ -38,15 +38,25 @@ on conflict (id) do nothing;
 --       «Email not confirmed» y se va media hora en encontrarlo.
 --       La contraseña vive ahí, no en `usuarios_panel`.
 --
---    2. Corre esto con ese correo:
+--    2. Ya está el renglón. Un trigger sobre `auth.users` lo crea
+--       solo, con `id` = el id del usuario de Auth, `activo = true`
+--       y `rol = 'consulta'`. NO intentes insertarlo a mano:
+--       `usuarios_panel.id` no tiene default y el insert truena con
+--       23502 (null value in column "id").
 --
---         insert into public.usuarios_panel
---             (sofom_id, correo, nombre_completo, rol, activo)
---         select id, 'nuevo@ejemplo.mx', 'Nombre Apellido', 'analista', true
---         from public.sofoms where activa is true order by creado_en limit 1
---         on conflict (correo) do update set activo = true;
+--    3. Súbele el rol si lo quieres en el panel completo:
+--
+--         update public.usuarios_panel
+--            set rol = 'administrador', nombre_completo = 'Nombre Apellido'
+--          where correo = 'nuevo@ejemplo.mx';
 --
 --  `rol` solo acepta: administrador | analista | consulta.
+--
+--  Ojo con el trigger: CUALQUIER usuario nuevo de Auth entra a
+--  `usuarios_panel` activo y con rol `consulta`. Hoy no importa
+--  —la llave publicable solo vive en el Worker y no hay registro
+--  público—, pero si esto pasa de la demo, el default debería ser
+--  `activo = false`.
 -- ------------------------------------------------------------
 
 select 'producto' as sembrado,
