@@ -56,6 +56,9 @@ does not change afterwards.
 checks (`:2552`), and then dropped: nothing verifies it later, `expedientes` has no
 column for it, and the source never stored one either. A prospect does not sign in.
 
+Without that round trip every applicant leaves an orphan draft beside a second
+expediente.
+
 Triggers the Resend welcome email (CP-B6). **The email must never fail this request** —
 log the failure and return 201 anyway.
 
@@ -72,6 +75,13 @@ would let someone ask "is this CURP a client?" without spending a send. Rate-lim
 IP before the lookup and by phone before the send. `codigo` echoes only under
 `DEMO_MODE`, as `/otp/enviar` does. Never returns the expediente — knowing a CURP is a
 client must not be enough to read their address.
+
+`telefonoEnmascarado` is copy, not debug output: the UI shows it so the person knows
+which handset to pick up, which "tu teléfono registrado" does not tell someone who
+applied months ago.
+
+**Because this sends the code, the client must not call `/otp/enviar` afterwards** —
+that would mint a second code and burn the first.
 
 ### `POST /otp/validar`
 `200 → { valido: true, expedienteId?, paso? }`
@@ -94,9 +104,13 @@ Behind `requireProspecto`. **The expediente comes from the cookie, never the URL
 there is no id to tamper with and no IDOR to have. Writes only while the expediente is
 `borrador`.
 
-`paso` is validated as a slug, not against the screen list: that list lives in
-`web-app/src/app/model/interfaces/paso.ts` and duplicating it here would condemn it to
-drift. An unknown value should make the app fall back to the first step, not fail a
+**The client fires the `PATCH` and carries on.** It is bookkeeping so the person can
+come back tomorrow; a failure is never surfaced and never blocks the flow.
+
+`paso` is **an opaque slug in both directions.** The Worker validates its shape and
+never its vocabulary: `web-app/src/app/model/constants/pasos/pasos.ts` is the only
+definition of what the steps are and what order they come in, and duplicating that here
+would condemn it to drift. An unknown value should make the app fall back to the first step, not fail a
 submission. `expedientes.paso_actual` is added by migration `0003` — nullable and
 additive, so the original app is untouched — and is cleared on submission.
 
@@ -174,7 +188,12 @@ Field-for-field from `mapearExpediente` (`onp_fer_etapa2_pf.html:2851`) and
   four evidentiary moments: autorización, fotos, video, firma)
 - **Solicitud** — `monto_solicitado, plazo_solicitado_meses, tasa_solicitada,
   pago_estimado` (numbers), `es_cliente_existente` (bool), `numero_cliente`
-- **Meta** — `dispositivo, version_app`
+- **Meta** — `expedienteId` (optional), `dispositivo, version_app`
+
+  `expedienteId` is the draft `POST /prospectos` reserved. Sending it makes this
+  submission complete that row instead of inserting a second one beside it.
+  **Optional**, because an existing client who came in through `verificar-cliente`
+  never registered and has no draft — an unset id still submits.
 - **Documento** — `documento_html`: the rendered solicitud exactly as the prospect saw
   and signed it, from CP-F11. It becomes the `documentos` row that
   `GET /expedientes/:id` returns as `documento.contenido_html`. **Added 2026-09-30 by

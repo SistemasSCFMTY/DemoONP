@@ -37,6 +37,18 @@ sticky topbar → progress → scrolling body.
 Use `100dvh`, never `100vh`. Tap targets are at least 44×44px. Focusable inputs never
 compute below 16px, or iOS zooms the viewport on focus and the user loses their place.
 
+**Short fields pair two-per-row; long ones keep the row.** Código postal, número
+exterior/interior, the two teléfonos, país — pair them through `ui/onp-fila` and take
+a bite out of the scroll. Domicilio, nombre completo, CURP, RFC, correo, colonia,
+municipio, empresa, puesto, entre calles — full width, because halving them means the
+text scrolls out of sight while it is being typed. Below `--breakpoint-xs` (360px)
+every row collapses to one column: a two-column row that overflows at 320 is worse
+than the column it replaced. Never hand-pair per screen; four form screens plus the
+propietario real's copy will drift.
+
+Field blocks used by more than one screen live in `pages/solicitud/bloques/`, one
+component with an `idPrefijo`, not two copies of the markup.
+
 ## Typography
 
 **Charis SIL** (serif, 400/700) for `h1`/`h2`/`h3`. **Archivo** (variable) for body, UI,

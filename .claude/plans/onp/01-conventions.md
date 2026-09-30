@@ -149,6 +149,23 @@ nothing.
 - Body padding `24px 20px 40px`. Cards `16px`. Fields `14px` apart.
 - **Tap targets are at least 44×44px.** The source's 32px back button and 16px
   checkboxes fail this; fix them in the port rather than reproducing the defect.
+- **Short fields pair two-per-row; long ones keep the row.** A 28-screen form at
+  390px is a lot of scrolling, and pairing the genuinely short fields — código
+  postal, número exterior/interior, the two teléfonos, país, the INE year and
+  emission number — takes a visible bite out of it. Anything long or variable keeps
+  the full width: domicilio, nombre completo, CURP, RFC, correo, colonia, municipio,
+  ciudad, empresa, puesto, referencias, entre calles. Halving one of those only means
+  the text scrolls out of sight while it is being typed.
+  Pairing goes through `ui/onp-fila`, never hand-rolled per screen — there are four
+  form screens plus the propietario real's copy of the same blocks, and hand-paired
+  rows drift. The threshold is `--breakpoint-xs` (360px): 390 and 375 get two
+  columns, **320 collapses to one**, because a two-column row that overflows on a
+  small phone is worse than the column it replaced. This is a density change inside
+  the 390px shell, not a desktop layout.
+- **Field blocks shared between screens live in `pages/solicitud/bloques/`.** The
+  applicant and the propietario real fill the same four groups; the source has two
+  copies of that markup and they have already drifted (departure 16). One component,
+  two `idPrefijo` values.
 - Inputs must not trigger iOS zoom: never below 16px computed font-size on a focusable
   input, even though the visual scale says 13px — use a transform or accept 16px.
 - Simple fixed sizing beats layout machinery. Never shell-layout surgery for one
