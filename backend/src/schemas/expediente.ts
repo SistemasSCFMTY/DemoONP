@@ -144,6 +144,19 @@ export const ExpedientePayloadSchema = z.object({
    */
   documento_html: texto(200_000),
 
+  /**
+   * El expediente en `borrador` que creó `POST /prospectos`.
+   *
+   * Cuando viene, el envío **actualiza ese renglón** en vez de insertar
+   * otro: el registro y la solicitud son el mismo expediente en dos
+   * momentos, no dos filas. Opcional a propósito — una sesión que
+   * perdió el id todavía puede enviar, y es preferible un expediente
+   * sin su borrador que una solicitud rechazada.
+   *
+   * No es una columna: se quita antes de armar el renglón.
+   */
+  expedienteId: z.string().uuid().optional(),
+
   // ---- Propietario real: solo cuando se declara un tercero ----
   pr_apellido_paterno: texto(120),
   pr_apellido_materno: texto(120),

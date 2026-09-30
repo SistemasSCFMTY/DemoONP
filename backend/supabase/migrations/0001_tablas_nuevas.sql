@@ -1,5 +1,5 @@
 -- ============================================================
---  ONP FER — 0001 · las tres tablas que faltaban
+--  ONP FER — 0001 · las dos tablas que faltaban
 --
 --  **EL ESQUEMA YA ESTÁ.** Se sondeó el proyecto real: las nueve
 --  tablas del modelo existen, `expedientes` tiene 106 columnas y
@@ -12,10 +12,19 @@
 --  `plantillas`, ni `bitacora`, ni el bucket. Tampoco agrega
 --  columnas: no falta ninguna.
 --
---  Solo crea las tres que el sondeo no encontró y que los
---  endpoints del contrato necesitan. Las tres son nuestras y
+--  Solo crea las dos que el sondeo no encontró y que los
+--  endpoints del contrato necesitan. Las dos son nuestras y
 --  nacen vacías, así que crearlas no puede romper la app
 --  original.
+--
+--  NO crea `prospectos`. El registro previo no es una entidad
+--  aparte: es un `expedientes` en `borrador`. Esa tabla ya tiene
+--  `nombres`, `apellido_paterno`, `apellido_materno`, `correo` y
+--  `telefono_celular`, y de sus 106 columnas solo `folio` y
+--  `sofom_id` son obligatorias sin default. Una tabla nueva
+--  habría duplicado columnas que ya existen y habría dejado al
+--  prospecto fuera del panel hasta que enviara. Decisión del
+--  dueño, 2026-09-30.
 --
 --  Antes de correr esto, corre `verificacion.sql` y lee su
 --  salida. Si dice que algo ya existe, esta migración lo
@@ -23,33 +32,6 @@
 --
 --  Forward-only e idempotente.
 -- ============================================================
-
--- ------------------------------------------------------------
---  prospectos — el registro previo a la solicitud
---
---  DECISIÓN QUE EL PLAN NO RESUELVE. El contrato exige
---  `POST /prospectos → 201 { id }` y no dice dónde vive ese id.
---  Devolver uno que no apunta a nada sería mentir. La fuente no
---  guardaba nada en este paso: solo avanzaba de pantalla
---  (onp_fer_etapa2_pf.html:2539).
---
---  La contraseña se guarda como PBKDF2-SHA256 y nunca en claro.
---  El prospecto NO es un usuario de Supabase Auth: Auth es para
---  el personal del panel.
--- ------------------------------------------------------------
-create table if not exists public.prospectos (
-    id               uuid primary key default gen_random_uuid(),
-    sofom_id         uuid references public.sofoms(id),
-    nombres          text not null,
-    apellido_paterno text not null,
-    apellido_materno text,
-    correo           text not null,
-    telefono         text not null,
-    password_hash    text not null,
-    creado_en        timestamptz not null default now()
-);
-
-create index if not exists prospectos_correo_idx on public.prospectos (lower(correo));
 
 -- ------------------------------------------------------------
 --  otp_codigos — el código de un solo uso
@@ -110,4 +92,4 @@ select t.nombre as tabla,
        case when exists (select 1 from information_schema.tables
                          where table_schema = 'public' and table_name = t.nombre)
             then 'ok' else 'FALTA' end as resultado
-from (values ('prospectos'), ('otp_codigos'), ('producto')) as t(nombre);
+from (values ('otp_codigos'), ('producto')) as t(nombre);

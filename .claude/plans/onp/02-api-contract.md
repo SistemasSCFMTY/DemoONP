@@ -39,6 +39,23 @@ Single use: a second validate of the same code fails.
 `{ nombres, apellidoPaterno, apellidoMaterno, correo, telefono, password }`
 `201 → { id: string }`
 
+**Creates an `expedientes` row with `estado = 'borrador'`, not a row in a table of its
+own.** There is no `prospectos` table — owner's call, 2026-09-30. `expedientes` already
+carries `nombres`, `apellido_paterno`, `apellido_materno`, `correo` and
+`telefono_celular`, and of its 106 columns only `folio` and `sofom_id` are NOT NULL
+without a default, so a lead fits with nothing invented. `borrador` is the enum value
+that already means "started, not submitted"; no `alter type` was run.
+
+The `id` returned is that expediente's. `web-app/` keeps it in `SesionState` and sends
+it back as `expedienteId` on submission, so the two are one record in two moments.
+
+`folio` is reserved here rather than at submission, because the column is NOT NULL. It
+does not change afterwards.
+
+**`password` is validated and discarded.** Eight characters minimum, as the source
+checks (`:2552`), and then dropped: nothing verifies it later, `expedientes` has no
+column for it, and the source never stored one either. A prospect does not sign in.
+
 Triggers the Resend welcome email (CP-B6). **The email must never fail this request** —
 log the failure and return 201 anyway.
 
@@ -47,7 +64,7 @@ log the failure and return 201 anyway.
 
 | Part | Type | Notes |
 |---|---|---|
-| `expediente` | JSON | the whole payload, shape below |
+| `expediente` | JSON | the whole payload, shape below. Carries an optional `expedienteId` — the `borrador` from `POST /prospectos`. When present the submission **updates** that row to `pendiente` and keeps its folio; when absent it inserts a new expediente. A second submission of an expediente that is no longer `borrador` is rejected rather than overwriting it. |
 | `id_frente` | file | jpg |
 | `id_reverso` | file | jpg |
 | `firma` | file | png, from the signature canvas |

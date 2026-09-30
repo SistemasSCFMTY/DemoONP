@@ -12,7 +12,10 @@ export const prospectos = new Hono<{ Bindings: Env }>();
 prospectos.post('/', async (c) => {
   const datos = await cuerpoJson(c, ProspectoSchema);
 
-  const id = await registrarProspecto(supabaseDe(c.env), datos, c.env.DEMO_SOFOM_ID);
+  // El registro crea el expediente en `borrador`; el id que devuelve es
+  // el del expediente, y `web-app/` lo manda de vuelta en el envío para
+  // que la solicitud complete ese renglón en vez de abrir otro.
+  const { id } = await registrarProspecto(supabaseDe(c.env), datos, c.env.DEMO_SOFOM_ID);
 
   // El correo va DESPUÉS de que la escritura salió bien, y va en
   // `waitUntil`: la respuesta no lo espera y un fallo no la toca

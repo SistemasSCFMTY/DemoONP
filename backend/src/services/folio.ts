@@ -55,3 +55,19 @@ export async function conFolioLibre<T>(
   }
   throw ultimo;
 }
+
+/** Código de Postgres para violación de índice único. */
+const CHOQUE_UNICO = '23505';
+
+/**
+ * ¿Este fallo es una colisión de folio, y no otra cosa?
+ *
+ * Vive aquí y no en quien lo usa porque hay dos caminos que reservan
+ * folio —el registro en `borrador` y el envío— y una copia de esta
+ * condición en cada uno es una copia que se va a desincronizar.
+ */
+export const esChoqueDeFolio = (error: unknown): boolean =>
+  typeof error === 'object' &&
+  error !== null &&
+  (error as { code?: string }).code === CHOQUE_UNICO &&
+  String((error as { message?: string }).message ?? '').includes('folio');
