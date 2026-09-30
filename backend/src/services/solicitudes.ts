@@ -222,8 +222,11 @@ export async function recibirSolicitud(
   //
   // Uno por uno, a propósito. Cada archivo se materializa completo en
   // memoria para poder sellarlo, y un Worker tiene 128 MB: en paralelo,
-  // once archivos de 10 MB son un pico de 110 MB por el simple gusto de
-  // terminar antes.
+  // once archivos de 10 MB más un video de 25 MB son un pico de 135 MB
+  // —por encima del techo— por el simple gusto de terminar antes.
+  //
+  // El orden lo fija `TIPO_ARCHIVO_POR_PARTE` y `video` va al final a
+  // propósito: es la parte pesada y la única prescindible.
   const renglones: RenglonArchivo[] = [];
   const fallidos: ParteArchivo[] = [];
 
@@ -234,9 +237,13 @@ export async function recibirSolicitud(
       renglones.push(await subirArchivo(sb, folio, parte, archivo));
     } catch (error) {
       fallidos.push(parte);
+      // Nombre de la parte, tamaño y causa. Nunca el contenido ni
+      // ningún campo del expediente (01-conventions.md §1): todo lo
+      // que pasa por aquí es dato personal regulado.
       log.warn('archivo no subido', {
         folio,
         parte,
+        bytes: archivo.size,
         causa: error instanceof Error ? error.message : 'desconocida',
       });
     }

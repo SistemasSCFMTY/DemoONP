@@ -125,6 +125,7 @@ additive, so the original app is untouched — and is cleared on submission.
 | `firma` | file | png, from the signature canvas |
 | `doc_id`, `doc_curp`, `doc_fiscal`, `doc_fea`, `doc_domicilio` | file | pdf/jpg/png |
 | `doc_poder`, `doc_id_propietario`, `doc_domicilio_propietario` | file | only when tercero |
+| `video` | file | webm (Chromium) or mp4 (Safari), ≤ 25 MB. The identification recording. **Optional and never fatal**: a `video` that is rejected for its type or its size is logged and skipped, and the submission still returns 201 (CP-V1). Sent last, after every other part. |
 
 **Part name ≠ stored `tipo`.** `archivos.tipo` is the Postgres enum `tipo_archivo`,
 which already exists in the reused project and contains **none** of the eight `doc_*`
@@ -142,12 +143,20 @@ translates; the part names above are unchanged because `web-app/` is built again
 | `doc_id_propietario` | `id_propietario_real` |
 | `doc_domicilio_propietario` | `domicilio_propietario_real` |
 | `doc_id` | `otro` |
+| `video` | `video_identificacion` |
 
 `doc_id` → `otro` because `id_frente`/`id_reverso` are taken by the camera captures;
 reusing them would have the uploaded PDF overwrite the photo at the same
-`{folio}/{tipo}.{ext}` path. The full enum also has `video_identificacion`, `huella`
-and `rostro`, which this backend does not write yet — the panel may still meet them on
-older expedientes.
+`{folio}/{tipo}.{ext}` path. Of the full enum only `huella` and `rostro` remain
+unwritten — biometrics stay simulated — and the panel may still meet them on older
+expedientes.
+
+**Per-part limits, not one shared limit.** Every part accepts JPG, PNG, WEBP or PDF up
+to 10 MB, except `video`, which accepts `video/webm` or `video/mp4` up to 25 MB. One
+constant for all twelve would either starve the recording or wave through an 11 MB
+"INE photo". The MIME is matched on the media type alone: `MediaRecorder` reports
+`video/webm;codecs=vp8,opus` and the parameters are kept for the stored `Content-Type`
+but decide nothing.
 
 `201 → { folio: string, id: string }`
 
@@ -261,7 +270,8 @@ firmado_en } }`
 never mints URLs it does not render.
 
 ### `GET /expedientes/:id/archivos/:tipo`
-`tipo` ∈ the eleven upload types.
+`tipo` ∈ the twelve upload types, named either way — the part name (`doc_curp`) or the
+stored enum value (`constancia_curp`).
 `200 → { url: string, expiraEn: ISO8601 }` — short-lived signed URL, 5 minutes.
 
 ### `PATCH /expedientes/:id`

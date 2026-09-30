@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
+import type { Env } from '../env';
 import type { ExpedientePayload } from '../schemas/expediente';
-import { guardarExpediente } from './solicitudes';
+import { guardarExpediente, recibirSolicitud } from './solicitudes';
 
 /**
  * El registro crea el expediente en `borrador` y el envío lo completa.
@@ -118,5 +119,144 @@ describe('guardarExpediente', () => {
     expect(llamadas[0]!.op).toBe('insert');
     expect(llamadas[0]!.renglon).toMatchObject({ estado: 'pendiente' });
     expect(String(llamadas[0]!.renglon!['folio'])).toMatch(/^ONP-\d{6}-\d{4}$/);
+  });
+});
+
+/**
+ * El video no puede costar un expediente (CP-V1).
+ *
+ * Es la razón de ser del checkpoint. El video viaja dentro del mismo
+ * multipart que la solicitud, así que si su rechazo tumbara el envío,
+ * una grabación pesada o de un contenedor raro le costaría a alguien
+ * las veintiocho pantallas que acaba de llenar.
+ *
+ * Esto recorre `recibirSolicitud` de verdad —el `try/catch` y el
+ * arreglo `fallidos` reales—; lo único de mentiras es Supabase. La
+ * distinción importa: un archivo que el ciclo se *salta* no aparece en
+ * `archivosFallidos`. Que `video` esté ahí es la prueba de que se
+ * intentó, se rechazó y se siguió.
+ */
+
+const ENV = { DEMO_SOFOM_ID: 'sofom-1' } as Env;
+
+/** Un archivo de `bytes` bytes, sin contenido que valga nada. */
+const archivoDe = (nombre: string, mime: string, bytes: number): File =>
+  new File([new Uint8Array(bytes)], nombre, { type: mime });
+
+interface Insercion {
+  readonly tabla: string;
+  readonly renglon: unknown;
+}
+
+/**
+ * Cliente falso con tabla y bucket. Las inserciones que no llevan
+ * `.select()` se esperan directo, así que la cadena es `thenable`,
+ * igual que la de Supabase.
+ */
+function clienteConBucket(expediente: { id: string; folio: string }) {
+  const inserciones: Insercion[] = [];
+  const subidas: string[] = [];
+
+  const sb = {
+    from: (tabla: string) => ({
+      insert: (renglon: unknown) => {
+        const responder = () => {
+          inserciones.push({ tabla, renglon });
+          return { data: expediente, error: null };
+        };
+        const cadena: Record<string, unknown> = {
+          select: () => cadena,
+          single: async () => responder(),
+          maybeSingle: async () => responder(),
+          then: (ok: (v: unknown) => unknown, mal?: (e: unknown) => unknown) =>
+            Promise.resolve(responder()).then(ok, mal),
+        };
+        return cadena;
+      },
+    }),
+    storage: {
+      from: () => ({
+        upload: async (ruta: string) => {
+          subidas.push(ruta);
+          return { error: null };
+        },
+      }),
+    },
+  };
+
+  return { sb: sb as never, inserciones, subidas };
+}
+
+describe('recibirSolicitud · un video que no pasa no tumba el expediente', () => {
+  it('crea el expediente y devuelve «video» en archivosFallidos cuando pesa de más', async () => {
+    const { sb, inserciones, subidas } = clienteConBucket({
+      id: '22222222-2222-4222-8222-222222222222',
+      folio: 'ONP-260930-0042',
+    });
+
+    const form = new FormData();
+    form.set('expediente', JSON.stringify({ correo: 'x@y.mx', documento_html: '<p>x</p>' }));
+    // Una firma chica, que sí debe aterrizar…
+    form.set('firma', archivoDe('firma.png', 'image/png', 1024));
+    // …y un video de 26 MB, que no.
+    form.set('video', archivoDe('g.webm', 'video/webm', 26 * 1024 * 1024));
+
+    const creada = await recibirSolicitud(sb, ENV, form);
+
+    // 1. El expediente existe. Esto es lo que no se puede perder.
+    expect(creada.folio).toBe('ONP-260930-0042');
+    expect(creada.id).toBe('22222222-2222-4222-8222-222222222222');
+
+    // 2. El video se intentó, se rechazó y quedó anotado. Un archivo
+    //    que el ciclo se saltara no estaría en esta lista.
+    expect(creada.archivosFallidos).toEqual(['video']);
+
+    // 3. Nada del video llegó al bucket, y la firma sí.
+    expect(subidas).toEqual(['ONP-260930-0042/firma.png']);
+
+    // 4. La solicitud siguió hasta el final: renglón de `archivos`
+    //    solo para la firma, y el documento firmado escrito.
+    expect(inserciones.map((i) => i.tabla)).toEqual(['expedientes', 'archivos', 'documentos']);
+    expect(inserciones[1]!.renglon).toHaveLength(1);
+    expect(inserciones[1]!.renglon).toMatchObject([{ tipo: 'firma' }]);
+  });
+
+  it('registra el video como video_identificacion cuando sí pasa', async () => {
+    const { sb, inserciones, subidas } = clienteConBucket({
+      id: '33333333-3333-4333-8333-333333333333',
+      folio: 'ONP-260930-0043',
+    });
+
+    const form = new FormData();
+    form.set('expediente', JSON.stringify({}));
+    form.set('video', archivoDe('g.webm', 'video/webm', 4096));
+
+    const creada = await recibirSolicitud(sb, ENV, form);
+
+    expect(creada.archivosFallidos).toEqual([]);
+    expect(subidas).toEqual(['ONP-260930-0043/video_identificacion.webm']);
+    expect(inserciones[1]!.renglon).toMatchObject([
+      { tipo: 'video_identificacion', tipo_mime: 'video/webm' },
+    ]);
+  });
+
+  it('sube el video al final, después de las fotos y los comprobantes', async () => {
+    // El ciclo es secuencial y sigue el orden de `TIPO_ARCHIVO_POR_PARTE`.
+    // Si el Worker se queda sin tiempo a media subida, lo barato ya
+    // aterrizó.
+    const { sb, subidas } = clienteConBucket({
+      id: '44444444-4444-4444-8444-444444444444',
+      folio: 'ONP-260930-0044',
+    });
+
+    const form = new FormData();
+    form.set('expediente', JSON.stringify({}));
+    form.set('video', archivoDe('g.webm', 'video/webm', 2048));
+    form.set('id_frente', archivoDe('a.jpg', 'image/jpeg', 2048));
+    form.set('doc_curp', archivoDe('c.pdf', 'application/pdf', 2048));
+
+    await recibirSolicitud(sb, ENV, form);
+
+    expect(subidas.at(-1)).toBe('ONP-260930-0044/video_identificacion.webm');
   });
 });
