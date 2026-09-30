@@ -124,6 +124,14 @@ different facts. A runtime fallback is also never a dead end: say what failed in
 the person can act on, and give them an explicit control to carry on without the
 artifact rather than quietly faking it.
 
+A **degraded submission** follows the same rule. `POST /solicitudes` retries once
+without the videograbación when the first attempt dies on the wire, and the prospect is
+told while it retries *and* on screen 28, the screen they keep: the application was
+received, the recording was not attached — never wording that implies the video is
+there. The retry itself fires only on `status === 0`, never on a status the Worker
+answered with: a 5xx may have committed the expediente already, and two folios for one
+person is worse than a lost recording. CP-V4, 2026-09-30.
+
 ## Validation and errors
 
 Inline, under the field, in Spanish, naming the field and what is wrong:

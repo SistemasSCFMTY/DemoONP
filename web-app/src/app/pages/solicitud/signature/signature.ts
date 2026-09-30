@@ -3,6 +3,7 @@ import {
   Component,
   ElementRef,
   afterNextRender,
+  computed,
   inject,
   signal,
   viewChild,
@@ -13,10 +14,14 @@ import { NavegacionService } from '../../../core/navegacion-service';
 import { Geolocalizacion } from '../../../services/domain/geolocalizacion';
 import { armarExpediente } from '../../../services/domain/expediente-armador';
 import { mensajeDeApi } from '../../../services/http/api-base';
-import { SolicitudesHttp, type TipoArchivo } from '../../../services/http/solicitudes-http';
+import {
+  SolicitudesHttp,
+  type EnvioSolicitud,
+  type TipoArchivo,
+} from '../../../services/http/solicitudes-http';
 import { BorrarFirma, GuardarFirma } from '../../../state/identidad/identidad.actions';
 import { IdentidadState } from '../../../state/identidad/identidad.state';
-import { EstablecerFolio } from '../../../state/sesion/sesion.actions';
+import { EstablecerFolio, RegistrarVideoNoAdjuntado } from '../../../state/sesion/sesion.actions';
 import { SesionState } from '../../../state/sesion/sesion.state';
 import { SimuladorState } from '../../../state/simulador/simulador.state';
 import { SolicitudState } from '../../../state/solicitud/solicitud.state';
@@ -58,7 +63,20 @@ export class Signature {
   protected readonly marca = BRAND;
   protected readonly hayTrazo = signal(false);
   protected readonly enviando = signal(false);
+  /**
+   * The first attempt died on the wire and the second one is in flight
+   * without the videograbación (03-videograbacion.md, CP-V4). Visible while
+   * it happens: the retry roughly doubles the wait, and a silent second
+   * minute on the slowest click in the flow reads as a frozen app.
+   */
+  protected readonly reintentandoSinVideo = signal(false);
   protected readonly error = signal('');
+
+  protected readonly etiquetaEnvio = computed(() => {
+    if (this.reintentandoSinVideo()) return 'Reintentando sin la videograbación…';
+    if (this.enviando()) return 'Enviando tu solicitud…';
+    return 'Completar Etapa 2';
+  });
 
   private readonly lienzo = viewChild.required<ElementRef<HTMLCanvasElement>>('lienzo');
   private ctx: CanvasRenderingContext2D | null = null;
@@ -168,22 +186,34 @@ export class Signature {
         if (archivo) archivos.set(tipo as TipoArchivo, archivo);
       }
 
-      const respuesta = await new Promise<{ folio: string } | null>((resolver) => {
-        this.solicitudes.enviar({ ...expediente, firmado: true }, archivos).subscribe({
-          next: (r) => resolver(r),
-          error: (err) => {
-            this.error.set(mensajeDeApi(err));
-            resolver(null);
-          },
-        });
+      // A first attempt that dies on the wire is retried once without the
+      // `video` part, and only then — the policy and the duplicate-expediente
+      // reasoning live in `services/http/reintento-video.ts`.
+      const envio = await new Promise<EnvioSolicitud | null>((resolver) => {
+        this.solicitudes
+          .enviar({ ...expediente, firmado: true }, archivos, {
+            alReintentarSinVideo: () => this.reintentandoSinVideo.set(true),
+          })
+          .subscribe({
+            next: (r) => resolver(r),
+            error: (err) => {
+              this.error.set(mensajeDeApi(err));
+              resolver(null);
+            },
+          });
       });
 
-      if (!respuesta) return;
+      if (!envio) return;
 
-      this.store.dispatch(new EstablecerFolio(respuesta.folio));
+      this.store.dispatch(new EstablecerFolio(envio.respuesta.folio));
+      // Carried to screen 28, which is where the prospect reads the outcome
+      // and keeps the folio. Saying it only on this screen would say it to
+      // nobody: the navigation happens in the same tick.
+      if (envio.videoOmitido) this.store.dispatch(new RegistrarVideoNoAdjuntado());
       void this.navegacion.avanzar('complete', 'signature');
     } finally {
       this.enviando.set(false);
+      this.reintentandoSinVideo.set(false);
     }
   }
 

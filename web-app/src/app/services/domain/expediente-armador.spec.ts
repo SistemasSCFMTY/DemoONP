@@ -100,6 +100,7 @@ const SESION: SesionModel = {
   otpValidado: true,
   paso: null,
   folio: null,
+  videoNoAdjuntado: false,
 };
 
 function fuentes(sesion: Partial<SesionModel> = {}, solicitud: Partial<SolicitudModel> = {}) {

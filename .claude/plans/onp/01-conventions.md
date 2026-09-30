@@ -494,6 +494,23 @@ of 28. The failure is stated in words they can act on, and an explicit second co
 carries them on without the artifact — their choice, visible, rather than a fallback
 that quietly fakes the thing.
 
+**A degraded submission says what it dropped, and says it where the person will read
+it.** `POST /solicitudes` retries once without the `video` part when the first attempt
+dies on the wire — the recording is ~97% of that request (1,665,296 bytes against 4–7 KB
+per file, measured on folio `ONP-260930-6659`), so dropping it is the difference between
+an expediente and none. The prospect is told while the second attempt is in flight *and*
+on screen 28, which is the screen they keep: the application was received, the recording
+was not attached. Never wording that lets them believe the video is there.
+
+**And a write is retried only on a failure that proves it never landed.** Only
+`status === 0` — a transport failure the browser itself reported. Any status the Worker
+answered with, 5xx included, is refused: a 500 raised after the `expedientes` row was
+written is indistinguishable from one raised before it, and a blind second attempt
+leaves two folios, two sets of KYC files and an analyst who cannot tell which is real.
+No client-side timeout either — aborting a slow-but-working upload manufactures that
+same duplicate. The clean fix is an idempotency key the Worker honours; until `backend/`
+has one, this is the safe subset. Established in CP-V4, 2026-09-30.
+
 ---
 
 ## 12. The staff panel (`superadmin-app/`)

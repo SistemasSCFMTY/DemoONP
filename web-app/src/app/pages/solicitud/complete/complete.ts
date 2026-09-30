@@ -67,6 +67,12 @@ export class Complete {
   private readonly folioCrudo = this.store.selectSignal(SesionState.folio);
   protected readonly folio = computed(() => this.folioCrudo() ?? '—');
   protected readonly esLocal = computed(() => (this.folioCrudo() ?? '').startsWith('LOCAL-'));
+  /**
+   * The submission went out a second time without the videograbación
+   * (03-videograbacion.md, CP-V4). Said here because this is the screen the
+   * prospect reads and keeps — 01-conventions.md §11.
+   */
+  protected readonly videoNoAdjuntado = this.store.selectSignal(SesionState.videoNoAdjuntado);
 
   private readonly firma = this.store.selectSignal(IdentidadState.firma);
   private readonly hoja = viewChild.required('hoja', { read: ElementRef });
