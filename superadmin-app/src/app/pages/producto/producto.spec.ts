@@ -30,7 +30,7 @@ describe('ProductoVista', () => {
 
     const fixture = TestBed.createComponent(ProductoVista);
     await fixture.whenStable();
-    await esperarA(() => !store.selectSnapshot(ProductoState.cargando));
+    await esperarA(() => store.selectSnapshot(ProductoState.producto) !== null);
     await fixture.whenStable();
 
     const texto: string = fixture.nativeElement.textContent;
@@ -51,7 +51,7 @@ describe('ProductoVista', () => {
 
     const fixture = TestBed.createComponent(ProductoVista);
     await fixture.whenStable();
-    await esperarA(() => !store.selectSnapshot(ProductoState.cargando));
+    await esperarA(() => store.selectSnapshot(ProductoState.producto) !== null);
     await fixture.whenStable();
 
     const form: HTMLFormElement = fixture.nativeElement.querySelector('form');
@@ -69,7 +69,13 @@ describe('ProductoVista', () => {
   });
 });
 
-/** Polls until `condicion` holds, so the test waits on the real timers. */
+/**
+ * Polls until `condicion` holds, so the test waits on the real timers.
+ *
+ * It waits for the *result*, never for a `cargando` flag: every loading flag
+ * in this app starts false, so polling one can pass before the load has even
+ * been dispatched. That race made this suite fail about one run in ten.
+ */
 async function esperarA(condicion: () => boolean, msMaximo = 3000): Promise<void> {
   const limite = Date.now() + msMaximo;
   while (!condicion()) {
