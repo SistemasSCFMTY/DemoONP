@@ -31,3 +31,18 @@ export const unauthorized = (m = 'No tienes acceso.') => new ApiError('NO_AUTORI
 export const notFound = (m = 'No encontramos lo que buscas.') => new ApiError('NO_ENCONTRADO', m, 404);
 export const internal = (cause?: unknown) =>
   new ApiError('ERROR_INTERNO', 'Algo salió mal de nuestro lado. Inténtalo de nuevo.', 500, cause);
+
+/**
+ * El código no existe, ya se usó, o no es el de este teléfono.
+ *
+ * Un solo mensaje para los tres casos. Distinguirlos le diría a quien
+ * prueba códigos cuáles van por buen camino.
+ */
+export const otpInvalido = () =>
+  new ApiError('OTP_INVALIDO', 'Ese código no es correcto. Revísalo o pide uno nuevo.', 400);
+
+export const otpExpirado = () =>
+  new ApiError('OTP_EXPIRADO', 'El código venció. Pide uno nuevo.', 400);
+
+export const demasiadasSolicitudes = (m = 'Espera un momento antes de volver a intentarlo.') =>
+  new ApiError('DEMASIADAS_SOLICITUDES', m, 429);

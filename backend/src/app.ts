@@ -5,6 +5,7 @@ import type { Env } from './env';
 import { ApiError, internal } from './lib/errors';
 import { log } from './lib/log';
 import { expedientes } from './routes/expedientes';
+import { otp } from './routes/otp';
 import { solicitudes } from './routes/solicitudes';
 
 export const app = new Hono<{ Bindings: Env }>();
@@ -60,6 +61,7 @@ app.get('/health', (c) => c.json({ ok: true, at: new Date().toISOString() }));
 
 app.route('/solicitudes', solicitudes);
 app.route('/expedientes', expedientes);
+app.route('/otp', otp);
 
 /**
  * Un solo sobre de salida: `{ error: { code, message } }`.
