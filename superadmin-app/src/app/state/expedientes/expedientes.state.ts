@@ -31,6 +31,11 @@ export interface EstadoArchivo {
 export interface ModeloExpedientes {
   readonly items: readonly ExpedienteResumen[];
   readonly total: number;
+  /**
+   * The filters the list was last loaded with, so "Volver a la lista" returns
+   * the operator to the rows they came from instead of an unfiltered page.
+   */
+  readonly filtros: FiltrosExpedientes;
   readonly cargandoLista: boolean;
   readonly errorLista: string | null;
 
@@ -69,6 +74,7 @@ const SIN_DETALLE = {
   defaults: {
     items: [],
     total: 0,
+    filtros: { q: '', estado: null, limit: 25, offset: 0 },
     cargandoLista: false,
     errorLista: null,
     ...SIN_DETALLE,
@@ -86,6 +92,11 @@ export class ExpedientesState {
   @Selector()
   static total(estado: ModeloExpedientes): number {
     return estado.total;
+  }
+
+  @Selector()
+  static filtros(estado: ModeloExpedientes): FiltrosExpedientes {
+    return estado.filtros;
   }
 
   @Selector()
@@ -125,7 +136,7 @@ export class ExpedientesState {
 
   @Action(CargarExpedientes)
   cargarLista(ctx: StateContext<ModeloExpedientes>, { filtros }: CargarExpedientes) {
-    ctx.patchState({ cargandoLista: true, errorLista: null });
+    ctx.patchState({ cargandoLista: true, errorLista: null, filtros });
 
     return this.#api.listarExpedientes(filtros).pipe(
       tap((pagina) =>

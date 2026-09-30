@@ -25,6 +25,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/expedientes/expedientes').then((m) => m.Expedientes),
       },
+      {
+        path: 'expedientes/:id',
+        title: 'Expediente — ONP FER',
+        loadComponent: () =>
+          import('./pages/expediente-detalle/expediente-detalle').then(
+            (m) => m.ExpedienteDetalleVista,
+          ),
+      },
       { path: '', pathMatch: 'full', redirectTo: 'expedientes' },
     ],
   },

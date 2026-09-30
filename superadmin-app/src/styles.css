@@ -177,3 +177,62 @@
 .p-datatable {
   font-family: var(--font-body);
 }
+
+/* --------------------------------------------------------------------------
+   The signed solicitud, rendered inline in the expediente detail.
+   --------------------------------------------------------------------------
+   Global rather than component-scoped for a mechanical reason: the markup
+   arrives from the Worker as `documento.contenido_html` and is written with
+   `[innerHTML]`, so Angular's view encapsulation never stamps its attribute
+   onto those elements and a scoped rule cannot reach them.
+
+   Ported from the source's `.doc-hoja` (onp_fer_etapa2_pf.html:136–149). The
+   same rules exist a second time in ImpresionDocumento, restated for paper —
+   the printed solicitud is a legal document with its own measure, not a
+   component of the panel.
+   -------------------------------------------------------------------------- */
+.doc-hoja {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 26px 22px;
+  font-size: 0.75rem;
+  line-height: 1.65;
+  color: var(--color-text);
+}
+
+.doc-hoja p { margin: 0 0 9px 0; }
+.doc-hoja p.c { text-align: center; }
+.doc-hoja p.r { text-align: right; }
+.doc-hoja p.j { text-align: justify; }
+.doc-hoja p.b { font-weight: 700; }
+
+.doc-hoja h1,
+.doc-hoja h2,
+.doc-hoja h3 {
+  font-family: var(--font-heading);
+  color: var(--color-navy-deep);
+  margin: 14px 0 7px 0;
+}
+
+.doc-hoja h1 { font-size: 0.9375rem; text-align: center; }
+.doc-hoja h2 { font-size: 0.8125rem; }
+.doc-hoja h3 { font-size: 0.75rem; }
+
+.doc-hoja table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 9px 0;
+  font-size: 0.6875rem;
+}
+
+.doc-hoja td,
+.doc-hoja th {
+  border: 1px solid var(--color-border);
+  padding: 5px 7px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.doc-hoja .firma-zona { margin-top: 26px; text-align: center; }
+.doc-hoja .firma-zona img { max-width: 190px; display: block; margin: 0 auto 2px; }

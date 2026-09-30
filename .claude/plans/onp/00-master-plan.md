@@ -274,7 +274,7 @@ descope — no SOFOM management, no panel-user management, no cross-tenant searc
 | F13 | QA pass | P2 | frontend | F12 | ☐ |
 | S1 | Scaffold, shell, login | P0 | superadmin | 0.2, B7 | ☑ |
 | S2 | Expedientes list | P0 | superadmin | S1, B4 | ☑ |
-| S3 | Expediente detail | P0 | superadmin | S2, B4 | ☐ |
+| S3 | Expediente detail | P0 | superadmin | S2, B4 | ☑ |
 | S4 | Deploy to Pages | P0 | superadmin | S3, B8 | ☐ |
 | S5 | Producto | P1 | superadmin | S1, B9 | ☐ |
 | S6 | Formatos and Ajustes | P2 | superadmin | S1 | ☐ |
