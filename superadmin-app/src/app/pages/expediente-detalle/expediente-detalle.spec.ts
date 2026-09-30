@@ -74,6 +74,89 @@ describe('ExpedienteDetalleVista', () => {
     expect(completo.id).not.toContain(completo.folio);
     expect(completo.id).not.toContain(completo.curp ?? '');
   });
+
+  /**
+   * CP-V3. Two assertions that would each have caught a real defect:
+   *
+   * - the file list naming the videograbación instead of printing a blank
+   *   row, which is what an unmapped `tipo` does;
+   * - `preload="metadata"` on the player, which is the difference between
+   *   opening an expediente and pulling a 25 MB file for it.
+   */
+  it('names the videograbación and plays it without preloading it', async () => {
+    const store = TestBed.inject(Store);
+
+    const fixture = TestBed.createComponent(ExpedienteDetalleVista);
+    fixture.componentRef.setInput('id', completo.id);
+    await fixture.whenStable();
+    await esperarA(() => store.selectSnapshot(ExpedientesState.abierto) !== null);
+    await fixture.whenStable();
+
+    // The seeded complete expediente carries one.
+    expect(completo.archivos.some((a) => a.tipo === 'video_identificacion')).toBe(true);
+
+    // No row in "Archivos recibidos" is nameless.
+    const nombres: string[] = Array.from<HTMLElement>(
+      fixture.nativeElement.querySelectorAll('li'),
+    )
+      .filter((li) => li.querySelector('.font-mono'))
+      .map((li) => li.querySelector('p')!.textContent!.trim());
+    expect(nombres.length).toBe(completo.archivos.length);
+    expect(nombres).not.toContain('');
+    expect(nombres).toContain('Videograbación de identificación');
+
+    // The player is mounted, and mounted with the right attributes.
+    await esperarA(() => fixture.nativeElement.querySelector('video') !== null);
+    const video: HTMLVideoElement = fixture.nativeElement.querySelector('video');
+    expect(video.getAttribute('preload')).toBe('metadata');
+    expect(video.hasAttribute('controls')).toBe(true);
+    expect(video.hasAttribute('playsinline')).toBe(true);
+    expect(video.getAttribute('src')).toBeTruthy();
+    // §9: the element needs an accessible name of its own — a figcaption is
+    // not one.
+    expect(video.getAttribute('aria-label')).toBeTruthy();
+  });
+});
+
+/**
+ * The videograbación that was recorded and never arrived.
+ *
+ * `03-videograbacion.md`: the video is the one upload allowed to fail without
+ * costing the submission, so `video_grabado` set with no
+ * `video_identificacion` row is a state the Worker can legitimately produce.
+ * An analyst must be able to tell it apart from a prospect who never
+ * recorded one. The seeded Robles expediente is exactly that shape.
+ */
+describe('ExpedienteDetalleVista — videograbación declarada sin archivo', () => {
+  const sinVideo = EXPEDIENTES_SIMULADOS[1];
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideZonelessChangeDetection(),
+        provideRouter([]),
+        provideStore([PanelState, ExpedientesState]),
+        { provide: PanelApi, useClass: PanelApiSimulada },
+      ],
+    });
+  });
+
+  it('says so instead of showing an empty player', async () => {
+    expect(sinVideo.video_grabado).toBe(true);
+    expect(sinVideo.archivos.some((a) => a.tipo === 'video_identificacion')).toBe(false);
+
+    const store = TestBed.inject(Store);
+    const fixture = TestBed.createComponent(ExpedienteDetalleVista);
+    fixture.componentRef.setInput('id', sinVideo.id);
+    await fixture.whenStable();
+    await esperarA(() => store.selectSnapshot(ExpedientesState.abierto) !== null);
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelector('video')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain(
+      'La solicitud registra la videograbación, pero el archivo no llegó al expediente.',
+    );
+  });
 });
 
 /**

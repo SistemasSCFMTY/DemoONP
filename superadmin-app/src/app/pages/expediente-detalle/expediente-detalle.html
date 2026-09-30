@@ -87,6 +87,26 @@
           }
         </panel-seccion>
 
+        <!-- The video is a file in the expediente like any other — same
+             `expedientes/{folio}/` folder, same `archivos` row — so it is
+             evidence in the same column, next to the photographs it was
+             recorded between, not a feature with a section of its own. -->
+        <panel-seccion titulo="Videograbación de identificación">
+          @if (tieneVideo()) {
+            <panel-archivo-video
+              [expedienteId]="e.id"
+              pie="Videograbación capturada durante la solicitud"
+            />
+          } @else if (videoDeclaradoSinArchivo()) {
+            <p class="text-sm text-warning">
+              La solicitud registra la videograbación, pero el archivo no llegó al
+              expediente.
+            </p>
+          } @else {
+            <p class="text-sm text-text-soft">No se registró la videograbación.</p>
+          }
+        </panel-seccion>
+
         <panel-seccion titulo="Firma del solicitante">
           @if (tieneFirma()) {
             <panel-archivo-imagen

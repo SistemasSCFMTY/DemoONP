@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, delay, of, switchMap, throwError, timer } from 'rxjs';
 
+import { TIPO_ARCHIVO_VIDEO } from '../../model/constants/expediente/tipos-archivo';
 import { EstadoExpediente } from '../../model/interfaces/estado-expediente';
 import { ErrorApi } from '../../model/interfaces/error-api';
 import {
@@ -24,6 +25,7 @@ import {
 import { EXPEDIENTES_SIMULADOS } from './expedientes-simulados';
 import { IMAGENES_SIMULADAS } from './imagenes-simuladas';
 import { PanelApi } from './panel-api';
+import { VIDEO_SIMULADO } from './video-simulado';
 
 /**
  * An in-memory `PanelApi`, for building the panel while CP-B4 and CP-B7 are
@@ -145,7 +147,7 @@ export class PanelApiSimulada extends PanelApi {
   }
 
   override urlArchivo(id: string, tipo: TipoArchivo): Observable<UrlFirmada> {
-    const url = this.#imagenDe(id, tipo);
+    const url = this.#archivoDe(id, tipo);
     if (!url) {
       return this.#falla('NO_ENCONTRADO', 'Ese archivo no está en el expediente.', 180);
     }
@@ -233,20 +235,41 @@ export class PanelApiSimulada extends PanelApi {
   }
 
   /**
-   * Only the three image slots have a stand-in drawing. A `doc_*` upload is a
-   * PDF in the real bucket and the detail view lists it rather than painting
-   * it, so there is nothing to invent.
+   * Only the slots the detail view actually paints have a stand-in: the three
+   * images and the videograbación. A document upload is a PDF in the real
+   * bucket and the view lists it rather than painting it, so there is nothing
+   * to invent.
+   *
+   * The video is one clip for every expediente that has one, not one per
+   * person: it is a placeholder for the bytes, and three copies of the same
+   * 10 kB drawing would only be three copies.
    */
-  #imagenDe(id: string, tipo: TipoArchivo): string | null {
-    if (tipo !== 'id_frente' && tipo !== 'id_reverso' && tipo !== 'firma') return null;
-
+  #archivoDe(id: string, tipo: TipoArchivo): string | null {
     const juego = {
       'a7f3c2d1-9e44-4b21-8f07-2c5d3e1a9b60': IMAGENES_SIMULADAS.paez,
       'b2e91f47-3a05-4c8d-91be-7d4a60c3f215': IMAGENES_SIMULADAS.robles,
       'c5d80b36-71fa-4e93-a2c4-8b19f7e0d452': IMAGENES_SIMULADAS.villalobos,
     }[id];
 
-    return juego ? juego[tipo] : null;
+    if (!juego) return null;
+    if (tipo === TIPO_ARCHIVO_VIDEO) return this.#tieneArchivo(id, tipo) ? VIDEO_SIMULADO : null;
+    if (tipo === 'id_frente' || tipo === 'id_reverso' || tipo === 'firma') return juego[tipo];
+    return null;
+  }
+
+  /**
+   * Whether the expediente really carries that file.
+   *
+   * The images predate this check and get away without it, but the video does
+   * not: the seeded Robles expediente declares `video_grabado` and has no
+   * `video_identificacion` row, and a mock that handed back a clip anyway
+   * would make the "recorded but the file never arrived" state unreachable —
+   * the one state the panel most needs to be able to show (CP-V1's
+   * `archivosFallidos`).
+   */
+  #tieneArchivo(id: string, tipo: TipoArchivo): boolean {
+    const expediente = EXPEDIENTES_SIMULADOS.find((e) => e.id === id);
+    return expediente?.archivos.some((a) => a.tipo === tipo) ?? false;
   }
 
   /**

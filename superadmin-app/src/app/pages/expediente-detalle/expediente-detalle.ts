@@ -30,7 +30,10 @@ import {
   definicionEstado,
 } from '../../model/constants/expediente/estados-expediente';
 import { NOMBRE_MOMENTO } from '../../model/constants/expediente/momentos-ubicacion';
-import { NOMBRE_ARCHIVO } from '../../model/constants/expediente/tipos-archivo';
+import {
+  NOMBRE_ARCHIVO,
+  TIPO_ARCHIVO_VIDEO,
+} from '../../model/constants/expediente/tipos-archivo';
 import { EstadoExpediente } from '../../model/interfaces/estado-expediente';
 import { TipoArchivo } from '../../model/interfaces/expediente-detalle';
 import { FechaMxPipe } from '../../pipes/fecha-mx.pipe';
@@ -45,6 +48,7 @@ import {
 } from '../../state/expedientes/expedientes.actions';
 import { ExpedientesState } from '../../state/expedientes/expedientes.state';
 import { ArchivoImagen } from '../../ui/archivo-imagen/archivo-imagen';
+import { ArchivoVideo } from '../../ui/archivo-video/archivo-video';
 import { DatoFila } from '../../ui/dato-fila/dato-fila';
 import { EstadoBadge } from '../../ui/estado-badge/estado-badge';
 import { Seccion } from '../../ui/seccion/seccion';
@@ -86,6 +90,7 @@ import { Seccion } from '../../ui/seccion/seccion';
     DatoFila,
     EstadoBadge,
     ArchivoImagen,
+    ArchivoVideo,
     PesosPipe,
     FechaMxPipe,
     SiNoPipe,
@@ -191,7 +196,21 @@ export class ExpedienteDetalleVista implements AfterViewInit {
   protected readonly tieneFrente = computed(() => this.#tipos().has('id_frente'));
   protected readonly tieneReverso = computed(() => this.#tipos().has('id_reverso'));
   protected readonly tieneFirma = computed(() => this.#tipos().has('firma'));
+  protected readonly tieneVideo = computed(() => this.#tipos().has(TIPO_ARCHIVO_VIDEO));
   protected readonly tieneFotos = computed(() => this.tieneFrente() || this.tieneReverso());
+
+  /**
+   * The expediente says a video was recorded and no video arrived.
+   *
+   * Not a rare edge: the video is the one upload allowed to fail without
+   * costing the submission (`03-videograbacion.md`), so the Worker can
+   * legitimately create an expediente with `video_grabado` set and the part
+   * listed in `archivosFallidos`. An analyst has to be able to tell that from
+   * a prospect who never recorded one, and a blank panel says neither.
+   */
+  protected readonly videoDeclaradoSinArchivo = computed(
+    () => !this.tieneVideo() && (this.expediente()?.video_grabado ?? false),
+  );
 
   protected readonly plazo = computed(() => {
     const meses = this.expediente()?.plazo_solicitado_meses;

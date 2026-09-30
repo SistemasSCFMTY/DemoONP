@@ -644,6 +644,19 @@ does not help: Angular decodes HTML entities before it parses interpolation, so 
 braces come back and the expression fails to compile. The catalogue of claves builds
 those strings in TypeScript, through the `llaves` pipe.
 
+**Evidence media is one element per medium, never one component with a `@switch`.**
+`panel-archivo-imagen` paints an `<img>`, `panel-archivo-video` a `<video>`; they share
+the signed-URL path through `CargarArchivo` and nothing else. A `<video>` in an
+evidence column carries three rules of its own:
+
+- `preload="metadata"`, **never `auto`** — opening an expediente must not pull the
+  whole recording. A 25 MB file per expediente an analyst merely glances at is a bill
+  and a stall, not a feature.
+- `playsinline`, so iOS does not take the player fullscreen on tap.
+- `w-full max-w-full` on the element. A replaced element with an intrinsic width is the
+  classic way to make a page scroll sideways, and the expedientes table is the only
+  thing in this panel allowed to do that.
+
 **Never point the panel at `wrangler dev` and press a write button.** That Worker
 talks to the owner's live production Supabase, not a local database: `PUT /sofom`
 overwrites the single tenant row whose razón social is printed in every email footer,
@@ -668,6 +681,24 @@ exist in two `styles.css` files and the API types in two Angular apps plus the W
 **These drift silently; the compiler will not catch it.** §3 and `02-api-contract.md`
 are the referees. A PR that changes one copy must change the others in the same PR, and
 a reviewer who sees a token changed in one place only should block it.
+
+**Copying a shape is not copying a spelling.** `TipoArchivo` exists in both apps and
+means two different lists on purpose:
+
+- In `web-app/` it is the **multipart part name** — what `POST /solicitudes` sends
+  (`doc_curp`, `doc_domicilio`, and `video` from CP-V2).
+- In `superadmin-app/` it is the **Postgres `tipo_archivo` enum** — what an `archivos`
+  row stores and what `GET /expedientes/:id` returns (`constancia_curp`,
+  `comprobante_domicilio`, `video_identificacion`). The Worker translates between them
+  on the way in, in `TIPO_ARCHIVO_POR_PARTE`.
+
+The panel's copy was the part names until CP-V3, so `NOMBRE_ARCHIVO` was keyed on a
+vocabulary the API never sends and eight of the eleven rows in "Archivos recibidos"
+rendered with no name at all. The mock spoke the part names too, which is why nothing
+caught it: **a mock that is more convenient than the API it stands in for hides exactly
+the bug it should expose.** `superadmin-app/`'s
+`model/constants/expediente/tipos-archivo.spec.ts` now holds a hand-copy of the enum
+and fails when the two lists part company.
 
 ---
 
