@@ -33,6 +33,11 @@ export const routes: Routes = [
             (m) => m.ExpedienteDetalleVista,
           ),
       },
+      {
+        path: 'producto',
+        title: 'Producto — ONP FER',
+        loadComponent: () => import('./pages/producto/producto').then((m) => m.ProductoVista),
+      },
       { path: '', pathMatch: 'full', redirectTo: 'expedientes' },
     ],
   },

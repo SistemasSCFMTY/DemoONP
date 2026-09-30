@@ -15,10 +15,10 @@ interface SeccionNav {
 /**
  * The signed-in chrome: nav rail, the operator's identity, logout.
  *
- * The source's four tabs (`onp_fer_etapa2_pf.html:1918`) are down to one.
- * *Formatos* and *Ajustes* are CP-S6, expected to be cut; *Producto* is CP-S5
- * and P1, so its entry lands with that checkpoint rather than as a dead link
- * here.
+ * The source's four tabs (`onp_fer_etapa2_pf.html:1918`) are down to two.
+ * *Formatos* and *Ajustes* are CP-S6 and expected to be cut: branding lives in
+ * `brand.config.ts` now, and the Ajustes tab's connection-string fields went
+ * with the Worker taking ownership of the credentials.
  */
 @Component({
   selector: 'panel-shell',
@@ -42,6 +42,7 @@ export class PanelShell {
 
   protected readonly secciones: readonly SeccionNav[] = [
     { ruta: '/expedientes', etiqueta: 'Expedientes', icono: 'expedientes' },
+    { ruta: '/producto', etiqueta: 'Producto', icono: 'producto' },
   ];
 
   protected salir(): void {

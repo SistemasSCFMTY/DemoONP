@@ -239,8 +239,13 @@ descope — no SOFOM management, no panel-user management, no cross-tenant searc
       reload on the detail view is not a CDN 404, and `superadmin-app/README.md` with
       the build and deploy steps. Confirming login against the deployed Worker waits
       on CP-B8.
-- [ ] **CP-S5 · P1 — Producto.** The simulator parameters (`:5354`) against CP-B9, with
-      a preview of the catálogo copy they generate.
+- [x] **CP-S5 · P1 — Producto.** The simulator parameters (`:5354`) against CP-B9, with
+      a preview of the catálogo copy they generate. Built against the contract's
+      `GET`/`PUT /producto` and the in-memory API until CP-B9 lands. `monto_paso`,
+      `plazo_paso`, `nombre` and `iva` are in `PRODUCTO` (`:2340`) but **not** in
+      `02-api-contract.md`; the source's screen edits two of them, so either the
+      contract grows or the simulator's step size stops being configurable —
+      `onp-backend` and the owner to decide.
 - [ ] **CP-S6 · P2 — Formatos and Ajustes.** `.docx` upload and the sofom identity
       editor. **Expected to be cut** — branding is `brand.config.ts` now, and the
       Ajustes tab's connection-string fields are gone with the Worker owning the
@@ -284,7 +289,7 @@ descope — no SOFOM management, no panel-user management, no cross-tenant searc
 | S2 | Expedientes list | P0 | superadmin | S1, B4 | ☑ |
 | S3 | Expediente detail | P0 | superadmin | S2, B4 | ☑ |
 | S4 | Deploy to Pages | P0 | superadmin | S3, B8 | ◐ |
-| S5 | Producto | P1 | superadmin | S1, B9 | ☐ |
+| S5 | Producto | P1 | superadmin | S1, B9 | ☑ |
 | S6 | Formatos and Ajustes | P2 | superadmin | S1 | ☐ |
 
 **26 P0 · 4 P1 · 5 P2.** ◐ = built and documented, waiting on a dependency to close.

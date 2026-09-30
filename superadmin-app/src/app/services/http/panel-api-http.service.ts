@@ -13,6 +13,7 @@ import {
   FiltrosExpedientes,
   PaginaExpedientes,
 } from '../../model/interfaces/expediente-resumen';
+import { Producto } from '../../model/interfaces/producto';
 import { CredencialesPanel, SesionPanel } from '../../model/interfaces/sesion-panel';
 import { PanelApi } from './panel-api';
 
@@ -86,5 +87,15 @@ export class PanelApiHttp extends PanelApi {
         { withCredentials: true },
       )
       .pipe(map((r) => r.estado));
+  }
+
+  override obtenerProducto(): Observable<Producto> {
+    return this.#http.get<Producto>(`${this.#base}/producto`, { withCredentials: true });
+  }
+
+  override guardarProducto(producto: Producto): Observable<Producto> {
+    return this.#http.put<Producto>(`${this.#base}/producto`, producto, {
+      withCredentials: true,
+    });
   }
 }

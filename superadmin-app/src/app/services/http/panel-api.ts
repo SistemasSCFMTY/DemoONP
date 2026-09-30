@@ -6,6 +6,7 @@ import {
   FiltrosExpedientes,
   PaginaExpedientes,
 } from '../../model/interfaces/expediente-resumen';
+import { Producto } from '../../model/interfaces/producto';
 import { CredencialesPanel, SesionPanel } from '../../model/interfaces/sesion-panel';
 
 /**
@@ -49,4 +50,10 @@ export abstract class PanelApi {
 
   /** `PATCH /expedientes/:id` — the estado change from `:5640`. */
   abstract cambiarEstado(id: string, estado: EstadoExpediente): Observable<EstadoExpediente>;
+
+  /** `GET /producto` — the simulator parameters. Public, but read here too. */
+  abstract obtenerProducto(): Observable<Producto>;
+
+  /** `PUT /producto` — edits what the prospect's simulator shows. */
+  abstract guardarProducto(producto: Producto): Observable<Producto>;
 }

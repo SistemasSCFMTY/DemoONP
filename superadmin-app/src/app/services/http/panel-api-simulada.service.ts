@@ -13,6 +13,7 @@ import {
   FiltrosExpedientes,
   PaginaExpedientes,
 } from '../../model/interfaces/expediente-resumen';
+import { Producto } from '../../model/interfaces/producto';
 import { CredencialesPanel, SesionPanel } from '../../model/interfaces/sesion-panel';
 import { EXPEDIENTES_SIMULADOS } from './expedientes-simulados';
 import { IMAGENES_SIMULADAS } from './imagenes-simuladas';
@@ -38,6 +39,21 @@ export class PanelApiSimulada extends PanelApi {
   readonly #estados = new Map<string, EstadoExpediente>();
 
   #sesion: SesionPanel | null = null;
+
+  /**
+   * `PRODUCTO`'s defaults, verbatim from the source (`:2340`), minus the four
+   * fields the API contract does not carry.
+   */
+  #producto: Producto = {
+    monto_min: 5000,
+    monto_max: 200000,
+    plazo_min: 6,
+    plazo_max: 72,
+    tasa_anual: 36,
+    comision_apertura: true,
+    comision_pct: 2,
+    comision_desde: 10000,
+  };
 
   override iniciarSesion(credenciales: CredencialesPanel): Observable<SesionPanel> {
     const correo = credenciales.correo.trim();
@@ -126,6 +142,15 @@ export class PanelApiSimulada extends PanelApi {
     }
     this.#estados.set(id, estado);
     return of(estado).pipe(delay(300));
+  }
+
+  override obtenerProducto(): Observable<Producto> {
+    return of(this.#producto).pipe(delay(240));
+  }
+
+  override guardarProducto(producto: Producto): Observable<Producto> {
+    this.#producto = producto;
+    return of(producto).pipe(delay(380));
   }
 
   #estadoDe(expediente: ExpedienteDetalle): EstadoExpediente {

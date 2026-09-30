@@ -127,7 +127,7 @@ const DOCUMENTO_PAEZ = `
     <tr><th>Monto</th><td>$80,000</td></tr>
     <tr><th>Plazo</th><td>36 meses</td></tr>
     <tr><th>Tasa anual fija</th><td>36%</td></tr>
-    <tr><th>Pago mensual estimado</th><td>$3,657</td></tr>
+    <tr><th>Pago mensual estimado</th><td>$3,664</td></tr>
     <tr><th>Comisión de apertura</th><td>$1,600</td></tr>
   </table>
   <p class="j">El solicitante manifiesta bajo protesta de decir verdad que los datos
@@ -231,11 +231,12 @@ export const EXPEDIENTES_SIMULADOS: readonly ExpedienteDetalle[] = [
       },
     ],
 
-    // $80,000 · 36 meses · 36% anual → pago mensual $3,656.86 (sistema francés)
+    // $80,000 · 36 meses · 36% anual → pago mensual $3,664.30 (sistema
+    // francés, `pagoMensual` en services/domain/credito.ts).
     monto_solicitado: 80000,
     plazo_solicitado_meses: 36,
     tasa_solicitada: 36,
-    pago_estimado: 3656.86,
+    pago_estimado: 3664.3,
 
     dispositivo: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_2 like Mac OS X)',
     version_app: '1.0.0',
@@ -383,11 +384,11 @@ export const EXPEDIENTES_SIMULADOS: readonly ExpedienteDetalle[] = [
       },
     ],
 
-    // $150,000 · 48 meses · 36% anual → pago mensual $5,815.24
+    // $150,000 · 48 meses · 36% anual → pago mensual $5,936.67
     monto_solicitado: 150000,
     plazo_solicitado_meses: 48,
     tasa_solicitada: 36,
-    pago_estimado: 5815.24,
+    pago_estimado: 5936.67,
     es_cliente_existente: true,
     numero_cliente: 'CL-0048213',
 
@@ -466,7 +467,7 @@ export const EXPEDIENTES_SIMULADOS: readonly ExpedienteDetalle[] = [
         <table>
           <tr><th>Monto</th><td>$150,000</td></tr>
           <tr><th>Plazo</th><td>48 meses</td></tr>
-          <tr><th>Pago mensual estimado</th><td>$5,815</td></tr>
+          <tr><th>Pago mensual estimado</th><td>$5,937</td></tr>
         </table>
         <h3>Propietario real</h3>
         <p class="j">La solicitante declara actuar por cuenta de un tercero,
@@ -530,11 +531,11 @@ export const EXPEDIENTES_SIMULADOS: readonly ExpedienteDetalle[] = [
       },
     ],
 
-    // $25,000 · 12 meses · 36% anual → pago mensual $2,512.06
+    // $25,000 · 12 meses · 36% anual → pago mensual $2,511.55
     monto_solicitado: 25000,
     plazo_solicitado_meses: 12,
     tasa_solicitada: 36,
-    pago_estimado: 2512.06,
+    pago_estimado: 2511.55,
 
     dispositivo: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X)',
     version_app: '1.0.0',
