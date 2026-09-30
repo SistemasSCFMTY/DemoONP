@@ -29,8 +29,18 @@ export const ClienteVerificadoSchema = z.object({
   encontrado: z.boolean(),
   /** `•• •••• 5678`. Sólo cuando se encontró. */
   telefonoEnmascarado: z.string().optional(),
-  /** Segundos de vigencia del código recién enviado. */
-  expiraEn: z.number().optional(),
+  /**
+   * Cuándo vence el código, ISO 8601.
+   *
+   * **String, no segundos.** Es el mismo valor que devuelve
+   * `/otp/enviar` (`OtpEnviadoSchema`), porque sale del mismo
+   * `emitirCodigo`, que regresa `expira.toISOString()`. Cuando esto
+   * decía `z.number()`, `responder` rechazaba la respuesta y el
+   * endpoint daba 500 **justo en el caso bueno** — el de la CURP que sí
+   * existe—, que es el único que las pruebas con CURP inventada nunca
+   * tocan.
+   */
+  expiraEn: z.string().optional(),
   /** Sólo bajo DEMO_MODE, igual que en `/otp/enviar`. */
   codigo: z.string().optional(),
 });
