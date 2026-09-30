@@ -195,44 +195,44 @@ changing one copy changes the other.
 
 ## Prospect app — `onp-frontend`
 
-- [ ] **CP-F1 · P0 — Shell, routing, NGXS.** The 390px shell (topbar, progress, body),
+- [x] **CP-F1 · P0 — Shell, routing, NGXS.** The 390px shell (topbar, progress, body),
       `provideStore`, the step-order guard, the route map for the 28 screens, back
       navigation on router history, `brand.config` wired into the shell.
-- [ ] **CP-F2 · P0 — UI primitives.** `onp-field`, `onp-card`, `onp-alert`,
+- [x] **CP-F2 · P0 — UI primitives.** `onp-field`, `onp-card`, `onp-alert`,
       `onp-button`, `onp-checkbox-group`, `onp-radio-group`, `onp-status`,
       `onp-leyenda`, `onp-modal`, `onp-progress`, `onp-topbar`, `onp-otp-input`,
       `onp-fecha-trio`, `onp-preview-box`, `onp-pep-section`.
-- [ ] **CP-F3 · P0 — Portada + informativas.** `bienvenida`, `catalogo`, `privacidad`,
+- [x] **CP-F3 · P0 — Portada + informativas.** `bienvenida`, `catalogo`, `privacidad`,
       `terminos`, `ayuda`. Text comes from `brand.config`, as `pintarDatosSofom`
       (`:2197`) does in the source.
-- [ ] **CP-F4 · P0 — Simulador.** `es-cliente`, `simulador`, `requisitos`. Port and
+- [x] **CP-F4 · P0 — Simulador.** `es-cliente`, `simulador`, `requisitos`. Port and
       **unit-test** `pagoMensual` (`:2380`), `comisionDe` (`:2386`), `calcularCAT`
       (`:2395`, bisection), `pesos`/`pesosCent`. The owner named live CAT math as a
       thing stakeholders will poke at — if a credit person is in the room, this is the
       screen they will test. It is the one place tonight where tests are not optional.
-- [ ] **CP-F5 · P0 — Registro + OTP.** `registro`, `verificar-cliente`, `otp`. Password
+- [x] **CP-F5 · P0 — Registro + OTP.** `registro`, `verificar-cliente`, `otp`. Password
       meter (`:2522`), phone formatting (`:2515`), the six-box OTP input with paste and
       the 120-second countdown, against CP-B5. **Registration triggers CP-B6's email.**
-- [ ] **CP-F6 · P0 — Geolocalización.** Permission flow (`:2288`), capture at the four
+- [x] **CP-F6 · P0 — Geolocalización.** Permission flow (`:2288`), capture at the four
       evidentiary moments (`:2263`), `auth-location`. Denial must not dead-end.
-- [ ] **CP-F7 · P0 — Formulario.** `form-generales`, `form-domicilio`, `form-contacto`,
+- [x] **CP-F7 · P0 — Formulario.** `form-generales`, `form-domicilio`, `form-contacto`,
       `form-laborales`, `envio-formulario`. CURP generation (`:4102`) with check digit
       (`:4171`), CURP/RFC cross-checking against name and birth date (`:4205`), CP and
       phone validators. Conditional required-ness declared per §8, not inferred from DOM
       visibility. **Largest piece of work in this track.**
-- [ ] **CP-F8 · P0 — PEP + declaratoria.** `pep-propio`, `pep-familia`, `declaratoria`
+- [x] **CP-F8 · P0 — PEP + declaratoria.** `pep-propio`, `pep-familia`, `declaratoria`
       (290 lines of legal copy, verbatim, set in Archivo), plus the propietario real /
       tercero branch and its `pr_*` fields.
-- [ ] **CP-F9 · P0 — Identificación + documentos.** `auth-buro`, `id-photos`,
+- [x] **CP-F9 · P0 — Identificación + documentos.** `auth-buro`, `id-photos`,
       `documents`. `getUserMedia` capture front and back with a file-upload fallback,
       quality feedback (`:4686`), **Tesseract 7 in the browser** from npm with the
       parsers at `:4886` and `:4929`, and the eight document uploads **actually wired**
       to CP-B3 — the source declares those inputs and never reads them.
       **If the night runs short, mock the OCR autofill and keep the capture.**
-- [ ] **CP-F10 · P0 — Biometría + video.** `biometrics`, `video`, both mocked behind
+- [x] **CP-F10 · P0 — Biometría + video.** `biometrics`, `video`, both mocked behind
       named service interfaces. The `"98%"` / `"95%"` figures stay verbatim — owner's
       call, it is a demo, and they sit behind the "Modo demostración" label.
-- [ ] **CP-F11 · P0 — Solicitud, firma, envío.** `solicitud` rendered from the template
+- [x] **CP-F11 · P0 — Solicitud, firma, envío.** `solicitud` rendered from the template
       constant, `signature` (canvas, pointer events, clear), `complete`. Submits the
       whole expediente to CP-B3 and shows the returned folio. PDF stays in the browser
       with `html2pdf.js@0.14.0` from npm.
@@ -308,18 +308,18 @@ descope — no SOFOM management, no panel-user management, no cross-tenant searc
 | B10 | Confirmation email | P1 | backend | B6, B3 | ☑ |
 | B11 | Plantillas | P2 | backend | B2 | ☑ |
 | B12 | Bitácora | P2 | backend | B2 | ☐ |
-| F1 | Shell, routing, NGXS | P0 | frontend | 0.2 | ☐ |
-| F2 | UI primitives | P0 | frontend | 0.2 | ☐ |
-| F3 | Portada + informativas | P0 | frontend | F1, F2 | ☐ |
-| F4 | Simulador | P0 | frontend | F2 | ☐ |
-| F5 | Registro + OTP | P0 | frontend | F2, B5, B6 | ☐ |
-| F6 | Geolocalización | P0 | frontend | F1 | ☐ |
-| F7 | Formulario | P0 | frontend | F2 | ☐ |
-| F8 | PEP + declaratoria | P0 | frontend | F7 | ☐ |
-| F9 | Identificación + documentos | P0 | frontend | F2, B3 | ☐ |
-| F10 | Biometría + video | P0 | frontend | F2 | ☐ |
-| F11 | Solicitud, firma, envío | P0 | frontend | F8, B3 | ☐ |
-| F12 | Deploy to Pages | P0 | frontend | F1–F11, B8 | ☐ |
+| F1 | Shell, routing, NGXS | P0 | frontend | 0.2 | ☑ |
+| F2 | UI primitives | P0 | frontend | 0.2 | ☑ |
+| F3 | Portada + informativas | P0 | frontend | F1, F2 | ☑ |
+| F4 | Simulador | P0 | frontend | F2 | ☑ |
+| F5 | Registro + OTP | P0 | frontend | F2, B5, B6 | ☑ |
+| F6 | Geolocalización | P0 | frontend | F1 | ☑ |
+| F7 | Formulario | P0 | frontend | F2 | ☑ |
+| F8 | PEP + declaratoria | P0 | frontend | F7 | ☑ |
+| F9 | Identificación + documentos | P0 | frontend | F2, B3 | ☑ |
+| F10 | Biometría + video | P0 | frontend | F2 | ☑ |
+| F11 | Solicitud, firma, envío | P0 | frontend | F8, B3 | ☑ |
+| F12 | Deploy to Pages | P0 | frontend | F1–F11, B8 | ◐ build listo, deploy pendiente del owner |
 | F13 | QA pass | P2 | frontend | F12 | ☐ |
 | S1 | Scaffold, shell, login | P0 | superadmin | 0.2, B7 | ☑ |
 | S2 | Expedientes list | P0 | superadmin | S1, B4 | ☑ |
@@ -453,6 +453,54 @@ Cleared with the owner, or following directly from a decision they made.
     Revises departure 11 above.
 21. `documento_html` added to the `POST /solicitudes` payload; the contract required
     the signed `documentos` row but carried no field for the HTML. Deviation D12.
+
+### Found while porting, 2026-09-30 — `onp-frontend`, CP-F4 to CP-F11
+
+Six more defects. Each is a bug, not a decision, so none is reproduced; all six are
+flagged in the CP-F1–F12 pull request for the owner to confirm.
+
+18. **The CURP generator produces a 17-character CURP.** `generarCURPPF` (`:4102`)
+    concatenates 16 characters and appends a check digit; position 17, the homonym
+    differentiator, is missing. Its own `validarCURPLocal` (`:4185`) demands 18 and
+    *hides the status line* below that length rather than complaining, so every
+    generated CURP is invalid and nothing says so. Position 17 is restored per the
+    published rule: `0` for births before 2000, `A` from 2000 on. The cross-check
+    ignores that position, since RENAPO may have assigned a differentiator no generator
+    can predict.
+19. **The CURP generator does not fold accents.** It uppercases and nothing else, so
+    `PÉREZ` yields a CURP containing `É` and `PEÑA` one containing `Ñ`. RENAPO folds
+    diacritics and maps `Ñ` to `X`. Both are extremely common in Mexican surnames.
+20. **The demo CURP fails its own check digit.** The "Modo demostración" tip on
+    `verificar-cliente` (`:661`) instructs the presenter to type
+    `RASL910714MNLMLR04`; the correct final digit is `1`. In local mode
+    `verificarCliente` (`:2575`) runs `validarCURPLocal`, so the demo as documented is
+    rejected. **The copy is the owner's call, so the string is kept verbatim** and
+    `verificar-cliente` accepts that fixture by identity as well as by validation.
+    *The owner may prefer the digit corrected to `1` — that is a copy change and it is
+    theirs to make.*
+21. **The "entre calles" hint is misspelt on one of its two copies.** `Indícalas
+    vialidades perpendiculares` on `form-domicilio` (`:926`), `Indica las vialidades
+    perpendiculares` on the propietario real's copy of the same block (`:1430`). Ported
+    as the correct "Indica las". A predictable consequence of the two blocks being
+    duplicated markup; in the port they share one component.
+22. **The OCR front parser destroys the accents it then looks for.**
+    `parsearFrente` (`:4887`) sanitises with `[^A-Z0-9\n ]`, which is ASCII-only, so
+    `AÑO` becomes `A O` and `EMISIÓN` becomes `EMISI N` — and the patterns that run
+    next are `A[NÑ]O\s*DE\s*REGISTRO` and `EMISI[OÓ]N`. Both accented alternatives are
+    dead code, and año de registro, número de emisión and año de emisión only parse
+    when Tesseract drops the accent, which its own whitelist (`:4848`) tells it not to
+    do. The accented letters are preserved. Found by a unit test.
+23. **The solicitud template interpolates form values into HTML unescaped.**
+    `llenarPlantilla` (`:3716`) substitutes `{{clave}}` raw, so a surname containing
+    `<` breaks the document and one containing a `<script>` tag executes in the page
+    rendering it — including the staff panel's detail view, where the same stored HTML
+    is displayed. Every value in that template comes from a form a stranger filled in.
+    Values are escaped in the port; `firma` is exempt because it is an `<img>` the app
+    itself builds.
+
+Also not ported, though not a defect: the OCR text is logged to the console in full
+(`:4864`). That text is the contents of an identity document, and §1 forbids logging a
+field value.
 
 **Reviewed and deliberately kept:** the mocked `"98%"` / `"95%"` biometric confidence
 (`:5004`). Owner's call — it is a demo and the figure sits behind the "Modo

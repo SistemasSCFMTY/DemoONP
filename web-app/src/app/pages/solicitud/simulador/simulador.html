@@ -1,0 +1,104 @@
+<onp-titulo texto="¿Cuánto necesitas?" lede="Mueve las barras y mira cómo cambia tu pago mensual." />
+
+<section class="mb-4 rounded-card border border-border bg-surface p-4">
+  <div class="mb-2 flex items-baseline justify-between">
+    <label for="sim-monto" class="text-label font-semibold text-text">Monto</label>
+    <output for="sim-monto" class="font-heading text-lg font-bold tabular-nums text-navy-deep">
+      {{ sim().monto | pesos }}
+    </output>
+  </div>
+  <input
+    id="sim-monto"
+    type="range"
+    class="onp-rango"
+    [min]="producto().monto_min"
+    [max]="producto().monto_max"
+    [step]="producto().monto_paso"
+    [value]="sim().monto"
+    (input)="cambiarMonto($event)"
+  />
+  <div class="mt-1.5 flex justify-between text-status text-text-soft">
+    <span>{{ producto().monto_min | pesos }}</span>
+    <span>{{ producto().monto_max | pesos }}</span>
+  </div>
+</section>
+
+<section class="mb-4 rounded-card border border-border bg-surface p-4">
+  <div class="mb-2 flex items-baseline justify-between">
+    <label for="sim-plazo" class="text-label font-semibold text-text">Plazo</label>
+    <output for="sim-plazo" class="font-heading text-lg font-bold tabular-nums text-navy-deep">
+      {{ sim().plazo }} <span class="text-label font-normal">meses</span>
+    </output>
+  </div>
+  <input
+    id="sim-plazo"
+    type="range"
+    class="onp-rango"
+    [min]="producto().plazo_min"
+    [max]="producto().plazo_max"
+    [step]="producto().plazo_paso"
+    [value]="sim().plazo"
+    (input)="cambiarPlazo($event)"
+  />
+  <div class="mt-1.5 flex justify-between text-status text-text-soft">
+    <span>{{ producto().plazo_min }} meses</span>
+    <span>{{ producto().plazo_max }} meses</span>
+  </div>
+
+  <div class="mt-3 flex flex-wrap gap-2" role="group" aria-label="Plazos frecuentes">
+    @for (plazo of atajos(); track plazo) {
+      <button
+        type="button"
+        [class]="claseAtajo(plazo)"
+        [attr.aria-pressed]="plazo === sim().plazo"
+        (click)="fijarPlazo(plazo)"
+      >
+        {{ plazo }}
+      </button>
+    }
+  </div>
+</section>
+
+<section class="mb-4 rounded-card bg-navy p-4 text-white">
+  <p class="text-label text-white/70">Pago mensual estimado</p>
+  <p class="mt-1 font-heading text-3xl font-bold tabular-nums">
+    {{ sim().pagoMensual | pesos }}<span class="text-label font-normal text-white/70"> / mes</span>
+  </p>
+
+  <dl class="mt-4 space-y-1.5 text-label">
+    <div class="flex justify-between gap-3">
+      <dt class="text-white/70">Monto solicitado</dt>
+      <dd class="tabular-nums">{{ sim().monto | pesos }}</dd>
+    </div>
+    <div class="flex justify-between gap-3">
+      <dt class="text-white/70">Plazo</dt>
+      <dd class="tabular-nums">{{ sim().plazo }} meses</dd>
+    </div>
+    <div class="flex justify-between gap-3">
+      <dt class="text-white/70">Tasa anual fija</dt>
+      <dd class="tabular-nums">{{ producto().tasa_anual }}%</dd>
+    </div>
+    @if (sim().comision > 0) {
+      <div class="flex justify-between gap-3">
+        <dt class="text-white/70">Comisión de apertura</dt>
+        <dd class="tabular-nums">{{ sim().comision | pesos }}</dd>
+      </div>
+    }
+    <div class="flex justify-between gap-3">
+      <dt class="text-white/70">Total a pagar</dt>
+      <dd class="tabular-nums">{{ sim().total | pesos }}</dd>
+    </div>
+    <div class="mt-1.5 flex justify-between gap-3 border-t border-white/20 pt-2">
+      <dt class="text-white/70">CAT estimado <span class="text-white/50">sin IVA</span></dt>
+      <dd class="tabular-nums">{{ sim().cat | porcentaje }}</dd>
+    </div>
+  </dl>
+</section>
+
+<p class="mb-2 text-status leading-relaxed text-text-soft">
+  <strong>Esto es una estimación, no una oferta.</strong> Las condiciones definitivas dependen
+  del resultado de la evaluación de tu solicitud y pueden diferir de las aquí mostradas. El CAT
+  es informativo y se calcula para fines de comparación.
+</p>
+
+<onp-button (pulsar)="aceptar()">Continuar con esta cantidad</onp-button>

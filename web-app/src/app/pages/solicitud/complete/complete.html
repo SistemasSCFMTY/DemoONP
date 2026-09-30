@@ -1,0 +1,51 @@
+<onp-titulo
+  texto="¡Solicitud enviada!"
+  lede="Tu información fue recibida y quedó registrada. Está en revisión."
+/>
+
+<onp-card>
+  <p class="flex items-center gap-1.5 text-body font-semibold text-success">
+    <svg lucideCheck class="size-4 shrink-0" aria-hidden="true"></svg>
+    Expediente generado
+  </p>
+  <p class="mt-1.5 text-label text-text-soft">Número de folio:</p>
+  <p class="mt-0.5 font-heading text-lg font-bold tracking-wider text-navy-deep">
+    {{ folio() }}
+  </p>
+  @if (esLocal()) {
+    <onp-status tono="aviso">
+      Modo demostración: el servidor no respondió y este folio se generó en el dispositivo. La
+      solicitud no quedó registrada en el sistema.
+    </onp-status>
+  }
+</onp-card>
+
+<onp-card>
+  <p class="mb-2.5 text-label font-semibold text-text">Guarda tu comprobante</p>
+  <p class="mb-2.5 text-status leading-relaxed text-text-soft">
+    Descarga el PDF de la solicitud que firmaste. Contiene la información que proporcionaste y
+    tu firma.
+  </p>
+  <onp-button variante="secondary" [deshabilitado]="descargando()" (pulsar)="descargar()">
+    {{ descargando() ? 'Preparando el PDF…' : 'Descargar solicitud en PDF' }}
+  </onp-button>
+  @if (errorPdf()) {
+    <onp-status tono="error">{{ errorPdf() }}</onp-status>
+  }
+</onp-card>
+
+<onp-alert tono="info">
+  <strong>¿Qué sigue?</strong> Revisaremos tu información y te avisaremos el resultado en esta
+  misma aplicación. También te contactaremos al correo y teléfono que registraste.
+</onp-alert>
+
+<onp-button (pulsar)="finalizar()">Finalizar</onp-button>
+
+<!-- Rendered off-screen at document width for html2pdf: positioned away
+     rather than hidden, because html2canvas cannot rasterise an element
+     with no layout box. aria-hidden keeps it out of the accessibility
+     tree — the prospect already read this document on the previous
+     screen. -->
+<div class="hoja-pdf" aria-hidden="true">
+  <onp-hoja-documento #hoja [contenido]="documentoFirmado()" />
+</div>

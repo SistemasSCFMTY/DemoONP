@@ -1,0 +1,43 @@
+<onp-titulo
+  texto="Firma electrónica"
+  lede="Dibuja tu firma en el área de abajo. Luego acepta la declaración legal."
+/>
+
+<onp-leyenda>
+  <strong>Declaración (Persona Física):</strong><br /><br />
+  "El suscrito manifiesta bajo protesta de decir verdad que la información y documentación
+  proporcionada a {{ marca.razonSocial }} es auténtica, completa, vigente y verídica, y
+  reconoce que cualquier falsedad, omisión o alteración podrá dar lugar a las
+  responsabilidades legales correspondientes.<br /><br />
+  Asimismo, reconoce y acepta que la firma plasmada por medios electrónicos, incluyendo
+  aquella realizada mediante dispositivo táctil, tendrá los mismos efectos jurídicos que una
+  firma autógrafa, de conformidad con la legislación aplicable, y que los registros
+  electrónicos, videograbaciones, mecanismos de autenticación, biométricos, sellos digitales y
+  demás evidencias generadas durante el proceso formarán parte integrante del expediente
+  electrónico correspondiente."
+</onp-leyenda>
+
+<p class="mt-4 mb-2 text-label font-semibold text-text" id="area-firma">Área de firma:</p>
+<canvas
+  #lienzo
+  class="block h-40 w-full touch-none rounded-card border border-border bg-surface"
+  aria-labelledby="area-firma"
+  role="img"
+  (pointerdown)="iniciar($event)"
+  (pointermove)="trazar($event)"
+  (pointerup)="terminar()"
+  (pointerleave)="terminar()"
+  (pointercancel)="terminar()"
+></canvas>
+
+<onp-button variante="secondary" [deshabilitado]="!hayTrazo()" (pulsar)="borrar()">
+  Borrar firma
+</onp-button>
+
+@if (error()) {
+  <onp-status tono="error">{{ error() }}</onp-status>
+}
+
+<onp-button [deshabilitado]="!hayTrazo() || enviando()" (pulsar)="completar()">
+  {{ enviando() ? 'Enviando tu solicitud…' : 'Completar Etapa 2' }}
+</onp-button>

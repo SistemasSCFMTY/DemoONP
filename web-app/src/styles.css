@@ -33,6 +33,18 @@
   --color-error: #8a2a2a;
   --color-warning: #8a5a1c;
 
+  /* Tinted grounds for alerts, the leyenda and the PEP block. Added in
+     CP-F2 because the source paints these with raw hex (#fffacd, #e3f2fd,
+     #f9f9f9) and #e3f2fd/#1565c0 is Material blue — a colour from a
+     different company. Each is a low-chroma wash of a palette colour, so
+     an alert reads as this product rather than as a framework default.
+     Registered in 01-conventions.md §3 before being used (no hex in a
+     template, ever). */
+  --color-surface-warning: #fdf6e3; /* warning wash — alert.warning       */
+  --color-surface-info: #eef2f7;    /* navy wash    — alert.info          */
+  --color-surface-success: #eef6f1; /* success wash — OCR-detected field  */
+  --color-surface-muted: #f9f8f5;   /* cream wash   — leyenda, pep-section */
+
   /* --- Typography (§2). Charis SIL headings, Archivo body. ---
      Confirmed by the owner 2026-09-30: Charis SIL for main headings,
      Archivo for the declaratoria and all body copy. */
@@ -46,6 +58,9 @@
   --text-h3: 0.875rem;        /* 14px — section heading                  */
   --text-topbar: 0.875rem;    /* 14px — sticky bar title                 */
   --text-h2: 1.125rem;        /* 18px — screen title                     */
+  --text-wordmark: 1.6875rem; /* 27px — the portada wordmark, and only
+                                 there. Weight 700, which the §2 ladder
+                                 already reserves for the wordmark.      */
 
   /* --- Shape (§4). Radius keyed to what the element IS, never one token
      applied everywhere. Buttons are rounded rectangles, not pills. --- */
@@ -114,19 +129,87 @@
 }
 
 /* ==========================================================================
+   Two-column form rows (§5) — the `onp-fila` primitive
+   ==========================================================================
+   Lives here rather than in the component so the breakpoint has exactly one
+   definition: `theme(--breakpoint-xs)` resolves the same token the `xs:`
+   utility variant uses. A component stylesheet cannot reach a Tailwind theme
+   value, and writing `22.5rem` a second time is how two numbers drift apart.
+
+   The rationale is on the component. In short: short bounded fields pair up
+   to cut the scroll of a 28-screen form, long or variable ones keep the full
+   row, and below 360px everything collapses to one column — a two-column row
+   that overflows at 320 is worse than the column it replaced.
+   ========================================================================== */
+@layer components {
+  onp-fila {
+    display: grid;
+    grid-template-columns: 1fr;
+    column-gap: 0.75rem;
+  }
+
+  @media (width >= theme(--breakpoint-xs)) {
+    onp-fila {
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto auto;
+    }
+
+    /* Each field becomes a subgrid of the row and spans its three bands —
+       label, control, messages — so they stay aligned across both columns
+       even when one label wraps to two lines and the other does not. This
+       is why `onp-field` and `onp-select` have exactly three children. */
+    onp-fila > * {
+      display: grid;
+      grid-row: span 3;
+      grid-template-rows: subgrid;
+    }
+
+    /* Without subgrid the two columns still appear; the fields just lay out
+       independently. Bottom-aligning recovers most of the alignment. */
+    @supports not (grid-template-rows: subgrid) {
+      onp-fila > * {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+      }
+    }
+  }
+}
+
+/* ==========================================================================
    web-app only — the prospect shell (§5)
    ==========================================================================
-   The source ships a 390px-wide centred column. 100dvh, not 100vh: the
-   original breaks under mobile Safari's collapsing toolbar (departure 8).
-   superadmin-app does NOT get this block — it is a desktop surface (§12).
+   The shell used to be a `.app-shell` class pinning EVERYTHING to 390px,
+   the source's centred column. That caged the chrome too: on a laptop the
+   navy topbar was a 390px stub floating in white, which is what the owner
+   saw and rejected (2026-09-30, reversing departure 1's literal reading).
+
+   Mobile first still holds — 390 is where the design is decided, and below
+   64rem this cap does nothing at all. What changed is what happens above it:
+   the layout containers now span the viewport and only the *content* is
+   capped, so the topbar reads as a bar instead of a fragment.
+
+   The shell itself is Tailwind on the element now (owner: prefer Tailwind
+   over plain CSS). All that survives here is the token, because a width
+   used by four components belongs in one named place.
+
+   `--container-*` is the namespace Tailwind builds `max-w-*` from, so this
+   spells `max-w-app`. 64rem is the `lg` breakpoint, on purpose: the cap and
+   the breakpoint should not be able to drift apart.
+
+   Its own `@theme` and not the shared block above: the panel is a desktop
+   tool with its own shell and no use for this, so copying it there would be
+   dead tokens in both files instead of one honest one (§3 duplication).
    ========================================================================== */
-@layer base {
-  .app-shell {
-    width: 100%;
-    max-width: 390px;
-    margin: 0 auto;
-    min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
-  }
+@theme {
+  /* The content cap. 64rem is the `lg` breakpoint, named so the cap and the
+     breakpoint cannot drift apart. Spells `max-w-app`. */
+  --container-app: 64rem;
+
+  /* Tailwind's smallest default is `sm` at 40rem — wider than a phone, so
+     nothing in this app could ever respond to it. `xs` is the width below
+     which a two-column form row stops fitting: 390 (the design width) and
+     375 (iPhone SE) are above it, 320 is below. A density change inside the
+     column, not a desktop layout. */
+  --breakpoint-xs: 22.5rem; /* 360px */
 }

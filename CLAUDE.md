@@ -32,10 +32,13 @@ The port source is `../ONP/onp_fer_etapa2_pf.html` (6,052 lines, single file).
 
 ## Quick rules (the ones that get missed)
 
-- **`web-app/` is mobile first, 390px is the design width.** The source ships
-  `max-width: 390px` centered. Build at 390 and let it breathe upward — never design at
-  desktop and squeeze down. **`superadmin-app/` is the exception**: a desktop tool for
-  staff, and it should not pretend otherwise.
+- **`web-app/` is mobile first, 390px is the design width.** Build at 390 and let it
+  breathe upward — never design at desktop and squeeze down. But **the shell does not
+  cage the page at 390**: layout containers span the viewport and only the content is
+  capped, at `max-w-app` (64rem, the `lg` breakpoint). The source's centred 390px column
+  put the navy topbar in a stub on any laptop; owner reversed it 2026-09-30.
+  **`superadmin-app/` is the exception**: a desktop tool for staff, and it should not
+  pretend otherwise.
 - **One whitelabel, one file.** `web-app/src/app/brand.config.ts` — razón social,
   nombre comercial, domicilio, logo, palette. No `sofoms` table, no tenant switcher, no
   branding UI. Swapping client is a one-file edit.
@@ -50,6 +53,10 @@ The port source is `../ONP/onp_fer_etapa2_pf.html` (6,052 lines, single file).
   tenant-authored or legal text — the declaratoria renders exactly as written.
 - **No inline function calls in templates** — computed signals or pure pipes
   (`web-app/src/app/pipes/`); no `protected readonly Enum = Enum` bridges.
+- **Every component's markup is a `.html` file beside the class** —
+  `templateUrl: './topbar.html'`, never an inline `template:` literal. All of them,
+  one-line `<ng-content />` wrappers included. Only a test host inside a `.spec.ts`
+  stays inline. `styles:` is unaffected.
 - **NGXS is the single source of truth** for the expediente. Each wizard step owns a
   typed `FormGroup` and dispatches on valid submit; steps rehydrate from the store on
   back-navigation.

@@ -1,0 +1,60 @@
+<onp-titulo
+  texto="Grabación de vídeo"
+  lede="Se grabará tu vídeo de identificación (máximo 45 segundos)."
+/>
+
+<onp-alert tono="warning">
+  <strong>Recomendaciones:</strong>
+  <ul class="mt-2 list-disc space-y-0.5 pl-5">
+    <li>Ubícate en un lugar con buena iluminación</li>
+    <li>Procura que tu rostro sea visible completamente</li>
+    <li>Evita contraluces, sombras o filtros</li>
+    <li>Mantén la cámara estable y limpia</li>
+    <li>Verifica que tu conexión a internet sea estable</li>
+    <li>Retira lentes oscuros, gorras o accesorios que cubran tu rostro</li>
+    <li>Asegúrate de que no haya ruido excesivo</li>
+  </ul>
+</onp-alert>
+
+@if (grabacion.simulada) {
+  <p
+    class="mb-3.5 rounded-control border border-dashed border-gold-light bg-surface-warning px-3 py-2.5 text-status leading-relaxed text-warning"
+  >
+    <strong>Modo demostración:</strong> la videograbación está simulada. En producción se graba
+    tu imagen y voz y se conserva como parte del expediente.
+  </p>
+}
+
+<onp-field
+  idCampo="video-otp"
+  etiqueta="Código OTP (enviado a tu correo)"
+  marcador="000000"
+  modoEntrada="numeric"
+  ayuda="Válido por 2 minutos."
+  [maxlength]="6"
+  [obligatorio]="true"
+  [control]="otp"
+/>
+
+<onp-leyenda>
+  Al continuar, autorizas a {{ marca.razonSocial }} a recopilar y conservar tu grabación, datos
+  biométricos y demás información relacionada, exclusivamente para fines de identificación,
+  conforme a las Disposiciones de Carácter General. Esta información se conservará de forma
+  segura durante la vigencia del contrato y, al menos, 10 años después.
+</onp-leyenda>
+
+<onp-button variante="secondary" [deshabilitado]="grabando() || grabado()" (pulsar)="grabar()">
+  {{ grabando() ? 'Grabando…' : 'Iniciar grabación' }}
+</onp-button>
+
+@if (grabado()) {
+  <onp-status tono="exito">Grabado</onp-status>
+} @else {
+  <onp-status tono="pendiente">No grabado</onp-status>
+}
+
+@if (error()) {
+  <onp-status tono="error">{{ error() }}</onp-status>
+}
+
+<onp-button [deshabilitado]="!grabado()" (pulsar)="continuar()">Continuar</onp-button>

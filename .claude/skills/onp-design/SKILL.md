@@ -37,14 +37,26 @@ sticky topbar → progress → scrolling body.
 Use `100dvh`, never `100vh`. Tap targets are at least 44×44px. Focusable inputs never
 compute below 16px, or iOS zooms the viewport on focus and the user loses their place.
 
+**Short fields pair two-per-row; long ones keep the row.** Código postal, número
+exterior/interior, the two teléfonos, país — pair them through `ui/onp-fila` and take
+a bite out of the scroll. Domicilio, nombre completo, CURP, RFC, correo, colonia,
+municipio, empresa, puesto, entre calles — full width, because halving them means the
+text scrolls out of sight while it is being typed. Below `--breakpoint-xs` (360px)
+every row collapses to one column: a two-column row that overflows at 320 is worse
+than the column it replaced. Never hand-pair per screen; four form screens plus the
+propietario real's copy will drift.
+
+Field blocks used by more than one screen live in `pages/solicitud/bloques/`, one
+component with an `idPrefijo`, not two copies of the markup.
+
 ## Typography
 
 **Charis SIL** (serif, 400/700) for `h1`/`h2`/`h3`. **Archivo** (variable) for body, UI,
 labels and numerals. Weight ladder: 400 body · 500 labels · 600 headings and buttons ·
 700 wordmark. `font-synthesis-weight: none` on headings.
 
-Scale, deliberately small for the viewport: topbar 14 · h2 18 · h3 14 · lede 13 ·
-body 13 · label 12 · status 11.
+Scale, deliberately small for the viewport: wordmark 27 · topbar 14 · h2 18 · h3 14 ·
+lede 13 · body 13 · label 12 · status 11. `wordmark` is the portada only.
 
 **No uppercase kicker above a heading.** No eyebrows, no
 `text-xs uppercase tracking-wide` line announcing what the title already says. It is the
@@ -60,6 +72,12 @@ ONP FER's own, as `@theme` tokens — never a hex in a template:
 `navy #1c3352` · `navy-deep #0e2036` · `gold #9c7a3c` · `gold-light #c6a866` ·
 `bg #f6f4ef` · `surface #ffffff` · `text #1a1c1f` · `text-soft #525a66` ·
 `border #e8e4d9` · `success #1e6b45` · `error #8a2a2a` · `warning #8a5a1c`
+
+Tinted grounds for alerts and set-off blocks: `surface-warning #fdf6e3` ·
+`surface-info #eef2f7` · `surface-success #eef6f1` · `surface-muted #f9f8f5`. They
+exist because the source paints alerts with raw hex and its info blue is Material's —
+a colour from a different company. Each is a wash of a palette colour, so an alert
+reads as this product.
 
 The ground is warm cream, not white. Cards are white *on* it — that contrast is the
 whole visual system, and painting the page white collapses it.
@@ -106,14 +124,23 @@ The required marker is the label's `::after` asterisk in `error` **plus**
 `[attr.aria-required]` — the asterisk alone is invisible to a screen reader.
 
 Conditional required-ness is declared with `setValidators`, never inferred by asking the
-DOM what is visible.
+DOM what is visible. Better still, where a whole block is conditional: build its form
+when the answer selects it and discard it when it does not, so there is no hidden form
+whose values could reach the payload. A block that must stay mounted gets cleared when
+the answer turns it off.
+
+A generated field only overwrites itself. The CURP fills from the name and birth date
+and stops the moment the prospect edits it — regenerating on every keystroke silently
+undoes their correction.
 
 ## Accessibility contract
 
 Every input has a real `<label for>`; a placeholder is never a label. The step title is
-an `<h1>` that takes focus on navigation. The progress bar is a `role="progressbar"`
-with `aria-valuenow`. The modal traps focus, closes on Escape, and restores focus to its
-trigger. Status lines are `aria-live="polite"`; error summaries are `role="alert"`.
+an `<h1>` that takes focus on navigation — the *screen* title in the body, set at the
+`h2` size; the topbar's text is chrome and is never a second `<h1>`. `ui/onp-titulo`
+is that element, so no page implements it. The progress bar is a `role="progressbar"`
+with `aria-valuenow`. The modal is a native `<dialog>`: it traps focus, closes on
+Escape, and restores focus to its trigger without any of that being hand-rolled. Status lines are `aria-live="polite"`; error summaries are `role="alert"`.
 Colour never carries meaning alone — pair it with an icon. Visible focus ring on
 everything; never `outline: none` without a replacement.
 

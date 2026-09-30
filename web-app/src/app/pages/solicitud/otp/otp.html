@@ -1,0 +1,42 @@
+<onp-titulo texto="Código de verificación" [lede]="destino()" />
+
+@if (codigoDemo()) {
+  <p
+    class="mb-3.5 rounded-control border border-dashed border-gold-light bg-surface-warning px-3 py-2.5 text-status leading-relaxed text-warning"
+  >
+    <strong>Modo demostración:</strong> tu código es
+    <b class="font-mono text-base tracking-widest">{{ codigoDemo() }}</b>
+    <br />En producción llega por mensaje y nunca se muestra en pantalla.
+  </p>
+}
+
+<onp-otp-input (codigo)="capturar($event)" />
+
+<p class="mb-3.5 text-center text-label text-text-soft" aria-live="polite">
+  @if (vencido()) {
+    El código <b class="text-error">venció</b>
+  } @else {
+    Vence en <b class="tabular-nums text-navy-deep">{{ reloj() }}</b>
+  }
+</p>
+
+@if (error()) {
+  <p class="mb-2 text-center">
+    <onp-status tono="error">{{ error() }}</onp-status>
+  </p>
+}
+
+<div class="mb-1.5 text-center">
+  <onp-button variante="enlace" [deshabilitado]="!puedeReenviar()" (pulsar)="reenviar()">
+    Reenviar código
+  </onp-button>
+</div>
+
+<p class="text-center text-status leading-relaxed text-text-soft">
+  El código es de un solo uso y tiene una vigencia de dos minutos, conforme a las Disposiciones
+  de Carácter General.
+</p>
+
+<onp-button [deshabilitado]="codigo().length !== 6 || validando()" (pulsar)="validar()">
+  {{ validando() ? 'Verificando…' : 'Verificar' }}
+</onp-button>

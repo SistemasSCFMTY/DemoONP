@@ -1,0 +1,84 @@
+<section class="mb-4 rounded-card border border-border bg-surface p-4">
+  <h3 class="font-heading text-h3 font-bold text-navy-deep">{{ titulo() }}</h3>
+  <p class="mt-0.5 mb-3 text-label leading-relaxed text-text-soft">{{ pista() }}</p>
+
+  @if (camaraAbierta()) {
+    <div class="relative mb-3 overflow-hidden rounded-card bg-navy-deep">
+      <video #visor class="block w-full" autoplay playsinline muted></video>
+      <div class="pointer-events-none absolute inset-4 rounded-control border-2 border-dashed border-white/70"></div>
+    </div>
+    <onp-button (pulsar)="capturar()">Capturar</onp-button>
+    <onp-button variante="secondary" (pulsar)="cerrarCamara()">Cancelar</onp-button>
+  }
+
+  @if (vistaPrevia(); as fuente) {
+    <onp-preview-box [fuente]="fuente" [descripcion]="descripcionFoto()" />
+  }
+
+  @if (!camaraAbierta() && !vistaPrevia()) {
+    @if (camara.disponible) {
+      <onp-button variante="secondary" [deshabilitado]="!habilitado()" (pulsar)="abrirCamara()">
+        <span class="inline-flex items-center justify-center gap-2">
+          <svg lucideCamera class="size-4" aria-hidden="true"></svg>
+          Tomar foto
+        </span>
+      </onp-button>
+    }
+    <onp-button variante="secondary" [deshabilitado]="!habilitado()" (pulsar)="elegirArchivo()">
+      <span class="inline-flex items-center justify-center gap-2">
+        <svg lucideUpload class="size-4" aria-hidden="true"></svg>
+        Subir archivo
+      </span>
+    </onp-button>
+    @if (!camara.disponible) {
+      <onp-status tono="aviso">
+        La cámara no está disponible en este dispositivo o navegador. Sube una fotografía desde
+        tus archivos.
+      </onp-status>
+    }
+  }
+
+  @if (vistaPrevia()) {
+    <onp-button variante="secondary" (pulsar)="repetir()">Repetir</onp-button>
+  }
+
+  <input
+    #archivo
+    type="file"
+    accept="image/*"
+    capture="environment"
+    class="sr-only"
+    [attr.aria-label]="'Subir ' + titulo()"
+    (change)="archivoElegido($event)"
+  />
+
+  @if (calidad(); as c) {
+    <onp-status [tono]="c.aprobada ? 'exito' : 'aviso'">
+      {{ c.aprobada ? 'Foto capturada correctamente' : 'Calidad insuficiente — se recomienda repetir' }}
+    </onp-status>
+    <ul class="mt-2 space-y-1">
+      @for (revision of c.revisiones; track revision.texto) {
+        <li class="flex items-center gap-1.5 text-status" [class]="revision.ok ? 'text-success' : 'text-error'">
+          @if (revision.ok) {
+            <svg lucideCheck class="size-4 shrink-0" aria-hidden="true"></svg>
+          } @else {
+            <svg lucideX class="size-4 shrink-0" aria-hidden="true"></svg>
+          }
+          <span>{{ revision.texto }}</span>
+        </li>
+      }
+    </ul>
+  } @else {
+    <onp-status tono="pendiente">Sin cargar</onp-status>
+  }
+
+  @if (progresoOcr() !== null) {
+    <p class="mt-3 text-status text-text-soft" aria-live="polite">
+      {{ lado() === 'front' ? 'Leyendo datos de la credencial' : 'Leyendo zona MRZ' }}
+      {{ progresoOcr() }}%
+    </p>
+    <div class="mt-1 h-1 w-full overflow-hidden rounded-control bg-border">
+      <div class="h-full bg-gold-light transition-[width]" [style.width.%]="progresoOcr()"></div>
+    </div>
+  }
+</section>

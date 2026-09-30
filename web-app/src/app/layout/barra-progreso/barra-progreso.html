@@ -1,0 +1,11 @@
+<div
+  class="mx-auto h-1 w-full max-w-app bg-border"
+  role="progressbar"
+  aria-label="Avance de tu solicitud"
+  [attr.aria-valuenow]="porcentaje()"
+  aria-valuemin="0"
+  aria-valuemax="100"
+  [attr.aria-valuetext]="porcentaje() + ' por ciento'"
+>
+  <div class="h-full bg-gold-light transition-[width] duration-300" [style.width.%]="porcentaje()"></div>
+</div>

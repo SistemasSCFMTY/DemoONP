@@ -1,0 +1,39 @@
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { LucideCheck, LucideCircleDashed, LucideTriangleAlert, LucideX } from '@lucide/angular';
+
+export type TonoEstado = 'pendiente' | 'exito' | 'error' | 'aviso';
+
+/**
+ * A one-line status under a control.
+ *
+ * The source writes these as text glyphs — `✓ Capturado`, `✗ No fue posible`,
+ * `⭐ Pendiente`. An emoji renders differently on every platform and a screen
+ * reader announces it as prose ("estrella blanca media"), so each becomes a
+ * Lucide icon with the colour (CLAUDE.md, §9: colour never alone).
+ *
+ * `aria-live="polite"` because these lines appear in response to something the
+ * prospect just did — granting a permission, capturing a photograph — and the
+ * result has to reach them without stealing focus.
+ */
+@Component({
+  selector: 'onp-status',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [LucideCheck, LucideX, LucideTriangleAlert, LucideCircleDashed],
+  templateUrl: './onp-status.html',
+})
+export class OnpStatus {
+  readonly tono = input<TonoEstado>('pendiente');
+
+  protected readonly color = computed(() => {
+    switch (this.tono()) {
+      case 'exito':
+        return 'text-success';
+      case 'error':
+        return 'text-error';
+      case 'aviso':
+        return 'text-warning';
+      default:
+        return 'text-text-soft';
+    }
+  });
+}

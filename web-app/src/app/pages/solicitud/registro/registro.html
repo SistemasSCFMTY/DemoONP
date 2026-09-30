@@ -1,0 +1,71 @@
+<onp-titulo
+  texto="Crea tu cuenta"
+  lede="Con estos datos podrás retomar tu solicitud si algo se interrumpe."
+/>
+
+<form [formGroup]="formulario" (ngSubmit)="enviar()">
+  <onp-field
+    idCampo="reg-nombre"
+    etiqueta="Nombre completo"
+    marcador="Como aparece en tu identificación"
+    autocompletar="name"
+    [obligatorio]="true"
+    [control]="formulario.controls.nombre"
+  />
+
+  <onp-field
+    idCampo="reg-correo"
+    etiqueta="Correo electrónico"
+    tipo="email"
+    marcador="tucorreo@ejemplo.com"
+    autocompletar="email"
+    [obligatorio]="true"
+    [control]="formulario.controls.correo"
+  />
+
+  <div (input)="formatear()">
+    <onp-field
+      idCampo="reg-celular"
+      etiqueta="Teléfono celular"
+      tipo="tel"
+      marcador="81 1234 5678"
+      modoEntrada="numeric"
+      autocompletar="tel-national"
+      [maxlength]="14"
+      [obligatorio]="true"
+      [control]="formulario.controls.celular"
+    />
+  </div>
+
+  <onp-field
+    idCampo="reg-pass"
+    etiqueta="Contraseña"
+    tipo="password"
+    marcador="Mínimo 8 caracteres"
+    autocompletar="new-password"
+    [obligatorio]="true"
+    [control]="formulario.controls.password"
+  />
+
+  @if (medidaPassword(); as medida) {
+    <onp-status [tono]="medida.tono">{{ medida.texto }}</onp-status>
+  }
+
+  <onp-checkbox
+    idCampo="reg-acepto"
+    [obligatorio]="true"
+    [control]="formulario.controls.acepto"
+  >
+    He leído y acepto el <b>Aviso de Privacidad</b> y los <b>Términos y Condiciones</b>.
+    Autorizo el tratamiento de mis datos personales, incluidos los biométricos, para los fines
+    descritos.
+  </onp-checkbox>
+
+  @if (error()) {
+    <onp-status tono="error">{{ error() }}</onp-status>
+  }
+
+  <onp-button tipo="submit" [deshabilitado]="enviando()">
+    {{ enviando() ? 'Creando tu cuenta…' : 'Crear cuenta y continuar' }}
+  </onp-button>
+</form>
