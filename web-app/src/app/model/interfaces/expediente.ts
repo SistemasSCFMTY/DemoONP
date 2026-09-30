@@ -111,6 +111,20 @@ export interface Expediente {
   numero_cliente: string | null;
 
   // Meta
+  /**
+   * The draft this submission completes.
+   *
+   * `POST /prospectos` no longer creates a `prospectos` row — that table is
+   * gone (owner's call). It creates an `expedientes` row with
+   * `estado = 'borrador'` and reserves its folio, and the `id` it returns is
+   * that expediente's. Sending it back is what turns the draft into the
+   * submission instead of inserting a second row beside it: without this
+   * field, every applicant leaves an orphan draft behind.
+   *
+   * Optional on the wire, so a run that skipped registration — an existing
+   * client who came in through `verificar-cliente` — still submits.
+   */
+  expedienteId?: string | null;
   dispositivo: string | null;
   version_app: string | null;
 

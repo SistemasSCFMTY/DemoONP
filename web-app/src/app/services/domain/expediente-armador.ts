@@ -65,8 +65,22 @@ export function nombreInvertido(g: DatosGenerales): string {
   return [g.apellidoPaterno, g.apellidoMaterno, g.nombres].filter(Boolean).join(' ');
 }
 
+/**
+ * The address as prose, for `domicilio_completo` and the printed solicitud.
+ *
+ * Both catalogue codes are resolved to their labels — `avenida` to "Avenida"
+ * and `NL` to "Nuevo León". The flat `tipo_vialidad` and `entidad_federativa`
+ * fields keep the codes, because those are the catalogue values the panel and
+ * the database index on; this string is the one a person reads on a document
+ * they are about to sign, and "Monterrey, NL" is not how an address is
+ * written there.
+ */
 function domicilioLegible(d: DatosDomicilio): string {
-  return armarDomicilio({ ...d, tipoVialidad: texto(VIALIDADES, d.tipoVialidad) });
+  return armarDomicilio({
+    ...d,
+    tipoVialidad: texto(VIALIDADES, d.tipoVialidad),
+    entidadFederativa: texto(ESTADOS, d.entidadFederativa),
+  });
 }
 
 export interface FuentesExpediente {
@@ -175,6 +189,9 @@ export function armarExpediente({
     es_cliente_existente: sesion.esCliente === true,
     numero_cliente: oNulo(sesion.numeroCliente),
 
+    // The draft reserved at registro. Null for an existing client who never
+    // registered, which the contract allows.
+    expedienteId: sesion.prospectoId,
     dispositivo: typeof navigator !== 'undefined' ? navigator.userAgent : null,
     version_app: 'web-app',
   };
