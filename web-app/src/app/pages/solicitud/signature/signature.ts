@@ -1,8 +1,234 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  afterNextRender,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { Store } from '@ngxs/store';
+import { BRAND } from '../../../brand.config';
+import { NavegacionService } from '../../../core/navegacion-service';
+import { Geolocalizacion } from '../../../services/domain/geolocalizacion';
+import { armarExpediente } from '../../../services/domain/expediente-armador';
+import { mensajeDeApi } from '../../../services/http/api-base';
+import { SolicitudesHttp, type TipoArchivo } from '../../../services/http/solicitudes-http';
+import { BorrarFirma, GuardarFirma } from '../../../state/identidad/identidad.actions';
+import { IdentidadState } from '../../../state/identidad/identidad.state';
+import { EstablecerFolio } from '../../../state/sesion/sesion.actions';
+import { SesionState } from '../../../state/sesion/sesion.state';
+import { SimuladorState } from '../../../state/simulador/simulador.state';
+import { SolicitudState } from '../../../state/solicitud/solicitud.state';
+import { OnpButton } from '../../../ui/onp-button/onp-button';
+import { OnpLeyenda } from '../../../ui/onp-leyenda/onp-leyenda';
+import { OnpStatus } from '../../../ui/onp-status/onp-status';
+import { OnpTitulo } from '../../../ui/onp-titulo/onp-titulo';
 
+/**
+ * Firma electrónica. Screen 27 (onp_fer_etapa2_pf.html:1853).
+ *
+ * Pointer events rather than the source's two parallel mouse/touch pairs
+ * (`:5030`): one set of handlers covers finger, stylus and mouse, and it is
+ * the only way a stylus gets pressure-correct behaviour on a tablet.
+ *
+ * The canvas is sized from its own layout box at device pixel ratio, so the
+ * stroke is not a soft rectangle on a phone and the exported PNG is crisp
+ * enough to read at print size.
+ *
+ * Signing is what submits the expediente. Geolocation is captured first —
+ * the fourth and most important of the four evidentiary moments, because
+ * where the person was when they signed is the one the source singles out.
+ *
+ * The declaration above the canvas is verbatim; `[NOMBRE DE LA
+ * SOFOM/EMPRESA]` becomes the razón social.
+ */
 @Component({
   selector: 'onp-signature',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: '<p>Pendiente</p>',
+  imports: [OnpTitulo, OnpLeyenda, OnpButton, OnpStatus],
+  template: `
+    <onp-titulo
+      texto="Firma electrónica"
+      lede="Dibuja tu firma en el área de abajo. Luego acepta la declaración legal."
+    />
+
+    <onp-leyenda>
+      <strong>Declaración (Persona Física):</strong><br /><br />
+      "El suscrito manifiesta bajo protesta de decir verdad que la información y documentación
+      proporcionada a {{ marca.razonSocial }} es auténtica, completa, vigente y verídica, y
+      reconoce que cualquier falsedad, omisión o alteración podrá dar lugar a las
+      responsabilidades legales correspondientes.<br /><br />
+      Asimismo, reconoce y acepta que la firma plasmada por medios electrónicos, incluyendo
+      aquella realizada mediante dispositivo táctil, tendrá los mismos efectos jurídicos que una
+      firma autógrafa, de conformidad con la legislación aplicable, y que los registros
+      electrónicos, videograbaciones, mecanismos de autenticación, biométricos, sellos digitales y
+      demás evidencias generadas durante el proceso formarán parte integrante del expediente
+      electrónico correspondiente."
+    </onp-leyenda>
+
+    <p class="mt-4 mb-2 text-label font-semibold text-text" id="area-firma">Área de firma:</p>
+    <canvas
+      #lienzo
+      class="block h-40 w-full touch-none rounded-card border border-border bg-surface"
+      aria-labelledby="area-firma"
+      role="img"
+      (pointerdown)="iniciar($event)"
+      (pointermove)="trazar($event)"
+      (pointerup)="terminar()"
+      (pointerleave)="terminar()"
+      (pointercancel)="terminar()"
+    ></canvas>
+
+    <onp-button variante="secondary" [deshabilitado]="!hayTrazo()" (pulsar)="borrar()">
+      Borrar firma
+    </onp-button>
+
+    @if (error()) {
+      <onp-status tono="error">{{ error() }}</onp-status>
+    }
+
+    <onp-button [deshabilitado]="!hayTrazo() || enviando()" (pulsar)="completar()">
+      {{ enviando() ? 'Enviando tu solicitud…' : 'Completar Etapa 2' }}
+    </onp-button>
+  `,
 })
-export class Signature {}
+export class Signature {
+  private readonly store = inject(Store);
+  private readonly navegacion = inject(NavegacionService);
+  private readonly geo = inject(Geolocalizacion);
+  private readonly solicitudes = inject(SolicitudesHttp);
+
+  protected readonly marca = BRAND;
+  protected readonly hayTrazo = signal(false);
+  protected readonly enviando = signal(false);
+  protected readonly error = signal('');
+
+  private readonly lienzo = viewChild.required<ElementRef<HTMLCanvasElement>>('lienzo');
+  private ctx: CanvasRenderingContext2D | null = null;
+  private dibujando = false;
+
+  constructor() {
+    afterNextRender(() => this.preparar());
+  }
+
+  private preparar(): void {
+    const canvas = this.lienzo().nativeElement;
+    const caja = canvas.getBoundingClientRect();
+    const escala = window.devicePixelRatio || 1;
+
+    // Back the canvas at device resolution; CSS keeps it at its layout size.
+    canvas.width = Math.round(caja.width * escala);
+    canvas.height = Math.round(caja.height * escala);
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.scale(escala, escala);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, caja.width, caja.height);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 2;
+    // The signature is drawn in navy, the same ink as the rest of the app.
+    ctx.strokeStyle = getComputedStyle(document.documentElement)
+      .getPropertyValue('--color-navy')
+      .trim();
+    this.ctx = ctx;
+  }
+
+  private punto(evento: PointerEvent): { x: number; y: number } {
+    const caja = this.lienzo().nativeElement.getBoundingClientRect();
+    return { x: evento.clientX - caja.left, y: evento.clientY - caja.top };
+  }
+
+  protected iniciar(evento: PointerEvent): void {
+    if (!this.ctx) return;
+    evento.preventDefault();
+    this.lienzo().nativeElement.setPointerCapture(evento.pointerId);
+    const { x, y } = this.punto(evento);
+    this.dibujando = true;
+    this.ctx.beginPath();
+    this.ctx.moveTo(x, y);
+  }
+
+  protected trazar(evento: PointerEvent): void {
+    if (!this.dibujando || !this.ctx) return;
+    evento.preventDefault();
+    const { x, y } = this.punto(evento);
+    this.ctx.lineTo(x, y);
+    this.ctx.stroke();
+    this.hayTrazo.set(true);
+  }
+
+  protected terminar(): void {
+    this.dibujando = false;
+  }
+
+  protected borrar(): void {
+    const canvas = this.lienzo().nativeElement;
+    const caja = canvas.getBoundingClientRect();
+    if (this.ctx) {
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.fillRect(0, 0, caja.width, caja.height);
+    }
+    this.hayTrazo.set(false);
+    this.store.dispatch(new BorrarFirma());
+  }
+
+  protected async completar(): Promise<void> {
+    if (!this.hayTrazo() || this.enviando()) return;
+    this.enviando.set(true);
+    this.error.set('');
+
+    try {
+      // The fourth evidentiary moment, and the one that matters most.
+      await this.geo.capturarSiHayPermiso('firma');
+
+      const firma = await this.firmaComoBlob();
+      if (!firma) {
+        this.error.set('No pudimos guardar tu firma. Inténtalo de nuevo.');
+        return;
+      }
+      this.store.dispatch(new GuardarFirma(firma, URL.createObjectURL(firma)));
+
+      const identidad = this.store.selectSnapshot(IdentidadState.todo);
+      const expediente = armarExpediente({
+        solicitud: this.store.selectSnapshot(SolicitudState.todo),
+        identidad: { ...identidad, firma: identidad.firma },
+        simulador: this.store.selectSnapshot(SimuladorState.estado),
+        sesion: this.store.selectSnapshot(SesionState.estado),
+      });
+
+      const archivos = new Map<TipoArchivo, File | Blob>();
+      if (identidad.frente) archivos.set('id_frente', identidad.frente.imagen);
+      if (identidad.reverso) archivos.set('id_reverso', identidad.reverso.imagen);
+      archivos.set('firma', firma);
+      for (const [tipo, archivo] of Object.entries(identidad.documentos)) {
+        if (archivo) archivos.set(tipo as TipoArchivo, archivo);
+      }
+
+      const respuesta = await new Promise<{ folio: string } | null>((resolver) => {
+        this.solicitudes.enviar({ ...expediente, firmado: true }, archivos).subscribe({
+          next: (r) => resolver(r),
+          error: (err) => {
+            this.error.set(mensajeDeApi(err));
+            resolver(null);
+          },
+        });
+      });
+
+      if (!respuesta) return;
+
+      this.store.dispatch(new EstablecerFolio(respuesta.folio));
+      void this.navegacion.avanzar('complete', 'signature');
+    } finally {
+      this.enviando.set(false);
+    }
+  }
+
+  private firmaComoBlob(): Promise<Blob | null> {
+    return new Promise((resolver) => {
+      this.lienzo().nativeElement.toBlob((blob) => resolver(blob), 'image/png');
+    });
+  }
+}
