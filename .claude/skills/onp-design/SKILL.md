@@ -70,10 +70,15 @@ carelessness about people's money.
 Port the source's strings verbatim — they are well written. Do not "improve" the legal
 text.
 
-**No invented numbers.** The CAT, the pago mensual and the comisión are computed from
-live product parameters. A figure with no source is worse than no figure, and in a
-regulated credit UI it is a compliance problem, not a design one. This is why the
-source's hardcoded "98%" biometric confidence was removed rather than ported.
+**No invented numbers in anything financial.** The CAT, the pago mensual and the
+comisión are computed from live product parameters. A figure with no source is worse
+than no figure, and in a regulated credit UI it is a compliance problem, not a design
+one.
+
+One carve-out, and only one: the mocked biometric confidence (`"98%"` / `"95%"`) is
+kept verbatim from the source — owner's call, 2026-09-30, because this is a demo and
+the figure sits behind a "Modo demostración" label. It is not licence to invent a
+second one.
 
 Where something is simulated, it says so — *"Modo demostración"* stays, and stays true.
 

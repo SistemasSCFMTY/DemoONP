@@ -33,6 +33,9 @@ log a form value, never put one in a URL, never send one to a third party.
 This maps the source 1:1: Charis SIL takes the role Source Serif 4 held, Archivo takes
 IBM Plex Sans'. Loaded by CDN `@import` in `web-app/src/styles.css` — see Deviation D1.
 
+**Confirmed by the owner, 2026-09-30:** Charis SIL for main headings, Archivo for the
+declaratoria and all body copy. The 290 lines of legal text are set in Archivo.
+
 Weight ladder: **400 body · 500 labels · 600 headings and buttons · 700 wordmark.**
 Set `font-synthesis-weight: none` on headings; a browser faking a weight is a defect.
 
@@ -292,11 +295,7 @@ honest.
 | D3 | Colour is hard-coded to ONP's navy/gold rather than built from `--brand-*` | Single tenant. The whitelabel indirection has no second tenant to serve | owner | 2026-09-30 |
 | D4 | Tailwind 4, not 3.4 | The repo was scaffolded on 4 and nothing in the ruleset depends on 3.4 | owner | 2026-09-30 |
 | D5 | PrimeNG only in the admin panel, not the prospect flow | A 390px consumer wizard uses nothing PrimeNG is good at; the admin `p-table` does | owner | 2026-09-30 |
+| D6 | The mocked biometric confidence (`"98%"` / `"95%"`) is kept verbatim | Owner's call: this is a demo, and the figure sits behind a "Modo demostración" label. It is the one carve-out from "no invented numbers" — everything financial stays computed | owner | 2026-09-30 |
 
-### Open question
-
-**The Charis SIL / Archivo role split (D2) is my assumption, not your instruction.**
-I mapped Charis SIL to headings because it takes Source Serif 4's place in a structure
-you asked me to preserve. Charis SIL is a reading serif designed for long-form literacy
-text, so an argument exists for the reverse — Charis for the declaratoria's body copy,
-Archivo for headings. Say the word and I will flip it in this file and the skill.
+No open questions. The Charis SIL / Archivo split was confirmed by the owner on
+2026-09-30 and is recorded in §2.

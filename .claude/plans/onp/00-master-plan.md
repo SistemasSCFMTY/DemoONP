@@ -27,7 +27,13 @@ Copy and screen structure are preserved verbatim. Conventions: `01-conventions.m
 | Agent | Owns | Model |
 |---|---|---|
 | `onp-backend` | `backend/`, Supabase migrations, the API contract | Sonnet |
-| `onp-frontend` | `web-app/`, the design system, NGXS, the admin panel | Sonnet |
+| `onp-frontend` | `web-app/` prospect flow, the design system, NGXS, routing | Sonnet |
+| `onp-admin` | `web-app/src/app/pages/admin/`, PrimeNG, the panel's state | Sonnet |
+
+`onp-frontend` and `onp-admin` share a repo but not a folder. `onp-admin` owns
+`pages/admin/`, `state/admin/` and the PrimeNG setup; it consumes `ui/` primitives and
+does not edit them. If the panel needs a new primitive, `onp-admin` asks `onp-frontend`
+for it rather than adding one.
 
 Phase 0 is done **before** the agents split, because both depend on it.
 
@@ -104,7 +110,7 @@ contract in this repo as the referee, and any PR changing one side must change b
 - [ ] **CP-B10 — Hardening.** Zod on every route in and out, rate limits, request size
       caps, a smoke test per endpoint, `.env.example` complete, README with setup.
 
-## Frontend track — `onp-frontend`
+## Frontend track — `onp-frontend` (prospect flow)
 
 - [ ] **CP-F1 — Shell + routing + NGXS root.** App shell (topbar, progress, body),
       `provideStore` with the six states from §7, the step-order guard, the route map
@@ -144,21 +150,50 @@ contract in this repo as the referee, and any PR changing one side must change b
       advancing, per the owner's call. Includes the tercero document branch.
 - [ ] **CP-F11 — Biometría + video.** `biometrics`, `video`. Both stay mocked, behind a
       named service interface (`BiometriaService`, `VideoService`) that a real provider
-      can replace. The invented "98%" confidence figure is **removed** — a fabricated
-      number in a compliance UI is worse than an honest "Capturado (demostración)".
+      can replace. The mocked "98%" / "95%" confidence figures are kept verbatim —
+      owner's call, it's a demo, and they sit behind the "Modo demostración" label.
 - [ ] **CP-F12 — Solicitud + firma.** `solicitud` (rendered by CP-B8), `signature`
       (canvas, pointer events, clear, 44px-safe controls), `complete`. PDF generation
       stays in the browser with `html2pdf.js@0.14.0` from npm, not CDN.
-- [ ] **CP-F13 — Panel administrativo.** `admin-login`, `admin-home` (tabs:
-      Expedientes, Producto, Formatos, Ajustes), `admin-detalle`. PrimeNG **21.1.10** +
-      `@angular/cdk@21.2.14` enters here and only here. The expediente list is a
-      `p-table` with header/body templates, `rowHover`, whole-row click into detail,
-      `[scrollable]` + `scrollHeight`, and an `emptymessage` — never a hand-rolled row
-      list. Filters and page persist as URL query params. The Ajustes tab loses the
-      connection-string fields; they are env vars.
-- [ ] **CP-F14 — QA pass.** 390px through tablet, keyboard-only traversal of all 28
-      steps, screen-reader pass on the form screens, `prefers-reduced-motion`, iOS
-      input-zoom check, tap-target audit, Lighthouse on the prospect flow.
+- [ ] **CP-F13 — QA pass, prospect flow.** 390px through tablet, keyboard-only
+      traversal of all 28 steps, screen-reader pass on the form screens,
+      `prefers-reduced-motion`, iOS input-zoom check, tap-target audit, Lighthouse.
+
+## Admin track — `onp-admin`
+
+The panel is three screens in the source but four tabs of real functionality. It lives
+in `web-app/` but is owned separately, because it is the one surface with a different
+user (staff, on a desktop), a different component library (PrimeNG) and a different
+threat model (authenticated, `sofom_id`-scoped).
+
+- [ ] **CP-A1 — Shell, login, session.** PrimeNG **21.1.10** + `@angular/cdk@21.2.14`
+      enter here and only here: stock Aura plus an ONP preset built from the §3 tokens,
+      never a `theme/` override sheet for looks. `admin-login` against CP-B6, the
+      session guard on `/admin/**`, `AdminState`, logout, and the tab shell
+      (Expedientes, Producto, Formatos, Ajustes). The hidden long-press entry from the
+      prospect app routes here, and `/admin` is reachable directly.
+- [ ] **CP-A2 — Expedientes list.** A `p-table` with header/body templates, `rowHover`,
+      whole-row click into detail, `[scrollable]` + `scrollHeight` for internal scroll,
+      and an `emptymessage` — never a hand-rolled `<div>` row list. Search and filters
+      persist as URL query params, with `queryParamMap` as the single load path. Port
+      the search behavior from `pintarExpedientes` (`:5426`).
+- [ ] **CP-A3 — Expediente detail.** Every field row from `verExpediente` (`:5471`),
+      INE images and signature via CP-B4's signed URLs, estado changes (`:5640`),
+      document view, PDF download, delete with confirmation. This screen displays the
+      most PII in the product — no field value in a URL, no value in a log.
+- [ ] **CP-A4 — Producto.** The simulator parameters (`:5354`–`:5426`): montos, plazos,
+      tasa, comisión. A live preview of what the prospect's catálogo will say, since
+      these values feed the worked example and the CAT.
+- [ ] **CP-A5 — Formatos.** `.docx` upload against CP-B8, current-template display,
+      preview of the filled solicitud, and removal. Port the flow from `subirPlantilla`
+      (`:5735`) and `verPreviewPlantilla` (`:5817`).
+- [ ] **CP-A6 — Ajustes.** Sofom identity — razón social, domicilio, logo — which feeds
+      `pintarDatosSofom` (`:2197`) across the prospect app. Export and wipe. **The
+      connection-string fields are gone**; Supabase credentials are backend env vars,
+      and the storage-mode switcher has nothing left to switch.
+- [ ] **CP-A7 — QA pass, admin.** Desktop and tablet, keyboard-only traversal, table
+      a11y, focus management on the detail view and its dialogs, and a check that no
+      prospect-flow route leaks panel state.
 
 ---
 
@@ -191,8 +226,14 @@ contract in this repo as the referee, and any PR changing one side must change b
 | F10 | Documentos | frontend | F9, B4 | ☐ |
 | F11 | Biometría + video | frontend | F2 | ☐ |
 | F12 | Solicitud + firma | frontend | F8, B8, B3 | ☐ |
-| F13 | Panel administrativo | frontend | B3, B6, B9 | ☐ |
-| F14 | QA pass | frontend | F1–F13 | ☐ |
+| F13 | QA pass, prospect flow | frontend | F1–F12 | ☐ |
+| A1 | Admin shell + login | admin | 0.2, B6 | ☐ |
+| A2 | Expedientes list | admin | A1, B3 | ☐ |
+| A3 | Expediente detail | admin | A2, B4 | ☐ |
+| A4 | Producto | admin | A1, B9 | ☐ |
+| A5 | Formatos | admin | A1, B8 | ☐ |
+| A6 | Ajustes | admin | A1, B9 | ☐ |
+| A7 | QA pass, admin | admin | A1–A6 | ☐ |
 
 ---
 
@@ -266,8 +307,11 @@ or follows directly from a decision they made.
    instead, per §10.
 7. The folio is generated client-side (`:3422`) from a date plus a short random — both
    guessable and collidable. Server-side in CP-B3.
-8. Biometric confidence was a hardcoded "98%" / "95%" (`:5004`). Removed in CP-F11.
-9. `100vh` on the app shell breaks under mobile Safari's collapsing toolbar. `100dvh`.
-10. 32px tap targets on the back button and 16px checkboxes are below the 44px minimum.
-11. Required-ness was inferred by walking the DOM for visibility (`:3987`, `:4009`).
+8. `100vh` on the app shell breaks under mobile Safari's collapsing toolbar. `100dvh`.
+9. 32px tap targets on the back button and 16px checkboxes are below the 44px minimum.
+10. Required-ness was inferred by walking the DOM for visibility (`:3987`, `:4009`).
     Declared explicitly per §8.
+
+**Reviewed and deliberately kept:** the mocked `"98%"` / `"95%"` biometric confidence
+(`:5004`). Owner's call, 2026-09-30 — it is a demo and the figure sits behind the
+"Modo demostración" label. Recorded as deviation D6 in `01-conventions.md`.
