@@ -24,11 +24,7 @@ import {
 import { Store, select } from '@ngxs/store';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 
-import {
-  CLAVES_VALIDAS,
-  filtrarCatalogo,
-  filtrarCondicionales,
-} from '../../model/constants/plantilla/catalogo-claves';
+import { CLAVES_VALIDAS } from '../../model/constants/plantilla/catalogo-claves';
 import {
   BANDERAS_EJEMPLO,
   DATOS_EJEMPLO,
@@ -50,15 +46,13 @@ import { PlantillasState } from '../../state/plantillas/plantillas.state';
 import { SofomState } from '../../state/sofom/sofom.state';
 import { CargarSofom } from '../../state/sofom/sofom.actions';
 import { Seccion } from '../../ui/seccion/seccion';
+import { ClavesCatalogo } from './claves-catalogo/claves-catalogo';
 
 interface EstadoTexto {
   readonly ok: boolean;
   readonly texto: string;
   readonly clases: string;
 }
-
-/** How long "Copiado" stays on the button. Matches the source (`:5707`). */
-const MS_COPIADO = 1200;
 
 /**
  * Formatos — the solicitud template and the catalogue of claves.
@@ -82,6 +76,7 @@ const MS_COPIADO = 1200;
   imports: [
     ReactiveFormsModule,
     Seccion,
+    ClavesCatalogo,
     LlavesPipe,
     LucideUpload,
     LucideEye,
@@ -117,13 +112,17 @@ export class Formatos implements AfterViewInit {
   /** A `.docx` that failed to convert, before anything was sent. */
   readonly #errorLocal = signal<string | null>(null);
   readonly #leyendo = signal(false);
-  protected readonly claveCopiada = signal<string | null>(null);
-
   protected readonly busqueda = new FormControl('', { nonNullable: true });
-  readonly #consulta = signal('');
 
-  protected readonly grupos = computed(() => filtrarCatalogo(this.#consulta()));
-  protected readonly condicionales = computed(() => filtrarCondicionales(this.#consulta()));
+  /**
+   * The debounced search text, handed to the deferred catalogue as an input.
+   * The field itself stays in this component: it is above the fold and must
+   * keep working while the catalogue is still absent.
+   */
+  protected readonly consulta = signal('');
+
+  /** Placeholder rows, sized to roughly the first group so nothing jumps. */
+  protected readonly filasFantasma = [1, 2, 3, 4, 5, 6];
 
   protected readonly hayActivo = computed(() => this.activa() !== null);
   protected readonly ocupado = computed(
@@ -187,7 +186,7 @@ export class Formatos implements AfterViewInit {
 
     this.busqueda.valueChanges
       .pipe(debounceTime(150), distinctUntilChanged(), takeUntilDestroyed())
-      .subscribe((q) => this.#consulta.set(q));
+      .subscribe((q) => this.consulta.set(q));
   }
 
   ngAfterViewInit(): void {
@@ -253,33 +252,8 @@ export class Formatos implements AfterViewInit {
     if (activa) this.#store.dispatch(new QuitarPlantilla(activa.id));
   }
 
-  protected copiar(clave: string): void {
-    void this.#alPortapapeles(`{{${clave}}}`, clave);
-  }
-
-  protected copiarBloque(clave: string): void {
-    void this.#alPortapapeles(`{{#${clave}}}\n\n{{/${clave}}}`, clave);
-  }
-
-  /**
-   * Copies, then flips the button to "Copiado" for a moment (`:5701`).
-   *
-   * `navigator.clipboard` needs a secure context and a user gesture; both
-   * hold here. The source keeps a `document.execCommand` fallback — that API
-   * is deprecated and the panel is served over HTTPS, so a failure shows a
-   * message instead of silently doing nothing.
-   */
-  async #alPortapapeles(texto: string, clave: string): Promise<void> {
-    try {
-      await navigator.clipboard.writeText(texto);
-      this.claveCopiada.set(clave);
-      setTimeout(() => {
-        if (this.claveCopiada() === clave) this.claveCopiada.set(null);
-      }, MS_COPIADO);
-    } catch {
-      this.#errorLocal.set(
-        'Tu navegador no dejó copiar al portapapeles. Selecciona la clave y cópiala a mano.',
-      );
-    }
+  /** A clipboard failure from the catalogue, shown with the other messages. */
+  protected avisarErrorCopia(mensaje: string): void {
+    this.#errorLocal.set(mensaje);
   }
 }

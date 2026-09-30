@@ -138,6 +138,7 @@
           ></svg>
           <label for="buscar-clave" class="sr-only">Buscar clave</label>
           <input
+            #campoBusqueda
             id="buscar-clave"
             type="search"
             [formControl]="busqueda"
@@ -146,70 +147,42 @@
           />
         </div>
 
-        @for (grupo of grupos(); track grupo.grupo) {
-          <div class="mb-5">
-            <h3 class="mb-2 font-heading text-sm font-bold text-gold">{{ grupo.grupo }}</h3>
-            <ul class="flex flex-col gap-1">
-              @for (item of grupo.claves; track item.clave) {
-                <li
-                  class="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border/60 py-1.5 last:border-b-0"
-                >
-                  <code class="font-mono text-status text-navy">{{
-                    item.clave | llaves
-                  }}</code>
-                  <span class="flex-1 text-status text-text-soft">{{ item.descripcion }}</span>
-                  <button
-                    type="button"
-                    (click)="copiar(item.clave)"
-                    class="rounded-control border border-border px-2 py-1 text-status font-semibold transition-colors"
-                    [class.bg-surface-success]="item.clave === claveCopiada()"
-                    [class.text-success]="item.clave === claveCopiada()"
-                    [class.text-navy]="item.clave !== claveCopiada()"
-                  >
-                    {{ item.clave === claveCopiada() ? 'Copiado' : 'Copiar' }}
-                  </button>
-                </li>
-              }
-            </ul>
+        <!--
+          The catalogue is 86 claves across twelve groups — the heaviest thing
+          on this screen and the one furthest down it. `@defer` keeps it out of
+          the Formatos chunk entirely (see `claves-catalogo.ts` for why it had
+          to become its own component) and brings it in on whichever comes
+          first: the section scrolling into view, or the operator touching the
+          search field above, which they can do while this is still absent.
+          `prefetch on idle` means the chunk is usually already in memory by
+          the time either fires.
+        -->
+        @defer (on viewport; on interaction(campoBusqueda); prefetch on idle) {
+          <panel-claves-catalogo
+            animate.enter="claves-entran"
+            [consulta]="consulta()"
+            (errorCopia)="avisarErrorCopia($event)"
+          />
+        } @placeholder {
+          <!-- One root node, because `on viewport` observes the placeholder.
+               It stands in for roughly the first group so the page does not
+               jump when the real list lands. -->
+          <div aria-hidden="true" class="flex flex-col gap-2">
+            @for (fila of filasFantasma; track fila) {
+              <div class="flex items-center gap-3 border-b border-border/60 py-1.5">
+                <div class="h-3 w-32 rounded-control bg-border/70"></div>
+                <div class="h-3 flex-1 rounded-control bg-border/40"></div>
+              </div>
+            }
           </div>
-        }
-
-        @if (condicionales().length) {
-          <div class="mb-2">
-            <h3 class="mb-1 font-heading text-sm font-bold text-gold">
-              Secciones que solo aparecen a veces
-            </h3>
-            <p class="mb-2 text-status text-text-soft">
-              Todo lo que pongas entre la clave de apertura y la de cierre solo saldrá
-              impreso si se cumple la condición.
-            </p>
-            <ul class="flex flex-col gap-1">
-              @for (item of condicionales(); track item.clave) {
-                <li
-                  class="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border/60 py-1.5 last:border-b-0"
-                >
-                  <code class="font-mono text-status text-navy">{{
-                    item.clave | llaves: 'bloque'
-                  }}</code>
-                  <span class="flex-1 text-status text-text-soft">{{ item.descripcion }}</span>
-                  <button
-                    type="button"
-                    (click)="copiarBloque(item.clave)"
-                    class="rounded-control border border-border px-2 py-1 text-status font-semibold transition-colors"
-                    [class.bg-surface-success]="item.clave === claveCopiada()"
-                    [class.text-success]="item.clave === claveCopiada()"
-                    [class.text-navy]="item.clave !== claveCopiada()"
-                  >
-                    {{ item.clave === claveCopiada() ? 'Copiado' : 'Copiar' }}
-                  </button>
-                </li>
-              }
-            </ul>
-          </div>
-        }
-
-        @if (!grupos().length && !condicionales().length) {
-          <p class="py-6 text-center text-sm text-text-soft">Ninguna clave coincide.</p>
+        } @loading (after 100ms; minimum 200ms) {
+          <p class="py-6 text-center text-sm text-text-soft" aria-live="polite">
+            Cargando el catálogo de claves…
+          </p>
+        } @error {
+          <p role="alert" class="py-6 text-center text-sm text-error">
+            No se pudo cargar el catálogo de claves. Recarga la página.
+          </p>
         }
       </panel-seccion>
     </div>

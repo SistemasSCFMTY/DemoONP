@@ -1,4 +1,4 @@
-import JSZip from 'jszip';
+import type JSZip from 'jszip';
 
 /**
  * Reads a `.docx` and returns the panel's simplified HTML.
@@ -157,9 +157,15 @@ function tablaHtml(tabla: Element): string {
 }
 
 export async function leerDocx(archivo: Blob): Promise<string> {
+  // JSZip is imported here rather than at the top of the file so it does not
+  // ride in the Formatos route chunk. It is ~120 kB raw for a library that
+  // only runs if the operator actually picks a `.docx`, and most visits to
+  // that tab are to read the catalogue of claves. Type-only import above.
+  const { default: JSZipLib } = await import('jszip');
+
   let zip: JSZip;
   try {
-    zip = await JSZip.loadAsync(archivo);
+    zip = await JSZipLib.loadAsync(archivo);
   } catch {
     throw new ErrorDocx('El archivo no parece un documento de Word válido.');
   }
