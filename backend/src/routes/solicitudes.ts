@@ -4,6 +4,8 @@ import { badRequest } from '../lib/errors';
 import { responder } from '../lib/respuesta';
 import { supabaseDe } from '../lib/supabase';
 import { SolicitudCreadaSchema } from '../schemas/expediente';
+import { correoConfirmacion } from '../services/correo/confirmacion';
+import { enviarCorreo } from '../services/correo/mailer';
 import { recibirSolicitud } from '../services/solicitudes';
 
 /**
@@ -23,6 +25,17 @@ solicitudes.post('/', async (c) => {
   }
 
   const creada = await recibirSolicitud(supabaseDe(c.env), c.env, form);
+
+  // Confirmación con el folio (CP-B10). Después de que la escritura
+  // salió bien y dentro de `waitUntil`, igual que el de bienvenida: la
+  // respuesta no lo espera y un fallo no la toca. Una solicitud
+  // aceptada no puede convertirse en un error porque Resend tardó.
+  if (creada.correo) {
+    const { asunto, html } = correoConfirmacion(creada.folio);
+    c.executionCtx.waitUntil(
+      enviarCorreo(c.env.RESEND_API_KEY, { para: creada.correo, asunto, html }),
+    );
+  }
 
   // `archivosFallidos` no sale en la respuesta: el contrato dice
   // `201 → { folio, id }` y nada más. Queda en el log del servidor,

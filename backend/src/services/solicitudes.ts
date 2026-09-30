@@ -87,6 +87,8 @@ export interface SolicitudCreada {
   readonly id: string;
   /** Partes que no se pudieron subir. El 201 sale igual; ver el comentario abajo. */
   readonly archivosFallidos: readonly ParteArchivo[];
+  /** A dónde mandar la confirmación (CP-B10). `null` si no vino correo. */
+  readonly correo: string | null;
 }
 
 /**
@@ -215,5 +217,5 @@ export async function recibirSolicitud(
     tercero: hayPropietarioReal(datos),
   });
 
-  return { folio, id, archivosFallidos: fallidos };
+  return { folio, id, archivosFallidos: fallidos, correo: datos.correo };
 }
