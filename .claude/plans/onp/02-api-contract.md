@@ -54,6 +54,29 @@ log the failure and return 201 anyway.
 | `doc_id`, `doc_curp`, `doc_fiscal`, `doc_fea`, `doc_domicilio` | file | pdf/jpg/png |
 | `doc_poder`, `doc_id_propietario`, `doc_domicilio_propietario` | file | only when tercero |
 
+**Part name ≠ stored `tipo`.** `archivos.tipo` is the Postgres enum `tipo_archivo`,
+which already exists in the reused project and contains **none** of the eight `doc_*`
+names — an insert with `doc_curp` fails with a 500, not a validation error. The Worker
+translates; the part names above are unchanged because `web-app/` is built against them.
+
+| Part | Stored `tipo` |
+|---|---|
+| `id_frente` · `id_reverso` · `firma` | same |
+| `doc_curp` | `constancia_curp` |
+| `doc_fiscal` | `constancia_fiscal` |
+| `doc_fea` | `constancia_fea` |
+| `doc_domicilio` | `comprobante_domicilio` |
+| `doc_poder` | `poder_notarial` |
+| `doc_id_propietario` | `id_propietario_real` |
+| `doc_domicilio_propietario` | `domicilio_propietario_real` |
+| `doc_id` | `otro` |
+
+`doc_id` → `otro` because `id_frente`/`id_reverso` are taken by the camera captures;
+reusing them would have the uploaded PDF overwrite the photo at the same
+`{folio}/{tipo}.{ext}` path. The full enum also has `video_identificacion`, `huella`
+and `rostro`, which this backend does not write yet — the panel may still meet them on
+older expedientes.
+
 `201 → { folio: string, id: string }`
 
 The **folio is generated server-side**. The source generates it in the browser
@@ -94,6 +117,14 @@ Field-for-field from `mapearExpediente` (`onp_fer_etapa2_pf.html:2851`) and
 - **Solicitud** — `monto_solicitado, plazo_solicitado_meses, tasa_solicitada,
   pago_estimado` (numbers), `es_cliente_existente` (bool), `numero_cliente`
 - **Meta** — `dispositivo, version_app`
+- **Documento** — `documento_html`: the rendered solicitud exactly as the prospect saw
+  and signed it, from CP-F11. It becomes the `documentos` row that
+  `GET /expedientes/:id` returns as `documento.contenido_html`. **Added 2026-09-30 by
+  `onp-backend`** — CP-B3 requires the signed `documentos` row and the detail endpoint
+  returns it, but no field in this list carried the HTML. The source sent it from the
+  browser (`exp.documento`, `:3130`) and that is still the only source: the Worker
+  renders no templates (CP-B11 is P2 and expected to be cut). Optional, so a submission
+  that omits it still succeeds, just without a `documentos` row.
 - **Propietario real** — present only when a tercero is declared. Same shape prefixed
   `pr_`: `pr_apellido_paterno, pr_apellido_materno, pr_nombres, pr_nombre_completo,
   pr_genero, pr_fecha_nacimiento, pr_entidad_nacimiento, pr_nacionalidad, pr_curp,
@@ -123,7 +154,16 @@ Session is an httpOnly cookie carrying a JWT. Every route below returns
 
 ### `POST /admin/login`
 `{ correo, password }` → `200 → { nombre_completo }` + `Set-Cookie`.
-Verifies against `usuarios_panel` (`activo` must be true).
+
+**Passwords live in Supabase Auth, not in `usuarios_panel`.** That table has no password
+column and never had one — it is the profile (`rol`, `activo`, `nombre_completo`), which
+is how the source used it (`:5300`) after calling `signInWithPassword` (`:5291`). So the
+Worker calls `signInWithPassword` server-side with the publishable key, looks the profile
+up with the secret key, and requires `activo = true` and a `rol` in
+`administrador | analista | consulta` (the `rol_usuario` enum — there is no `superadmin`).
+The Supabase session is then discarded: the cookie carries **our own** HS256 JWT signed
+with `JWT_SECRET`, and this API never validates a Supabase-issued token. Corrected
+2026-09-30 by `onp-backend`.
 
 ### `GET /admin/me` → `200 → { correo, nombre_completo }`
 ### `POST /admin/logout` → `204`
@@ -148,8 +188,22 @@ never mints URLs it does not render.
 `200 → { url: string, expiraEn: ISO8601 }` — short-lived signed URL, 5 minutes.
 
 ### `PATCH /expedientes/:id`
-`{ estado: 'pendiente' | 'en_revision' | 'aprobado' | 'rechazado' }`
+`{ estado: 'pendiente' | 'revision' | 'aprobado' | 'rechazado', motivo?: string }`
 `200 → { estado }`
+
+**It is `revision`, not `en_revision`.** The Postgres enum `estado_expediente` already
+exists and reads
+`borrador | pendiente | revision | aprobado | rechazado | cancelado`. `en_revision` is
+not in it, so that value fails as a 500 from the database rather than a validation
+error. Corrected 2026-09-30 by `onp-backend` after probing the real project;
+`superadmin-app/` must send `revision`. `borrador` and `cancelado` read back fine but
+the panel does not set them.
+
+`motivo` is optional and not in the original contract. It fills
+`historial_estados.motivo` — that table already exists (`expediente_id`,
+`estado_anterior`, `estado_nuevo`, `motivo`, `usuario_id`, `creado_en`) and the Worker
+writes a row on every estado change. A rejection with no reason recorded makes the
+audit trail useless.
 
 ### `PUT /producto` *(P1)*
 Same shape as `GET /producto`. Edits what the prospect's simulator shows.
