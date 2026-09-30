@@ -50,6 +50,18 @@
   --color-error: #8a2a2a;
   --color-warning: #8a5a1c;
 
+  /* Tinted grounds for alerts, the leyenda and the PEP block. Added in
+     CP-F2 because the source paints these with raw hex (#fffacd, #e3f2fd,
+     #f9f9f9) and #e3f2fd/#1565c0 is Material blue — a colour from a
+     different company. Each is a low-chroma wash of a palette colour, so
+     an alert reads as this product rather than as a framework default.
+     Registered in 01-conventions.md §3 before being used (no hex in a
+     template, ever). */
+  --color-surface-warning: #fdf6e3; /* warning wash — alert.warning       */
+  --color-surface-info: #eef2f7;    /* navy wash    — alert.info          */
+  --color-surface-success: #eef6f1; /* success wash — OCR-detected field  */
+  --color-surface-muted: #f9f8f5;   /* cream wash   — leyenda, pep-section */
+
   /* --- Typography (§2). Charis SIL headings, Archivo body. ---
      Confirmed by the owner 2026-09-30: Charis SIL for main headings,
      Archivo for the declaratoria and all body copy. */
@@ -63,6 +75,9 @@
   --text-h3: 0.875rem;        /* 14px — section heading                  */
   --text-topbar: 0.875rem;    /* 14px — sticky bar title                 */
   --text-h2: 1.125rem;        /* 18px — screen title                     */
+  --text-wordmark: 1.6875rem; /* 27px — the portada wordmark, and only
+                                 there. Weight 700, which the §2 ladder
+                                 already reserves for the wordmark.      */
 
   /* --- Shape (§4). Radius keyed to what the element IS, never one token
      applied everywhere. Buttons are rounded rectangles, not pills. --- */

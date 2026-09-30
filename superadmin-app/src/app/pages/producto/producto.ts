@@ -129,7 +129,7 @@ export class ProductoVista implements AfterViewInit {
           ok: true,
           titulo: 'Guardado',
           texto: 'Los parámetros del producto quedaron registrados. El simulador ya los usa.',
-          clases: 'bg-success/10 text-success',
+          clases: 'bg-surface-success text-success',
         }
       : null;
   });

@@ -27,8 +27,14 @@ export type IconoEstado =
  * §9: colour never carries meaning alone, so every estado also names an icon.
  * The source's badge palette used five hexes that are not in the §3 table;
  * rather than widen a palette that must stay in step with `web-app/`, each
- * estado tints a §3 token. `revision` therefore reads navy where the source
- * read blue, and the icon carries the distinction.
+ * estado uses the §3 tinted grounds. `revision` therefore reads navy where the
+ * source read blue, and the icon carries the distinction.
+ *
+ * The grounds are the `surface-*` tokens, not an alpha wash of the foreground:
+ * `bg-warning/10` renders differently over a white card than over the cream
+ * ground, and these chips sit on both. `rechazado` is the exception — §3 has
+ * no `surface-error`, so it keeps `bg-error/10` until one is registered.
+ * Raised in PR #3.
  */
 export interface DefinicionEstado {
   readonly valor: EstadoExpediente;
@@ -45,28 +51,28 @@ export const ESTADOS_EXPEDIENTE: readonly DefinicionEstado[] = [
     etiqueta: 'Borrador',
     etiquetaLarga: 'Borrador sin enviar',
     icono: 'PencilLine',
-    clases: 'bg-border/70 text-text-soft',
+    clases: 'bg-surface-muted text-text-soft',
   },
   {
     valor: 'pendiente',
     etiqueta: 'Pendiente',
     etiquetaLarga: 'Pendiente de revisión',
     icono: 'Clock',
-    clases: 'bg-warning/10 text-warning',
+    clases: 'bg-surface-warning text-warning',
   },
   {
     valor: 'revision',
     etiqueta: 'En revisión',
     etiquetaLarga: 'En revisión',
     icono: 'Search',
-    clases: 'bg-navy/10 text-navy',
+    clases: 'bg-surface-info text-navy',
   },
   {
     valor: 'aprobado',
     etiqueta: 'Aprobado',
     etiquetaLarga: 'Aprobado',
     icono: 'Check',
-    clases: 'bg-success/10 text-success',
+    clases: 'bg-surface-success text-success',
   },
   {
     valor: 'rechazado',
@@ -80,7 +86,7 @@ export const ESTADOS_EXPEDIENTE: readonly DefinicionEstado[] = [
     etiqueta: 'Cancelado',
     etiquetaLarga: 'Cancelado',
     icono: 'Ban',
-    clases: 'bg-text-soft/10 text-text-soft',
+    clases: 'bg-surface-muted text-text-soft',
   },
 ];
 
@@ -119,7 +125,7 @@ function desconocido(valor: string): DefinicionEstado {
     etiqueta: valor,
     etiquetaLarga: valor,
     icono: 'CircleHelp',
-    clases: 'bg-text-soft/10 text-text-soft',
+    clases: 'bg-surface-muted text-text-soft',
   };
 }
 

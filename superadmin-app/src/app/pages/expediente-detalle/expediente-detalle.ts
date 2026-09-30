@@ -4,6 +4,7 @@ import {
   Component,
   DestroyRef,
   ElementRef,
+  SecurityContext,
   computed,
   effect,
   inject,
@@ -11,6 +12,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import {
   LucideArrowLeft,
@@ -105,6 +107,7 @@ export class ExpedienteDetalleVista implements AfterViewInit {
 
   readonly #store = inject(Store);
   readonly #impresion = inject(ImpresionDocumento);
+  readonly #sanitizer = inject(DomSanitizer);
 
   private readonly titulo = viewChild<ElementRef<HTMLElement>>('titulo');
 
@@ -143,6 +146,30 @@ export class ExpedienteDetalleVista implements AfterViewInit {
   /** True when the estado on file is not one the panel may assign. */
   protected readonly estadoNoAsignable = computed(() => this.estadoBloqueado() !== null);
   protected readonly nombreArchivo = NOMBRE_ARCHIVO;
+
+  /**
+   * The stored solicitud, sanitised.
+   *
+   * **Stored HTML is untrusted on display**, whatever wrote it. The source's
+   * `llenarPlantilla` (`onp_fer_etapa2_pf.html:3716`) interpolates form values
+   * into the template without escaping, so a surname containing a `<script>`
+   * tag is stored in `documentos.contenido_html` verbatim. `web-app/` escapes
+   * at generation now, but the database already holds rows written by the
+   * original single-file app and those were never escaped — and this view
+   * renders them inside an authenticated staff session that can read every
+   * expediente. A stored XSS with a payload typed by an anonymous prospect.
+   *
+   * One sanitisation point feeds both sinks: the inline `[innerHTML]` and the
+   * print window, which writes into a document that inherits this origin.
+   * `sanitize(SecurityContext.HTML, …)`, and **never**
+   * `bypassSecurityTrustHtml` — the plantilla styles itself with classes the
+   * sheet defines, so nothing it legitimately needs is stripped.
+   */
+  protected readonly documentoHtml = computed<string | null>(() => {
+    const html = this.expediente()?.documento?.contenido_html;
+    if (!html) return null;
+    return this.#sanitizer.sanitize(SecurityContext.HTML, html) ?? '';
+  });
 
   protected readonly documentoVisible = signal(false);
   protected readonly avisoImpresion = signal<string | null>(null);
@@ -273,9 +300,13 @@ export class ExpedienteDetalleVista implements AfterViewInit {
 
   protected descargarPdf(): void {
     const e = this.expediente();
-    if (!e?.documento) return;
+    const html = this.documentoHtml();
+    if (!e || html === null) return;
 
-    const abierta = this.#impresion.imprimir(e.folio, e.documento.contenido_html);
+    // The sanitised copy, never `documento.contenido_html`: the print window
+    // is `about:blank`, which inherits this origin, so a script written into
+    // it runs with the staff session's access.
+    const abierta = this.#impresion.imprimir(e.folio, html);
     this.avisoImpresion.set(
       abierta
         ? null

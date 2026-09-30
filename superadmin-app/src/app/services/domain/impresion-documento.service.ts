@@ -12,9 +12,22 @@ import { Injectable } from '@angular/core';
  *
  * Departure from the source's `descargarPDFExp` (`:5661`), noted in the PR.
  *
- * The document HTML comes from our own Worker (`documento.contenido_html`),
- * built from the plantilla — it is not operator input and not third-party
- * content.
+ * ---------------------------------------------------------------------------
+ * CALLER CONTRACT: `contenidoHtml` MUST ALREADY BE SANITISED.
+ *
+ * This writes into a window opened on `about:blank`, which inherits the
+ * panel's origin — so a `<script>` written here runs with the staff session's
+ * access to every expediente. The stored document is not trustworthy just
+ * because it came from our own database: the source's `llenarPlantilla`
+ * (`onp_fer_etapa2_pf.html:3716`) interpolated form values into the template
+ * without escaping, and rows written by the original single-file app are
+ * still in `documentos`.
+ *
+ * `ExpedienteDetalleVista.documentoHtml` is the sanitisation point and the
+ * only caller. Sanitising is not done here because a service has no
+ * `DomSanitizer` of its own worth the injection, and one pass feeding both
+ * sinks is easier to verify than two.
+ * ---------------------------------------------------------------------------
  */
 @Injectable({ providedIn: 'root' })
 export class ImpresionDocumento {

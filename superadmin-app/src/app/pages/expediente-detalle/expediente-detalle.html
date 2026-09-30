@@ -330,10 +330,11 @@
 
             <div id="doc-inline" class="mt-3">
               @if (documentoVisible()) {
-                <!-- The plantilla's own markup, from our Worker. Angular's
-                     sanitiser keeps the classes the sheet styles and drops
-                     anything else. -->
-                <div class="doc-hoja" [innerHTML]="doc.contenido_html"></div>
+                <!-- Sanitised in the component, not here — see
+                     `documentoHtml`. Stored HTML is untrusted on display:
+                     the original app interpolated form values into this
+                     template without escaping. -->
+                <div class="doc-hoja" [innerHTML]="documentoHtml()"></div>
               }
             </div>
           } @else {

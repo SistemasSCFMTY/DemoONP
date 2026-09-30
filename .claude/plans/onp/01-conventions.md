@@ -416,6 +416,25 @@ dropped on destroy.
 rasterises because it must; a staff tool should not take half a megabyte to do worse
 than the browser's own Save as PDF, which keeps the document as selectable text.
 
+**Stored HTML is untrusted on display.** `documentos.contenido_html` is rendered by
+the panel's detail view inside an authenticated staff session that can read every
+expediente. The source's `llenarPlantilla` (`:3716`) interpolates form values into the
+solicitud template without escaping, so a prospect who types `<script>` into a surname
+has it stored verbatim — a stored XSS with a payload written by an anonymous stranger.
+
+`web-app/` escapes at generation now, and that is the right fix, but it does not clear
+the rows the original single-file app already wrote. So the display side sanitises too,
+independently: `DomSanitizer.sanitize(SecurityContext.HTML, …)`, **never**
+`bypassSecurityTrustHtml`. One sanitisation point per view, feeding every sink —
+including `window.open` + `document.write`, which lands on `about:blank` and therefore
+inherits the app's origin. A service that writes HTML it did not sanitise states that
+contract at the top of the file, and the caller honours it.
+
+Two properties worth knowing when asserting on this: the sanitiser keeps `class` (so
+the `doc-hoja` sheet still styles the document) and returns accented characters as
+numeric entities, which the HTML parser decodes on the way back in — the printed
+solicitud keeps its accents.
+
 ### Open question for the owner
 
 **May an operator delete an expediente?** The source offers "Eliminar expediente"

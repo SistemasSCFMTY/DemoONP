@@ -154,7 +154,14 @@ path: a control writes to the URL, and nothing else dispatches.
 
 The expediente detail view displays more PII than anything else in the product. No
 field value in a URL, a log, or an analytics event; signed URLs for media are
-short-lived and never persisted. An operator's own search term is the one exception —
+short-lived and never persisted.
+
+**Stored HTML is untrusted on display.** The solicitud in `documentos.contenido_html`
+was interpolated from form values without escaping by the original app, so it can
+carry a prospect's `<script>` into an authenticated staff session. Sanitise on render
+with `DomSanitizer.sanitize(SecurityContext.HTML, …)`, never
+`bypassSecurityTrustHtml`, and feed every sink from the one sanitised copy — including
+a print window, which is `about:blank` and inherits the app's origin. An operator's own search term is the one exception —
 it belongs in the URL, because a reloaded panel must show the same rows.
 
 **Desktop type sizes.** The scale above is the 390px scale. The panel reads body at
