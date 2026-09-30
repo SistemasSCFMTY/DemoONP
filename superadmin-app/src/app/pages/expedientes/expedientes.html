@@ -1,8 +1,6 @@
-<div class="flex h-full flex-col px-8 py-7">
+<div class="flex h-full flex-col px-4 py-5 sm:px-8 sm:py-7">
   <header class="shrink-0">
-    <h1 #titulo tabindex="-1" class="font-heading text-2xl font-bold outline-none">
-      Expedientes
-    </h1>
+    <h1 #titulo tabindex="-1" class="font-heading text-2xl font-bold outline-none">Expedientes</h1>
     <p class="mt-1 text-sm text-text-soft">
       Solicitudes de crédito recibidas del flujo del prospecto.
     </p>
@@ -11,7 +9,7 @@
   <!-- Filters. Whatever is set here is in the URL, and the URL is the only
        thing that loads the table (§12). -->
   <div class="mt-6 flex shrink-0 flex-wrap items-center gap-3">
-    <div class="relative min-w-72 flex-1">
+    <div class="relative min-w-0 flex-1 sm:min-w-72">
       <svg
         lucideSearch
         class="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-text-soft"
@@ -27,7 +25,7 @@
       />
     </div>
 
-    <div class="flex items-center gap-1" role="group" aria-label="Filtrar por estado">
+    <div class="flex flex-wrap items-center gap-1" role="group" aria-label="Filtrar por estado">
       @for (opcion of opcionesEstado; track opcion.valor) {
         <button
           type="button"

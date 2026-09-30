@@ -1,13 +1,13 @@
 <div class="h-full overflow-y-auto">
-  <div class="mx-auto max-w-4xl px-8 py-7">
+  <div class="mx-auto max-w-4xl px-4 py-5 sm:px-8 sm:py-7">
     <header>
       <!-- Heading and lede verbatim from the source (`:2006`). -->
       <h1 #titulo tabindex="-1" class="font-heading text-2xl font-bold outline-none">
         Formato de solicitud de crédito
       </h1>
       <p class="mt-1 text-sm leading-relaxed text-text-soft">
-        Sube el documento de Word con las claves entre llaves. La app las sustituye por
-        los datos de cada cliente.
+        Sube el documento de Word con las claves entre llaves. La app las sustituye por los datos de
+        cada cliente.
       </p>
     </header>
 
@@ -61,9 +61,8 @@
 
         @if (!hayActivo()) {
           <p class="mt-3 text-status text-text-soft">
-            La vista previa y el botón de quitar se activan cuando hay un formato subido.
-            Mientras tanto la solicitud se arma con el formato predeterminado del
-            servidor.
+            La vista previa y el botón de quitar se activan cuando hay un formato subido. Mientras
+            tanto la solicitud se arma con el formato predeterminado del servidor.
           </p>
         }
 
@@ -84,12 +83,10 @@
 
         @if (clavesDesconocidas().length) {
           <div class="mt-3 rounded-control bg-surface-warning px-3 py-2.5">
-            <p class="text-sm font-semibold text-warning">
-              Estas claves no existen en el catálogo
-            </p>
+            <p class="text-sm font-semibold text-warning">Estas claves no existen en el catálogo</p>
             <p class="mt-1 text-status text-text-soft">
-              Se guardó el formato, pero estas aparecerán marcadas en el documento.
-              Revisa que estén bien escritas.
+              Se guardó el formato, pero estas aparecerán marcadas en el documento. Revisa que estén
+              bien escritas.
             </p>
             <ul class="mt-2 flex flex-wrap gap-1.5">
               @for (clave of clavesDesconocidas(); track clave) {
@@ -112,8 +109,7 @@
             </p>
           } @else if (htmlVistaPrevia(); as html) {
             <p class="mt-4 text-status text-text-soft">
-              Así se verá con datos de ejemplo. Lo resaltado son claves sin dato o mal
-              escritas.
+              Así se verá con datos de ejemplo. Lo resaltado son claves sin dato o mal escritas.
             </p>
             <!-- Sanitised in the component. The template came out of a file
                  an operator uploaded, so it is untrusted on display like any
@@ -126,8 +122,7 @@
 
       <panel-seccion titulo="Claves disponibles">
         <p class="mb-4 text-status leading-relaxed text-text-soft">
-          Copia la clave y pégala en tu documento de Word donde quieras que aparezca ese
-          dato.
+          Copia la clave y pégala en tu documento de Word donde quieras que aparezca ese dato.
         </p>
 
         <div class="relative mb-5">
