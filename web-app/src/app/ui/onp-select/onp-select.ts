@@ -15,25 +15,25 @@ import { mensajeDeError } from '../../services/domain/validadores';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule],
   template: `
-    <div class="mb-4">
-      <label [for]="idCampo()" class="mb-1 block text-label font-semibold text-text">
-        {{ etiqueta() }}@if (obligatorio()) {<span class="text-error" aria-hidden="true"> *</span>}
-      </label>
+    <label [for]="idCampo()" class="mb-1 block self-end text-label font-semibold text-text">
+      {{ etiqueta() }}@if (obligatorio()) {<span class="text-error" aria-hidden="true"> *</span>}
+    </label>
 
-      <select
-        [id]="idCampo()"
-        [formControl]="control()"
-        [attr.aria-required]="obligatorio() ? 'true' : null"
-        [attr.aria-invalid]="muestraError() ? 'true' : null"
-        [attr.aria-describedby]="muestraError() ? idCampo() + '-error' : null"
-        [class]="clases()"
-      >
-        <option value="">Selecciona...</option>
-        @for (opcion of opciones(); track opcion.valor) {
-          <option [value]="opcion.valor">{{ opcion.texto }}</option>
-        }
-      </select>
+    <select
+      [id]="idCampo()"
+      [formControl]="control()"
+      [attr.aria-required]="obligatorio() ? 'true' : null"
+      [attr.aria-invalid]="muestraError() ? 'true' : null"
+      [attr.aria-describedby]="muestraError() ? idCampo() + '-error' : null"
+      [class]="clases()"
+    >
+      <option value="">Selecciona...</option>
+      @for (opcion of opciones(); track opcion.valor) {
+        <option [value]="opcion.valor">{{ opcion.texto }}</option>
+      }
+    </select>
 
+    <div>
       @if (muestraError()) {
         <p [id]="idCampo() + '-error'" class="mt-1 text-status font-medium text-error" role="alert">
           {{ textoError() }}
@@ -41,6 +41,8 @@ import { mensajeDeError } from '../../services/domain/validadores';
       }
     </div>
   `,
+  // Three children, same shape as `onp-field`, so the two can share a row.
+  host: { class: 'mb-4 block' },
 })
 export class OnpSelect {
   readonly idCampo = input.required<string>();

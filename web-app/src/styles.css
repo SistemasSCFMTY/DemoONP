@@ -19,6 +19,15 @@
 @import 'tailwindcss';
 
 @theme {
+  /* --- Breakpoints (§5) ---
+     Tailwind's smallest default is `sm` at 40rem, which is wider than the
+     whole prospect shell — so nothing inside a 390px column can ever respond
+     to it. `xs` at 360px is the one that matters here: it is the width below
+     which a two-column form row stops fitting and has to fall back to one.
+     390 (the design width) and 375 (iPhone SE) are above it; 320 is below.
+     This is a density change *inside* the 390px shell, not a desktop layout. */
+  --breakpoint-xs: 22.5rem; /* 360px */
+
   /* --- Colour (§3). ONP FER's own identity. No hex in a template, ever. --- */
   --color-navy: #1c3352;
   --color-navy-deep: #0e2036;
@@ -125,6 +134,54 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================================
+   Two-column form rows (§5) — the `onp-fila` primitive
+   ==========================================================================
+   Lives here rather than in the component so the breakpoint has exactly one
+   definition: `theme(--breakpoint-xs)` resolves the same token the `xs:`
+   utility variant uses. A component stylesheet cannot reach a Tailwind theme
+   value, and writing `22.5rem` a second time is how two numbers drift apart.
+
+   The rationale is on the component. In short: short bounded fields pair up
+   to cut the scroll of a 28-screen form, long or variable ones keep the full
+   row, and below 360px everything collapses to one column — a two-column row
+   that overflows at 320 is worse than the column it replaced.
+   ========================================================================== */
+@layer components {
+  onp-fila {
+    display: grid;
+    grid-template-columns: 1fr;
+    column-gap: 0.75rem;
+  }
+
+  @media (width >= theme(--breakpoint-xs)) {
+    onp-fila {
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto auto;
+    }
+
+    /* Each field becomes a subgrid of the row and spans its three bands —
+       label, control, messages — so they stay aligned across both columns
+       even when one label wraps to two lines and the other does not. This
+       is why `onp-field` and `onp-select` have exactly three children. */
+    onp-fila > * {
+      display: grid;
+      grid-row: span 3;
+      grid-template-rows: subgrid;
+    }
+
+    /* Without subgrid the two columns still appear; the fields just lay out
+       independently. Bottom-aligning recovers most of the alignment. */
+    @supports not (grid-template-rows: subgrid) {
+      onp-fila > * {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+      }
+    }
   }
 }
 

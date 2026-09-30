@@ -17,6 +17,7 @@ import type { LadoFoto } from '../../../state/identidad/identidad.model';
 import { OnpAlert } from '../../../ui/onp-alert/onp-alert';
 import { OnpButton } from '../../../ui/onp-button/onp-button';
 import { OnpField } from '../../../ui/onp-field/onp-field';
+import { OnpFila } from '../../../ui/onp-fila/onp-fila';
 import { OnpSelect } from '../../../ui/onp-select/onp-select';
 import { OnpStatus } from '../../../ui/onp-status/onp-status';
 import { OnpTitulo } from '../../../ui/onp-titulo/onp-titulo';
@@ -54,6 +55,7 @@ const CAMPOS_INE = [
     OnpAlert,
     OnpSelect,
     OnpField,
+    OnpFila,
     OnpButton,
     OnpStatus,
     CapturaLado,
@@ -112,33 +114,37 @@ const CAMPOS_INE = [
             [control]="formulario.controls.claveElector"
           />
         </div>
-        <onp-field
-          idCampo="ine-anio-registro"
-          etiqueta="Año de registro"
-          marcador="AAAA"
-          modoEntrada="numeric"
-          [maxlength]="4"
-          [detectado]="detectado('anioRegistro')"
-          [control]="formulario.controls.anioRegistro"
-        />
-        <onp-field
-          idCampo="ine-num-emision"
-          etiqueta="Número de emisión"
-          marcador="00"
-          modoEntrada="numeric"
-          [maxlength]="2"
-          [detectado]="detectado('numEmision')"
-          [control]="formulario.controls.numEmision"
-        />
-        <onp-field
-          idCampo="ine-anio-emision"
-          etiqueta="Año de emisión"
-          marcador="AAAA"
-          modoEntrada="numeric"
-          [maxlength]="4"
-          [detectado]="detectado('anioEmision')"
-          [control]="formulario.controls.anioEmision"
-        />
+        <onp-fila>
+          <onp-field
+            idCampo="ine-anio-registro"
+            etiqueta="Año de registro"
+            marcador="AAAA"
+            modoEntrada="numeric"
+            [maxlength]="4"
+            [detectado]="detectado('anioRegistro')"
+            [control]="formulario.controls.anioRegistro"
+          />
+          <onp-field
+            idCampo="ine-num-emision"
+            etiqueta="Número de emisión"
+            marcador="00"
+            modoEntrada="numeric"
+            [maxlength]="2"
+            [detectado]="detectado('numEmision')"
+            [control]="formulario.controls.numEmision"
+          />
+        </onp-fila>
+        <onp-fila>
+          <onp-field
+            idCampo="ine-anio-emision"
+            etiqueta="Año de emisión"
+            marcador="AAAA"
+            modoEntrada="numeric"
+            [maxlength]="4"
+            [detectado]="detectado('anioEmision')"
+            [control]="formulario.controls.anioEmision"
+          />
+        </onp-fila>
       </section>
     }
 

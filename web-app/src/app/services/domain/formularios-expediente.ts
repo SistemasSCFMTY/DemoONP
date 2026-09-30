@@ -29,6 +29,17 @@ import {
  * classes. Nothing here asks the DOM what is visible (§8, departure 10).
  */
 
+/**
+ * The four group types, exported so the shared blocks in
+ * `pages/solicitud/bloques/` can take one as a typed input. Inferred rather
+ * than declared: the factory below is the single definition of the shape,
+ * and a second hand-written one would be a second thing to keep in step.
+ */
+export type GrupoGenerales = ReturnType<typeof grupoGenerales>;
+export type GrupoDomicilio = ReturnType<typeof grupoDomicilio>;
+export type GrupoContacto = ReturnType<typeof grupoContacto>;
+export type GrupoLaborales = ReturnType<typeof grupoLaborales>;
+
 /** `nombreFecha` names the nested group so the validators can find it. */
 export function grupoGenerales(fb: FormBuilder, valor: DatosGenerales) {
   return fb.nonNullable.group(
