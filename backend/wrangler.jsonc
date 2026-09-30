@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "onp-backend",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-30",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+
+  // NO SECRETS IN THIS FILE. It is committed.
+  //
+  // Set them with `wrangler secret put <NAME>`:
+  //   SUPABASE_URL, SUPABASE_SERVICE_KEY, JWT_SECRET, RESEND_API_KEY
+  //
+  // For local dev, put the same keys in .dev.vars (gitignored).
+  // See .dev.vars.example.
+  "vars": {
+    // Non-secret only. DEMO_MODE=true makes /otp/enviar echo the generated
+    // code in its response so the UI can show it under "Modo demostración".
+    "DEMO_MODE": "true"
+  }
+}
