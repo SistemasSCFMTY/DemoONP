@@ -10,6 +10,15 @@ const COLUMNAS_RESUMEN = 'id, folio, nombre_completo, curp, estado, monto_solici
 /** Cinco minutos, como dice el contrato. */
 export const VIGENCIA_URL_SEGUNDOS = 300;
 
+/**
+ * Toda consulta de expedientes va acotada a `sofom_id`.
+ *
+ * Somos un solo tenant, pero las tablas heredaron la columna de cuando
+ * no lo éramos, y el id sale del secreto y nunca del cliente
+ * (`lib/tenant.ts`). Acotar es gratis y convierte «hoy solo hay una
+ * SOFOM» —una propiedad de los datos, que cambia— en «este código solo
+ * puede ver una» —una propiedad del código, que no.
+ */
 export interface Consulta {
   readonly q?: string | undefined;
   readonly estado?: Estado | undefined;
@@ -37,11 +46,13 @@ const limpiarBusqueda = (q: string): string =>
  */
 export async function listarExpedientes(
   sb: SupabaseClient,
+  sofomId: string,
   consulta: Consulta,
 ): Promise<{ items: unknown[]; total: number }> {
   let query = sb
     .from('expedientes')
     .select(COLUMNAS_RESUMEN, { count: 'exact' })
+    .eq('sofom_id', sofomId)
     .order('creado_en', { ascending: false })
     .range(consulta.offset, consulta.offset + consulta.limit - 1);
 
@@ -81,11 +92,13 @@ export async function listarExpedientes(
  */
 export async function obtenerExpediente(
   sb: SupabaseClient,
+  sofomId: string,
   id: string,
 ): Promise<Record<string, unknown>> {
   const { data: expediente, error } = await sb
     .from('expedientes')
     .select('*')
+    .eq('sofom_id', sofomId)
     .eq('id', id)
     .maybeSingle();
 
@@ -126,12 +139,17 @@ export async function obtenerExpediente(
 /** La URL firmada de un archivo, válida cinco minutos. */
 export async function firmarArchivo(
   sb: SupabaseClient,
+  sofomId: string,
   expedienteId: string,
   tipo: TipoArchivo,
 ): Promise<{ url: string; expiraEn: string }> {
+  // `archivos` no lleva `sofom_id`; el acotamiento es el `!inner` sobre
+  // el expediente padre. Sin él, un id de expediente de otra SOFOM
+  // acuñaría una URL firmada a su foto de INE.
   const { data, error } = await sb
     .from('archivos')
-    .select('ruta')
+    .select('ruta, expedientes!inner(sofom_id)')
+    .eq('expedientes.sofom_id', sofomId)
     .eq('expediente_id', expedienteId)
     .eq('tipo', tipo)
     .maybeSingle();
@@ -166,6 +184,7 @@ export async function firmarArchivo(
  */
 export async function cambiarEstado(
   sb: SupabaseClient,
+  sofomId: string,
   id: string,
   estado: Estado,
   usuarioId: string,
@@ -174,6 +193,7 @@ export async function cambiarEstado(
   const { data: previo, error: errorPrevio } = await sb
     .from('expedientes')
     .select('estado')
+    .eq('sofom_id', sofomId)
     .eq('id', id)
     .maybeSingle();
 
@@ -186,6 +206,7 @@ export async function cambiarEstado(
   const { data, error } = await sb
     .from('expedientes')
     .update({ estado, actualizado_en: new Date().toISOString() })
+    .eq('sofom_id', sofomId)
     .eq('id', id)
     .select('estado')
     .maybeSingle();

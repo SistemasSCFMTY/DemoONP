@@ -198,3 +198,24 @@ export const LoginSchema = z.object({
 
 export const LoginOkSchema = z.object({ nombre_completo: z.string() });
 export const YoSchema = z.object({ correo: z.string(), nombre_completo: z.string() });
+
+/**
+ * `GET /expedientes/exportar` (CP-S6 / Ajustes).
+ *
+ * `expedientes` va como `unknown`: es el volcado del renglón con sus
+ * relaciones anidadas, y declararlo campo por campo aquí sería
+ * duplicar `ExpedienteDetalleSchema` con la garantía de que las dos
+ * copias se separen. Lo que sí se fija es el sobre —cuándo se generó,
+ * cuántos vinieron y si se truncó—, que es lo que quien lo consume
+ * necesita poder confiar.
+ *
+ * `truncado: true` significa que hay más de los que caben en una
+ * respuesta. Está en el sobre y no en un encabezado porque un archivo
+ * JSON guardado en disco conserva el campo y pierde el encabezado.
+ */
+export const ExportacionSchema = z.object({
+  generado_en: z.string(),
+  total: z.number().int(),
+  truncado: z.boolean(),
+  expedientes: z.array(z.unknown()),
+});

@@ -181,11 +181,17 @@ changing one copy changes the other.
       written, so CP-S4 can edit what the prospect sees.
 - [x] **CP-B10 · P1 — Confirmation email.** A second Resend template on submission,
       carrying the folio. Same sandbox-sender constraint.
-- [ ] **CP-B11 · P2 — Plantillas.** `.docx` parsing with JSZip (port `leerDocx`
-      `:3756`) and `POST /solicitud/render`. **Expected to be cut.** Until it is,
-      `PLANTILLA_BASE` (`:3861`) is seeded as a constant and the solicitud renders from
-      that.
-- [ ] **CP-B12 · P2 — Bitácora.** Append-only audit rows per mutation.
+- [x] **CP-B11 · P2 — Plantillas. Done by another road, 2026-09-30.** The owner un-cut
+      CP-S6, so the panel needs template storage after all — but the `.docx` parsing
+      stays in the browser for the same reason the OCR does: JSZip plus the unzip does
+      not fit the Worker bundle (deviation D7). So the panel extracts the HTML and the
+      Worker stores it: `GET/POST /plantillas`, `GET /plantillas/:id`,
+      `DELETE /plantillas/:id` (soft). **No `POST /solicitud/render`** — nothing renders
+      server-side, and `web-app/` keeps rendering the solicitud from its constant.
+- [ ] **CP-B12 · P2 — Bitácora.** Append-only audit rows per mutation. Still open, but
+      partly overtaken: `PATCH /expedientes/:id` already writes `historial_estados` on
+      every estado change (CP-B4), which is the audit trail the panel actually shows.
+      What is missing is the generic `bitacora` row per mutation.
 
 ## Prospect app — `onp-frontend`
 
@@ -300,7 +306,7 @@ descope — no SOFOM management, no panel-user management, no cross-tenant searc
 | B8 | Deploy Worker | P0 | backend | B3–B7 | ☑ |
 | B9 | Producto endpoint | P1 | backend | B2 | ☑ |
 | B10 | Confirmation email | P1 | backend | B6, B3 | ☑ |
-| B11 | Plantillas | P2 | backend | B2 | ☐ |
+| B11 | Plantillas | P2 | backend | B2 | ☑ |
 | B12 | Bitácora | P2 | backend | B2 | ☐ |
 | F1 | Shell, routing, NGXS | P0 | frontend | 0.2 | ☐ |
 | F2 | UI primitives | P0 | frontend | 0.2 | ☐ |

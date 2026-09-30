@@ -4,6 +4,7 @@ import { sign, verify } from 'hono/jwt';
 import { z } from 'zod';
 import type { Env } from '../env';
 import { requireEnv } from '../env';
+import { RolSchema, type Rol } from '../schemas/comunes';
 
 /**
  * La sesión del panel.
@@ -36,6 +37,15 @@ export const SesionSchema = z.object({
   sub: z.string(),
   correo: z.string(),
   nombre_completo: z.string(),
+  /**
+   * El rol al momento de entrar.
+   *
+   * Sirve para que el panel sepa qué pintar sin preguntar. **No es la
+   * autorización de una escritura**: para eso, `requireAdmin` vuelve a
+   * leer `usuarios_panel`. Un token vive ocho horas y quitarle el rol a
+   * alguien no debería tardar ocho horas en surtir efecto.
+   */
+  rol: RolSchema,
   exp: z.number(),
 });
 
@@ -43,7 +53,7 @@ export type Sesion = z.infer<typeof SesionSchema>;
 
 export async function emitirSesion<E extends HonoEnv & { Bindings: Env }>(
   c: Context<E>,
-  usuario: { id: string; correo: string; nombre_completo: string },
+  usuario: { id: string; correo: string; nombre_completo: string; rol: Rol },
 ): Promise<void> {
   const exp = Math.floor(Date.now() / 1000) + VIGENCIA_SEGUNDOS;
   const token = await sign(
@@ -51,6 +61,7 @@ export async function emitirSesion<E extends HonoEnv & { Bindings: Env }>(
       sub: usuario.id,
       correo: usuario.correo,
       nombre_completo: usuario.nombre_completo,
+      rol: usuario.rol,
       exp,
     },
     requireEnv(c.env, 'JWT_SECRET'),

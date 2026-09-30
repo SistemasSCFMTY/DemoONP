@@ -1,14 +1,17 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { requestId } from 'hono/request-id';
+import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import type { Env } from './env';
 import { ApiError, internal } from './lib/errors';
 import { log } from './lib/log';
 import { admin } from './routes/admin';
 import { expedientes } from './routes/expedientes';
 import { otp } from './routes/otp';
+import { plantillas } from './routes/plantillas';
 import { producto } from './routes/producto';
 import { prospectos } from './routes/prospectos';
+import { sofom } from './routes/sofom';
 import { solicitudes } from './routes/solicitudes';
 
 export const app = new Hono<{ Bindings: Env }>();
@@ -68,6 +71,8 @@ app.route('/expedientes', expedientes);
 app.route('/otp', otp);
 app.route('/prospectos', prospectos);
 app.route('/producto', producto);
+app.route('/sofom', sofom);
+app.route('/plantillas', plantillas);
 
 /**
  * Un solo sobre de salida: `{ error: { code, message } }`.
@@ -86,7 +91,10 @@ app.onError((err, c) => {
     estado: e.status,
     causa: e.cause instanceof Error ? e.cause.message : String(e.cause ?? ''),
   });
-  return c.json({ error: { code: e.code, message: e.message } }, e.status as 400);
+  return c.json(
+    { error: { code: e.code, message: e.message } },
+    e.status as ContentfulStatusCode,
+  );
 });
 
 app.notFound((c) =>

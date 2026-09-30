@@ -337,6 +337,29 @@ calls `signInWithPassword` with the publishable key, checks the profile with the
 key, mints **its own** HS256 JWT signed with `JWT_SECRET`, and discards the Supabase
 session. **This API never validates a Supabase-issued token — no JWKS anywhere.**
 
+**Scope every tenant query to `DEMO_SOFOM_ID`, and never take a sofom id from the
+client** — not from a path, a body or a header. `lib/tenant.ts` is the single place it
+comes from. We are single-tenant, but the tables kept `sofom_id` from when we were not:
+if that value could arrive from outside, anyone with a session could read another
+SOFOM's expedientes by changing a uuid. That only one row exists today is a property of
+the data, which changes; scoping makes it a property of the code, which does not.
+
+**Untrusted HTML is stored verbatim, never half-cleaned.** `plantillas.contenido_html`
+arrives from a browser (the panel unzips the `.docx`) and is rendered by the panel
+later. The Worker checks it is a string and caps its size, and stores exactly what it
+got. A partial sanitiser on the write path is worse than none: it misses things *and*
+it persuades the next reader that the column is safe. Sanitising belongs to whoever
+renders. Nothing in the backend may render such a column, put it in an email, or serve
+it as `text/html`.
+
+**Writes on the panel's Formatos and Ajustes need `rol === 'administrador'`, re-read
+from the database** — not taken from the token. The session lives eight hours;
+deactivating an account or demoting a role has to bite immediately. The token's `rol`
+is for deciding which buttons to paint, which is interface convenience, not
+authorisation. 403 uses code `NO_AUTORIZADO`, same as 401: the code list in
+`02-api-contract.md` is frozen, and the HTTP status is what separates "log in again"
+from "logging in again will not help".
+
 **Write `historial_estados` on every estado change.** The table already exists
 (`expediente_id`, `estado_anterior`, `estado_nuevo`, `motivo`, `usuario_id`,
 `creado_en`). An audit table nobody fills is worse than no audit table: it looks like

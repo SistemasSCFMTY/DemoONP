@@ -205,8 +205,86 @@ the panel does not set them.
 writes a row on every estado change. A rejection with no reason recorded makes the
 audit trail useless.
 
+
 ### `PUT /producto` *(P1)*
 Same shape as `GET /producto`. Edits what the prospect's simulator shows.
+
+---
+
+## Formatos and Ajustes — CP-S6
+
+Un-cut by the owner, 2026-09-30. All behind the session cookie; **writes additionally
+require `rol === 'administrador'`**, and `analista`/`consulta` get `403` with code
+`NO_AUTORIZADO` — same code as the 401 because the code list is frozen, different status
+because "log in again" fixes one and not the other.
+
+`requireAdmin` re-reads `usuarios_panel` rather than trusting the token's `rol`. The
+token lives eight hours; demoting someone should not take eight hours to bite.
+
+**Single tenant throughout.** Every query is scoped to the `DEMO_SOFOM_ID` secret and
+**no endpoint accepts a sofom id from the client** — not in a path, a body or a header.
+
+### `GET /sofom`
+`200 → { razon_social, rfc, domicilio, telefono, correo_contacto }`
+
+Five columns only. `nombre_corto`, `color_primario`, `logo_url` and `activa` exist in the
+table and are deliberately not exposed: visual branding is
+`web-app/src/app/brand.config.ts` (deviation D3).
+
+### `PUT /sofom` *(administrador)*
+Same body → same shape. `razon_social` is required; the rest normalise empty to `null`.
+A partial `update`, so `nombre_corto` (NOT NULL) survives untouched.
+
+### `GET /plantillas`
+`200 → [{ id, clave, nombre, archivo_original, version, activa, creado_en }]`
+
+**No `contenido_html`** — hundreds of KB a row that the Formatos table does not paint.
+
+### `GET /plantillas/:id`
+`200 →` the row **including** `contenido_html`.
+
+### `POST /plantillas` *(administrador)*
+`{ clave, nombre, contenido_html, archivo_original? }` → `201` with the created row.
+
+Deactivates any active row with the same `clave`, then inserts with
+`version = max(version for that clave) + 1` and `activa = true`. The deactivate happens
+first: if the second step fails you are left with no active template, which is visible,
+rather than two, which silently makes the renderer pick one.
+
+`clave` is `[a-z0-9_]+`. The solicitud template's is `solicitud_credito` (`:3129`).
+
+**`contenido_html` is untrusted and it is a stored-XSS carrier.** It originates in a
+browser — the panel unzips the `.docx` client-side — and lands in a column the panel
+later renders. The Worker checks two things: that it is a string, and that it is under
+1,000,000 characters. **It is stored verbatim and deliberately not sanitised**: a
+half-sanitiser on the write path is worse than none, because it invites the next reader
+to trust the column. Sanitising belongs to whoever renders. Corollary: nothing in this
+backend renders it, mails it, or serves it as `text/html`.
+
+### `DELETE /plantillas/:id` *(administrador)*
+`204`. **Soft** — sets `activa = false`. This is the source's "Quitar y usar el
+predeterminado" (`:2015`). The row is the record of which text each expediente was
+signed against; deleting version 2 leaves every solicitud signed with it unexplainable.
+
+### `GET /expedientes/exportar`
+`200 → { generado_en, total, truncado, expedientes: [...] }`
+
+Every expediente for the tenant, each with its `propietario_real`, its `archivos`
+metadata and its `documento`. Registered before `/:id` so "exportar" is not read as a
+uuid.
+
+Three deliberate limits, because this is the most sensitive read in the product — one
+object holding every applicant's CURP, RFC, address, income and INE hashes:
+
+- **No signed URLs.** `archivos` carries metadata and hashes; seeing a file still means
+  asking for it one at a time, which leaves a log line.
+- **`documento.contenido_html` is omitted** unless `?incluir_documento=true`.
+- **Capped at 2,000 expedientes**, paged 200 at a time. A Worker has 128MB and this is
+  assembled in memory. `truncado: true` says so in the envelope rather than returning an
+  incomplete set that looks complete.
+
+`GET` only, so by the rule above it needs a session but not `administrador`. **Worth a
+second look** — it is a full data extract, and the owner may want it admin-only.
 
 ---
 
