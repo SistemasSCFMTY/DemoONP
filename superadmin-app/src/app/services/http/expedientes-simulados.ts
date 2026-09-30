@@ -289,7 +289,7 @@ export const EXPEDIENTES_SIMULADOS: readonly ExpedienteDetalle[] = [
     ...VACIO,
     id: 'b2e91f47-3a05-4c8d-91be-7d4a60c3f215',
     folio: 'ONP-260928-8802',
-    estado: 'en_revision',
+    estado: 'revision',
     creado_en: haceHoras(29),
     enviado_en: haceHoras(29),
 

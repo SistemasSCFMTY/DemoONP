@@ -163,9 +163,17 @@ it belongs in the URL, because a reloaded panel must show the same rows.
 The shared `@theme` block stays byte-identical across the two apps; panel-only rules
 live below it, under a banner saying so.
 
-**Estado chips.** `pendiente | en_revision | aprobado | rechazado`, each tinting a
-palette token and pairing it with a Lucide icon — `Clock`, `Search`, `Check`, `X` —
-because colour must not carry meaning alone. `rounded-control`, not a pill.
+**Estado chips.** `borrador | pendiente | revision | aprobado | rechazado | cancelado`
+— the Postgres enum verbatim — each tinting a palette token and pairing it with a
+Lucide icon, because colour must not carry meaning alone. `rounded-control`, not a
+pill. The Spanish label need not match the slug: "En revisión" reads better and
+transmits as `revision`. An estado the build does not know shows its raw value in a
+neutral chip; never blank, and never relabelled as something it is not.
+
+**Where a value crosses into the database, pin it in a test.** The panel once shipped
+`en_revision` because the API contract said so, and the Worker rejected every estado
+change — both sides type-checked perfectly against a wrong agreement. A contract is
+the referee between projects; the database is the referee over the contract.
 
 ## Anti-slop
 

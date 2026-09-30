@@ -115,8 +115,10 @@
             (change)="cambiarEstado($event)"
             class="w-full rounded-control border border-border bg-surface px-3 py-2 text-sm text-text focus:border-navy disabled:opacity-60"
           >
-            @for (opcion of estados; track opcion.valor) {
-              <option [value]="opcion.valor">{{ opcion.etiquetaLarga }}</option>
+            @for (opcion of opcionesEstado(); track opcion.valor) {
+              <option [value]="opcion.valor" [disabled]="opcion.valor === estadoBloqueado()">
+                {{ opcion.etiquetaLarga }}
+              </option>
             }
           </select>
           <p class="mt-2 text-status text-text-soft" aria-live="polite">

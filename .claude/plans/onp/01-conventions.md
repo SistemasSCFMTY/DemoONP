@@ -365,16 +365,38 @@ rules go **below** it in `styles.css`, under a banner saying so.
 same order as its `cssLayer`. That puts PrimeNG below Tailwind's utilities, so a
 utility class wins without `!important`. The two must be changed together.
 
-**Estado slugs.** `pendiente | en_revision | aprobado | rechazado`. The source spells
-the second one `revision` (`:5443`); `02-api-contract.md` spells it `en_revision` and
-the contract is the referee. Labels are the source's, verbatim — short form in the
-table badge, long form in the detail selector.
+**Estado slugs.** `borrador | pendiente | revision | aprobado | rechazado |
+cancelado` — the Postgres enum `public.estado_expediente`, verbatim. Labels are Spanish
+for a human and need not match the slug: "En revisión" reads better than "Revisión" and
+transmits as `revision`. Short form in the table badge, long form in the detail
+selector; the four the source defines keep its wording.
+
+**The database is the referee over the contract.** The first
+`02-api-contract.md` listed four estados and spelled the third `en_revision`; the panel
+followed it, and the deployed Worker rejected every estado change. Nothing in either
+type system could catch it — both sides type-checked against a wrong agreement. The
+contract was corrected from the live database in PR #4, and
+`estados-expediente.spec.ts` now writes the enum out as a literal and compares what the
+app transmits against it. **Where a value crosses into Postgres, pin it in a test.**
+
+**An unknown estado degrades visibly.** The source falls back to `pendiente` for an
+unrecognised value (`:5444`), which labels a record with a state it is not in. The
+panel shows the raw value in a neutral chip instead — legible, and obviously unhandled.
+The enum gained two values between the contract being written and the database being
+read; this is what stops the next one from quietly mislabelling a KYC file.
+
+**What an operator may assign is narrower than what exists.** The detail selector
+offers the four the source offers. `borrador` is the prospect's own unsent draft;
+`cancelado` may belong there, but an estado transition is the owner's call and the
+source does not answer it. An expediente that arrives in a non-assignable estado shows
+it first and disabled, so the control never claims the record is somewhere it is not.
 
 **Estado colour.** Each estado tints a §3 token and pairs it with a Lucide icon, since
-colour must not carry meaning alone (§9): `pendiente` warning + `Clock`, `en_revision`
-navy + `Search`, `aprobado` success + `Check`, `rechazado` error + `X`. The source's
-badge palette used five hexes that are not in §3 — rather than widen the shared
-palette for one chip, `en_revision` reads navy where the source read blue.
+colour must not carry meaning alone (§9): `borrador` muted + `PencilLine`, `pendiente`
+warning + `Clock`, `revision` navy + `Search`, `aprobado` success + `Check`,
+`rechazado` error + `X`, `cancelado` muted + `Ban`. The source's badge palette used
+five hexes that are not in §3 — rather than widen a shared palette for one chip, each
+estado tints a §3 token, and `revision` reads navy where the source read blue.
 
 **The list's URL contract.** `q`, `estado`, `desde`. `queryParamMap` is the single
 load path: a control writes to the URL and nothing else dispatches. `q` is an

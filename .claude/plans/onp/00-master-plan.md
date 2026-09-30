@@ -380,8 +380,12 @@ Cleared with the owner, or following directly from a decision they made.
 12. `sofoms`, multi-tenancy and the whole superadmin tier are dropped. One whitelabel,
     one config file — owner's call, 2026-09-30.
 
-13. **The panel's estado slug `revision` becomes `en_revision`** (`:5443`). The API
-    contract already spelled it that way and the contract is the referee.
+13. **The panel's estado chip shows an unrecognised estado instead of relabelling
+    it.** The source falls back to `pendiente` (`:5444`), which puts a record in a
+    state it is not in. (The slug itself is *not* a departure: `revision` is the
+    Postgres enum value and the panel transmits it verbatim. An earlier version of
+    `02-api-contract.md` said `en_revision`, the panel followed it, and the deployed
+    Worker rejected every estado change — corrected here and in PR #4.)
 14. **The panel's "Eliminar expediente" (`:5652`) is not built.** There is no delete
     endpoint in `02-api-contract.md`, and what an operator may destroy on a regulated
     KYC file is the owner's call. Recorded as the open question in

@@ -22,7 +22,11 @@ import {
 } from '@lucide/angular';
 import { Store, select } from '@ngxs/store';
 
-import { ESTADOS_EXPEDIENTE } from '../../model/constants/expediente/estados-expediente';
+import {
+  DefinicionEstado,
+  ESTADOS_ASIGNABLES,
+  definicionEstado,
+} from '../../model/constants/expediente/estados-expediente';
 import { NOMBRE_MOMENTO } from '../../model/constants/expediente/momentos-ubicacion';
 import { NOMBRE_ARCHIVO } from '../../model/constants/expediente/tipos-archivo';
 import { EstadoExpediente } from '../../model/interfaces/estado-expediente';
@@ -110,7 +114,34 @@ export class ExpedienteDetalleVista implements AfterViewInit {
   protected readonly guardandoEstado = select(ExpedientesState.guardandoEstado);
   readonly #filtros = select(ExpedientesState.filtros);
 
-  protected readonly estados = ESTADOS_EXPEDIENTE;
+  /**
+   * What the estado selector offers.
+   *
+   * The four assignable estados, plus — when the expediente arrived in one an
+   * operator may not set, such as `borrador` or `cancelado` — its own estado,
+   * first and disabled. Without that the browser would fall back to selecting
+   * the first option, and the control would quietly claim the record is in a
+   * state it is not in.
+   */
+  protected readonly opcionesEstado = computed<readonly DefinicionEstado[]>(() => {
+    const actual = this.expediente()?.estado;
+    if (!actual) return ESTADOS_ASIGNABLES;
+    if (ESTADOS_ASIGNABLES.some((o) => o.valor === actual)) return ESTADOS_ASIGNABLES;
+    return [definicionEstado(actual), ...ESTADOS_ASIGNABLES];
+  });
+
+  /**
+   * The estado on file when the panel may not assign it — the one option in
+   * the selector that is shown but cannot be chosen. Null otherwise.
+   */
+  protected readonly estadoBloqueado = computed(() => {
+    const actual = this.expediente()?.estado;
+    if (!actual || ESTADOS_ASIGNABLES.some((o) => o.valor === actual)) return null;
+    return actual;
+  });
+
+  /** True when the estado on file is not one the panel may assign. */
+  protected readonly estadoNoAsignable = computed(() => this.estadoBloqueado() !== null);
   protected readonly nombreArchivo = NOMBRE_ARCHIVO;
 
   protected readonly documentoVisible = signal(false);
@@ -208,9 +239,13 @@ export class ExpedienteDetalleVista implements AfterViewInit {
     this.documentoVisible() ? 'Ocultar documento' : 'Ver documento',
   );
 
-  protected readonly mensajeEstado = computed(() =>
-    this.guardandoEstado() ? 'Guardando…' : 'El cambio se guarda al seleccionarlo.',
-  );
+  protected readonly mensajeEstado = computed(() => {
+    if (this.guardandoEstado()) return 'Guardando…';
+    if (this.estadoNoAsignable()) {
+      return 'El estado actual no se asigna desde el panel. Elige otro para cambiarlo.';
+    }
+    return 'El cambio se guarda al seleccionarlo.';
+  });
 
   constructor() {
     effect(() => {
