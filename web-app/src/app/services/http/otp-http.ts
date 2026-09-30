@@ -13,6 +13,18 @@ export interface EnvioOtp {
 
 export interface ValidacionOtp {
   readonly valido: boolean;
+  /**
+   * Present when the code was sent by `POST /clientes/verificar` — i.e. this
+   * was a resume, not a registration. Validating also sets the httpOnly
+   * `onp_prospecto` cookie, which is why every call here sends credentials.
+   */
+  readonly expedienteId?: string;
+  /**
+   * The step the applicant stopped at, as an opaque slug. The backend does
+   * not know the list; `services/domain/reanudacion.ts` decides what to do
+   * with it, including when it is a slug this build does not recognise.
+   */
+  readonly paso?: string | null;
 }
 
 /**

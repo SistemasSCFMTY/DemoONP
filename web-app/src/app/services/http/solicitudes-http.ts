@@ -1,7 +1,14 @@
 import { Injectable } from '@angular/core';
-import type { Observable } from 'rxjs';
+import { EMPTY, catchError, type Observable } from 'rxjs';
 import type { Expediente, RespuestaSolicitud } from '../../model/interfaces/expediente';
+import type { PasoId } from '../../model/interfaces/paso';
 import { ApiBase, conRespaldo } from './api-base';
+
+export interface PasoGuardado {
+  readonly expedienteId: string;
+  /** An opaque slug. Hand it to `destinoDeReanudacion`, not to `pasoPorId`. */
+  readonly paso: string | null;
+}
 
 /** The eleven upload slots of `POST /solicitudes` (02-api-contract.md). */
 export type TipoArchivo =
@@ -40,6 +47,29 @@ export class SolicitudesHttp extends ApiBase {
     }
     return this.postForm<RespuestaSolicitud>('/solicitudes', cuerpo).pipe(
       conRespaldo(() => respaldoFolio()),
+    );
+  }
+
+  /**
+   * `PATCH /solicitudes/paso` — record how far the applicant has got.
+   *
+   * **This must never block the flow.** It is bookkeeping: it exists so the
+   * person can come back tomorrow, and a failed write is not their problem.
+   * Errors are swallowed here rather than surfaced, and no caller waits on
+   * the result. Migrations 0001 and 0003 have not been run, so against the
+   * live Worker this currently 500s on every call — which is exactly the
+   * case this has to survive silently.
+   */
+  guardarPaso(paso: PasoId): Observable<void> {
+    return this.http
+      .patch<void>(this.url('/solicitudes/paso'), { paso }, { withCredentials: true })
+      .pipe(catchError(() => EMPTY));
+  }
+
+  /** `GET /solicitudes/paso` — where the cookie's expediente left off. */
+  obtenerPaso(): Observable<PasoGuardado | null> {
+    return this.get<PasoGuardado | null>('/solicitudes/paso').pipe(
+      conRespaldo<PasoGuardado | null>(() => null),
     );
   }
 }

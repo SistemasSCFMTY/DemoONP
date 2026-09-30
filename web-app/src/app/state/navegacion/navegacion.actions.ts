@@ -19,3 +19,18 @@ export class EntrarAPaso {
 export class ReiniciarNavegacion {
   static readonly type = '[Navegación] Reiniciar';
 }
+
+/**
+ * Drop someone back into an application they left.
+ *
+ * Unlike `EntrarAPaso`, this marks the whole path behind them reached — the
+ * guard only admits a step already visited, so resuming at `form-laborales`
+ * without the steps before it would bounce them straight to the portada.
+ */
+export class ReanudarEn {
+  static readonly type = '[Navegación] Reanudar en';
+  constructor(
+    readonly paso: PasoId,
+    readonly alcanzados: readonly PasoId[],
+  ) {}
+}

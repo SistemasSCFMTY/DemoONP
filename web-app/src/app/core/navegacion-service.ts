@@ -3,7 +3,13 @@ import { Router } from '@angular/router';
 import { Store } from '@ngxs/store';
 import { pasoPorId } from '../model/constants/pasos/pasos';
 import type { PasoId } from '../model/interfaces/paso';
-import { EntrarAPaso, MarcarPasoAlcanzado } from '../state/navegacion/navegacion.actions';
+import { SolicitudesHttp } from '../services/http/solicitudes-http';
+import {
+  EntrarAPaso,
+  MarcarPasoAlcanzado,
+  ReanudarEn,
+} from '../state/navegacion/navegacion.actions';
+import type { DestinoReanudacion } from '../services/domain/reanudacion';
 
 /**
  * Moving between screens.
@@ -22,6 +28,7 @@ import { EntrarAPaso, MarcarPasoAlcanzado } from '../state/navegacion/navegacion
 export class NavegacionService {
   private readonly router = inject(Router);
   private readonly store = inject(Store);
+  private readonly solicitudes = inject(SolicitudesHttp);
 
   private readonly pila = signal<readonly PasoId[]>([]);
 
@@ -37,7 +44,34 @@ export class NavegacionService {
     }
     this.store.dispatch([new MarcarPasoAlcanzado(destino), new EntrarAPaso(destino)]);
     this.puedeRegresar.set(this.pila().length > 0);
+    this.recordarPaso(destino);
     await this.router.navigateByUrl(this.ruta(destino));
+  }
+
+  /**
+   * Tell the backend how far they got, and carry on regardless.
+   *
+   * Fire and forget, deliberately: this is bookkeeping so the person can
+   * come back tomorrow, and if it fails they keep filling the form and
+   * nothing is said. A failed write here is not their problem, and a
+   * navigation that waited on it would make every step feel slow on a bad
+   * connection. `guardarPaso` swallows its own errors; subscribing without
+   * a handler is safe.
+   */
+  private recordarPaso(paso: PasoId): void {
+    this.solicitudes.guardarPaso(paso).subscribe();
+  }
+
+  /**
+   * Drop someone back into an application they left, at the step the backend
+   * remembers. Clears the back stack: they did not walk here this session,
+   * so there is nothing behind them to walk back to.
+   */
+  async reanudar(destino: DestinoReanudacion): Promise<void> {
+    this.pila.set([]);
+    this.puedeRegresar.set(false);
+    this.store.dispatch(new ReanudarEn(destino.paso, destino.alcanzados));
+    await this.router.navigateByUrl(destino.ruta);
   }
 
   /** Undo one step. Falls back to the portada when the stack is empty — a

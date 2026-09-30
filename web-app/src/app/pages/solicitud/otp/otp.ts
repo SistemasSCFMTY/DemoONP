@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { Store } from '@ngxs/store';
 import { NavegacionService } from '../../../core/navegacion-service';
+import { destinoDeReanudacion } from '../../../services/domain/reanudacion';
 import { EnviarOtp, ValidarOtp } from '../../../state/sesion/sesion.actions';
 import { SesionState } from '../../../state/sesion/sesion.state';
 import { OnpButton } from '../../../ui/onp-button/onp-button';
@@ -96,9 +97,21 @@ export class Otp {
   private readonly sesion = this.store.selectSignal(SesionState.estado);
   protected readonly codigoDemo = this.store.selectSignal(SesionState.codigoDemo);
 
+  /**
+   * Which handset to pick up.
+   *
+   * A resumed application knows the number from the expediente and sends
+   * back a masked form of it — preferred over "tu teléfono registrado",
+   * because someone who applied months ago may not remember which number
+   * they gave.
+   */
   protected readonly destino = computed(() => {
     const s = this.sesion();
-    const a = s.esCliente ? 'tu teléfono registrado' : `tu teléfono ${s.telefono}`.trimEnd();
+    const a = s.telefonoEnmascarado
+      ? `tu teléfono ${s.telefonoEnmascarado}`
+      : s.esCliente
+        ? 'tu teléfono registrado'
+        : `tu teléfono ${s.telefono}`.trimEnd();
     return `Enviamos un código de 6 dígitos a ${a}.`;
   });
 
@@ -151,14 +164,24 @@ export class Otp {
     this.store.dispatch(new ValidarOtp(this.codigo())).subscribe({
       next: () => {
         this.validando.set(false);
-        if (!this.sesion().otpValidado) {
+        const sesion = this.sesion();
+        if (!sesion.otpValidado) {
           this.error.set('El código no coincide.');
           return;
         }
-        // An existing client is identified already and only needs to
-        // configure the credit; a new prospect goes on to identification.
-        const destino = this.sesion().esCliente ? 'simulador' : 'auth-location';
-        void this.navegacion.avanzar(destino, 'otp');
+
+        // A resume: the Worker matched an expediente and told us where it
+        // stopped. `destinoDeReanudacion` copes with a slug this build does
+        // not recognise, so a renamed step cannot strand anybody.
+        if (sesion.prospectoId && sesion.esCliente) {
+          void this.navegacion.reanudar(destinoDeReanudacion(sesion.paso));
+          return;
+        }
+
+        // An existing client with no draft is identified already and only
+        // needs to configure the credit; a new prospect goes on to
+        // identification.
+        void this.navegacion.avanzar(sesion.esCliente ? 'simulador' : 'auth-location', 'otp');
       },
       error: () => {
         this.validando.set(false);

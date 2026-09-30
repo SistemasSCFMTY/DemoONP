@@ -2,7 +2,12 @@ import { Injectable } from '@angular/core';
 import { Action, Selector, State, type StateContext } from '@ngxs/store';
 import { PASOS, indicePaso, pasoPorId } from '../../model/constants/pasos/pasos';
 import type { PasoId } from '../../model/interfaces/paso';
-import { EntrarAPaso, MarcarPasoAlcanzado, ReiniciarNavegacion } from './navegacion.actions';
+import {
+  EntrarAPaso,
+  MarcarPasoAlcanzado,
+  ReanudarEn,
+  ReiniciarNavegacion,
+} from './navegacion.actions';
 
 export interface NavegacionModel {
   /** Every step the prospect actually reached. The guard reads this. */
@@ -72,6 +77,14 @@ export class NavegacionState {
         ? estado.alcanzados
         : [...estado.alcanzados, paso],
     });
+  }
+
+  @Action(ReanudarEn)
+  reanudar(ctx: StateContext<NavegacionModel>, { paso, alcanzados }: ReanudarEn): void {
+    // Replaces rather than merges: the path the backend remembers is the
+    // truth about how far this person got, and anything this session
+    // happened to visit first is not.
+    ctx.setState({ actual: paso, alcanzados: [...alcanzados] });
   }
 
   @Action(ReiniciarNavegacion)
