@@ -37,7 +37,10 @@ app.use(
       'https://onp-panel.pages.dev',
     ],
     credentials: true,
-    allowMethods: ['GET', 'POST', 'PATCH', 'PUT', 'OPTIONS'],
+    // DELETE está aquí por `DELETE /plantillas/:id` («Quitar y usar el
+    // predeterminado»). Sin él la ruta funciona con curl y falla en el
+    // navegador: curl no manda preflight y el navegador sí.
+    allowMethods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type'],
   }),
 );
