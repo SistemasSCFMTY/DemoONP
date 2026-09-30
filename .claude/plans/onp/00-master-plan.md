@@ -94,17 +94,17 @@ changing one copy changes the other.
 
 ## Phase 0 — foundations · P0 · do these first, nothing works without them
 
-- [ ] **CP-0.1 — Restructure + brand config.** `git mv` the Angular app into `web-app/`.
+- [x] **CP-0.1 — Restructure + brand config.** `git mv` the Angular app into `web-app/`.
       Scaffold `superadmin-app/` (`ng new`, Angular 21, Tailwind 4) and `backend/`
       (Hono + wrangler). Root keeps `CLAUDE.md`, `.claude/`, `README.md`.
       **`web-app/src/app/brand.config.ts`** holds razón social, nombre comercial,
       domicilio, logo path and the palette — the whole whitelabel story in one file,
       swappable in a commit. Verify all three build.
-- [ ] **CP-0.2 — Design tokens.** Charis SIL + Archivo `@import`; the §3 colour table
+- [x] **CP-0.2 — Design tokens.** Charis SIL + Archivo `@import`; the §3 colour table
       and §4 ladders as Tailwind 4 `@theme`. Authored once, **copied verbatim into both
       Angular apps** with a comment naming `01-conventions.md` §3 as the source of
       truth. `web-app/` gets the 390px shell; `superadmin-app/` does not.
-- [ ] **CP-0.3 — API contract.** `02-api-contract.md`: every endpoint, its shape, its
+- [x] **CP-0.3 — API contract.** `02-api-contract.md`: every endpoint, its shape, its
       errors. Derived from `mapearExpediente` (`:2851`), `mapearPropietario` (`:2948`),
       `subirArchivo` (`:2998`). Keep it short — it exists so three agents agree, not as
       documentation.
@@ -244,9 +244,9 @@ descope — no SOFOM management, no panel-user management, no cross-tenant searc
 
 | CP | Title | Tier | Agent | Depends on | Status |
 |---|---|---|---|---|---|
-| 0.1 | Restructure + brand config | P0 | — | — | ☐ |
-| 0.2 | Design tokens | P0 | — | 0.1 | ☐ |
-| 0.3 | API contract | P0 | — | 0.1 | ☐ |
+| 0.1 | Restructure + brand config | P0 | — | — | ☑ |
+| 0.2 | Design tokens | P0 | — | 0.1 | ☑ |
+| 0.3 | API contract | P0 | — | 0.1 | ☑ |
 | B1 | Worker scaffold | P0 | backend | 0.1 | ☐ |
 | B2 | Supabase schema | P0 | backend | B1 | ☐ |
 | B3 | POST /solicitudes | P0 | backend | B2, 0.3 | ☐ |
@@ -332,7 +332,9 @@ logic (5252–6049).
 `@ngxs/store` + plugins **21.0.0** · `@lucide/angular` **1.49.0** · `primeng`
 **21.1.10** · `@angular/cdk` **21.2.14** · `hono` **4.13.11** · `tesseract.js` **7.0.0**
 (browser) · `html2pdf.js` **0.14.0** (browser) · `jszip` **3.10.2** (P2 only) ·
-`@supabase/supabase-js` **2.117.2** (Worker only).
+`@supabase/supabase-js` **2.117.2** (Worker only) · `wrangler` **4.144** with
+`@cloudflare/workers-types` **^5.20260926.1** — v4 of the types conflicts with current
+wrangler's peer range.
 
 **Do not install `@ngxs/store@22`** — it requires `@angular/core >=22.0.0 <23.0.0` and
 these apps are Angular 21.2.

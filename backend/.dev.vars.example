@@ -1,0 +1,8 @@
+# Copy to .dev.vars for local `wrangler dev`. .dev.vars is gitignored.
+# In production these are Worker secrets: `wrangler secret put <NAME>`.
+# Never put any of these in wrangler.jsonc — that file is committed.
+
+SUPABASE_URL=
+SUPABASE_SERVICE_KEY=
+JWT_SECRET=
+RESEND_API_KEY=
