@@ -28,4 +28,23 @@ export const environment = {
    *    product parameters in silence. Do not read a fallback as visible.
    */
   permitirMocks: true,
+  /**
+   * The videograbación kill switch (03-videograbacion.md, CP-V2).
+   *
+   * True asks for the camera and records for real. False forces
+   * `GrabacionSimulada`: no `getUserMedia`, no bytes, no `video` part in
+   * `POST /solicitudes` — and the screen says "Modo demostración", because a
+   * simulation that stops admitting it is the failure mode §11 exists to
+   * prevent.
+   *
+   * This is the stage lever. If the recorder misbehaves in front of
+   * stakeholders, flip it in `environment.production.ts`, push, and Pages
+   * rebuilds in about two minutes. No revert, no merge.
+   *
+   * It is not the only path to the simulation: `crearGrabacion` also falls
+   * back when there is no `MediaRecorder`, no secure context, or no
+   * supported mime — that last one is Safari, which has `MediaRecorder`
+   * since 14.1 but throws when asked for WebM.
+   */
+  grabarVideo: true,
 } as const;

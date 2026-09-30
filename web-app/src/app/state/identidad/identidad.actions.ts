@@ -1,4 +1,5 @@
 import type { Ubicacion } from '../../model/interfaces/ubicacion';
+import type { VideoGrabado } from '../../services/domain/videograbacion';
 import type { TipoArchivo } from '../../services/http/solicitudes-http';
 import type { DatosIne, LadoFoto, ResultadoCalidad } from './identidad.model';
 
@@ -55,6 +56,13 @@ export class RegistrarBiometria {
 
 export class RegistrarVideo {
   static readonly type = '[Identidad] Registrar video';
+  /**
+   * The recorded file, or `null` when the videograbación was simulated —
+   * the kill switch, a browser with no usable codec, or a prospect who
+   * declined the camera. `null` still marks the step done; it simply ships
+   * no bytes.
+   */
+  constructor(readonly video: VideoGrabado | null) {}
 }
 
 export class GuardarFirma {

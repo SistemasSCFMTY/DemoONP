@@ -10,7 +10,14 @@ export interface PasoGuardado {
   readonly paso: string | null;
 }
 
-/** The eleven upload slots of `POST /solicitudes` (02-api-contract.md). */
+/**
+ * The twelve upload slots of `POST /solicitudes` (02-api-contract.md).
+ *
+ * `video` is the identity videograbación (03-videograbacion.md, CP-V2). The
+ * part name must stay exactly `video`: the Worker's `TIPO_ARCHIVO_POR_PARTE`
+ * maps it to the `video_identificacion` enum value, and a part it does not
+ * recognise is ignored rather than stored.
+ */
 export type TipoArchivo =
   | 'id_frente'
   | 'id_reverso'
@@ -22,7 +29,8 @@ export type TipoArchivo =
   | 'doc_domicilio'
   | 'doc_poder'
   | 'doc_id_propietario'
-  | 'doc_domicilio_propietario';
+  | 'doc_domicilio_propietario'
+  | 'video';
 
 /**
  * `POST /solicitudes` — the whole expediente as `multipart/form-data`.

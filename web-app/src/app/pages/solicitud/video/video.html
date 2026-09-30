@@ -16,13 +16,23 @@
   </ul>
 </onp-alert>
 
-@if (grabacion.simulada) {
-  <p
-    class="mb-3.5 rounded-control border border-dashed border-gold-light bg-surface-warning px-3 py-2.5 text-status leading-relaxed text-warning"
-  >
-    <strong>Modo demostración:</strong> la videograbación está simulada. En producción se graba
-    tu imagen y voz y se conserva como parte del expediente.
-  </p>
+@switch (nota()) {
+  @case ('simulada') {
+    <p
+      class="mb-3.5 rounded-control border border-dashed border-gold-light bg-surface-warning px-3 py-2.5 text-status leading-relaxed text-warning"
+    >
+      <strong>Modo demostración:</strong> la videograbación está simulada en este dispositivo. No se
+      graba ni se envía ningún archivo de vídeo.
+    </p>
+  }
+  @case ('sin-camara') {
+    <p
+      class="mb-3.5 rounded-control border border-dashed border-gold-light bg-surface-warning px-3 py-2.5 text-status leading-relaxed text-warning"
+    >
+      <strong>Modo demostración:</strong> continuaste sin usar la cámara, así que no se grabó ningún
+      vídeo. Tu solicitud sigue adelante sin ese archivo.
+    </p>
+  }
 }
 
 <onp-field
@@ -38,13 +48,37 @@
 
 <onp-leyenda>
   Al continuar, autorizas a {{ marca.razonSocial }} a recopilar y conservar tu grabación, datos
-  biométricos y demás información relacionada, exclusivamente para fines de identificación,
-  conforme a las Disposiciones de Carácter General. Esta información se conservará de forma
-  segura durante la vigencia del contrato y, al menos, 10 años después.
+  biométricos y demás información relacionada, exclusivamente para fines de identificación, conforme
+  a las Disposiciones de Carácter General. Esta información se conservará de forma segura durante la
+  vigencia del contrato y, al menos, 10 años después.
 </onp-leyenda>
 
+<!-- Kept mounted so `viewChild` resolves before `grabar()` runs; hidden with
+     a class rather than an `@if`, which would race the view update. -->
+<div class="mb-3.5" [class.hidden]="!grabando()">
+  <div class="relative overflow-hidden rounded-card bg-navy-deep">
+    <!-- Mirrored, because a selfie preview that does not mirror reads as
+         someone else's camera. -->
+    <video #visor class="block w-full -scale-x-100" autoplay playsinline muted></video>
+    <p
+      class="absolute top-2 right-2 flex items-center gap-1.5 rounded-control bg-navy-deep/80 px-2 py-1 text-status font-semibold text-white"
+      role="timer"
+    >
+      <svg lucideVideo class="size-4 shrink-0" aria-hidden="true"></svg>
+      <span>{{ restante() }} s</span>
+    </p>
+  </div>
+</div>
+
+@if (grabando()) {
+  <p class="sr-only" role="status">
+    Grabando tu vídeo de identificación. Termina automáticamente a los
+    {{ duracionMaxima }} segundos.
+  </p>
+}
+
 <onp-button variante="secondary" [deshabilitado]="grabando() || grabado()" (pulsar)="grabar()">
-  {{ grabando() ? 'Grabando…' : 'Iniciar grabación' }}
+  {{ etiquetaBoton() }}
 </onp-button>
 
 @if (grabado()) {
@@ -55,6 +89,12 @@
 
 @if (error()) {
   <onp-status tono="error">{{ error() }}</onp-status>
+}
+
+@if (ofrecerSinCamara() && !grabado()) {
+  <onp-button variante="enlace" [deshabilitado]="grabando()" (pulsar)="continuarSinCamara()">
+    Continuar sin grabación de vídeo
+  </onp-button>
 }
 
 <onp-button [deshabilitado]="!grabado()" (pulsar)="continuar()">Continuar</onp-button>

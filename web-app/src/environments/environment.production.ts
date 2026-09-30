@@ -38,4 +38,14 @@ export const environment = {
    * in front of stakeholders turns a backend outage into a fake success.
    */
   permitirMocks: false,
+  /**
+   * The videograbación kill switch (03-videograbacion.md, CP-V2). True here
+   * means the demo records for real.
+   *
+   * **This is the lever to pull on stage.** Set it to false, commit, push:
+   * Pages rebuilds in about two minutes and the screen goes back to the
+   * labelled simulation with no camera, no bytes and no `video` part. It is
+   * faster than a revert and it touches one line.
+   */
+  grabarVideo: true,
 } as const;

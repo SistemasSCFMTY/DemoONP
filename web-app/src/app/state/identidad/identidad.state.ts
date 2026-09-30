@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Action, Selector, State, type StateContext } from '@ngxs/store';
 import type { Ubicacion } from '../../model/interfaces/ubicacion';
+import type { VideoGrabado } from '../../services/domain/videograbacion';
 import type { TipoArchivo } from '../../services/http/solicitudes-http';
 import {
   BorrarFirma,
@@ -32,6 +33,13 @@ export interface IdentidadModel {
   readonly confianzaHuella: string | null;
   readonly confianzaRostro: string | null;
   readonly videoGrabado: boolean;
+  /**
+   * The recorded videograbación, held in memory until `POST /solicitudes`
+   * ships it as the `video` part. `null` when the recording was simulated —
+   * `videoGrabado` is still true, because the step was completed; there are
+   * simply no bytes to upload.
+   */
+  readonly video: VideoGrabado | null;
   readonly firma: FotoCapturada | null;
 }
 
@@ -48,6 +56,7 @@ const INICIAL: IdentidadModel = {
   confianzaHuella: null,
   confianzaRostro: null,
   videoGrabado: false,
+  video: null,
   firma: null,
 };
 
@@ -119,6 +128,11 @@ export class IdentidadState {
   }
 
   @Selector()
+  static video(s: IdentidadModel): VideoGrabado | null {
+    return s.video;
+  }
+
+  @Selector()
   static firma(s: IdentidadModel): FotoCapturada | null {
     return s.firma;
   }
@@ -171,8 +185,8 @@ export class IdentidadState {
   }
 
   @Action(RegistrarVideo)
-  video(ctx: StateContext<IdentidadModel>): void {
-    ctx.patchState({ videoGrabado: true });
+  registrarVideo(ctx: StateContext<IdentidadModel>, { video }: RegistrarVideo): void {
+    ctx.patchState({ videoGrabado: true, video });
   }
 
   @Action(GuardarFirma)
