@@ -198,8 +198,16 @@
 }
 
 @layer components {
+  /* Grid at every width — one column below `lg`, two above.
+     NOT `display: block` below the breakpoint: a block `main` takes its
+     height from its content, so the work area grew past the shell, the
+     DOCUMENT started scrolling instead of the page inside `main`, and the top
+     bar scrolled away with it. As a grid item `main` stretches to the row,
+     the row is the shell's own height, and the scrolling goes back where it
+     belongs — inside the page. */
   .panel-armazon {
-    display: block;
+    display: grid;
+    grid-template-columns: 1fr;
     min-height: 0;
   }
 
@@ -223,6 +231,10 @@
     transform: none;
   }
 
+  /* Layering, stated once so it cannot drift: top bar 20, veil 30, rail 40.
+     The rail is the topmost thing in the panel — it slides OVER the top bar
+     rather than out from under it, which is why the bar needs a z-index at
+     all (it is `position: relative` purely to get one). */
   .panel-velo {
     position: fixed;
     inset: 0;
@@ -230,9 +242,13 @@
     background: rgb(14 32 54 / 0.45);
   }
 
+  .panel-barra {
+    position: relative;
+    z-index: 20;
+  }
+
   @media (width >= theme(--breakpoint-lg)) {
     .panel-armazon {
-      display: grid;
       grid-template-columns: var(--ancho-riel) 1fr;
     }
 

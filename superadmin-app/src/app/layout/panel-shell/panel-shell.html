@@ -9,7 +9,7 @@
        this disappears, which is also what puts the drawer out of reach: the
        only control that opens it is hidden there. -->
   <header
-    class="flex shrink-0 items-center gap-3 border-b border-white/10 bg-navy-deep px-4 py-3 text-surface lg:hidden"
+    class="panel-barra flex shrink-0 items-center gap-3 border-b border-white/10 bg-navy-deep px-4 py-3 text-surface lg:hidden"
   >
     <button
       #botonMenu
@@ -94,7 +94,7 @@
       </div>
     </aside>
 
-    <main class="min-w-0 overflow-hidden">
+    <main class="min-h-0 min-w-0 overflow-hidden">
       <router-outlet />
     </main>
   </div>
