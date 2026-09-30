@@ -12,16 +12,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
  */
 @Component({
   selector: 'panel-dato-fila',
-  template: `
-    <div class="flex gap-4 border-b border-border/60 py-2 last:border-b-0">
-      <dt class="w-2/5 shrink-0 text-text-soft">{{ clave() }}</dt>
-      @if (vacio()) {
-        <dd class="m-0 flex-1 text-text-soft/70 italic">No proporcionado</dd>
-      } @else {
-        <dd class="m-0 flex-1 font-medium break-words">{{ valor() }}</dd>
-      }
-    </div>
-  `,
+  templateUrl: './dato-fila.html',
   host: { class: 'block text-sm' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

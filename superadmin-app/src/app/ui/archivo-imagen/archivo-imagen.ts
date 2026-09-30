@@ -27,35 +27,7 @@ import { EstadoArchivo, ExpedientesState } from '../../state/expedientes/expedie
 @Component({
   selector: 'panel-archivo-imagen',
   imports: [LucideLoaderCircle, LucideImageOff],
-  template: `
-    <figure class="m-0">
-      <div
-        class="flex items-center justify-center overflow-hidden rounded-card border border-border bg-bg"
-        [class.aspect-video]="!contenerAlto()"
-      >
-        @if (estado()?.url; as url) {
-          <img [src]="url" [alt]="alt()" class="h-full w-full object-contain" />
-        } @else if (estado()?.error; as mensaje) {
-          <div class="flex flex-col items-center gap-2 px-4 py-8 text-center">
-            <svg lucideImageOff class="size-6 text-text-soft" aria-hidden="true"></svg>
-            <p class="text-status text-text-soft">{{ mensaje }}</p>
-          </div>
-        } @else {
-          <div class="flex flex-col items-center gap-2 px-4 py-8" aria-live="polite">
-            <svg
-              lucideLoaderCircle
-              class="size-5 animate-spin text-text-soft"
-              aria-hidden="true"
-            ></svg>
-            <p class="text-status text-text-soft">Cargando imagen…</p>
-          </div>
-        }
-      </div>
-      <figcaption class="mt-1.5 text-center text-status text-text-soft">
-        {{ pie() }}
-      </figcaption>
-    </figure>
-  `,
+  templateUrl: './archivo-imagen.html',
   host: { class: 'block' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
