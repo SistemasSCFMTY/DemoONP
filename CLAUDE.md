@@ -53,6 +53,10 @@ The port source is `../ONP/onp_fer_etapa2_pf.html` (6,052 lines, single file).
   tenant-authored or legal text — the declaratoria renders exactly as written.
 - **No inline function calls in templates** — computed signals or pure pipes
   (`web-app/src/app/pipes/`); no `protected readonly Enum = Enum` bridges.
+- **A `computed` never writes a signal** (not via a helper either). NG0600 aborts the
+  render pass mid-traversal and the screen looks like the CSS failed to load — blank
+  labels, unapplied `[class]`. One-time setup goes in `ngOnInit`. Mount-and-assert a
+  binding in a test; unit-testing the functions behind a screen misses this entirely.
 - **Every component's markup is a `.html` file beside the class** —
   `templateUrl: './topbar.html'`, never an inline `template:` literal. All of them,
   one-line `<ng-content />` wrappers included. Only a test host inside a `.spec.ts`
