@@ -31,8 +31,16 @@ app.use(
   '*',
   cors({
     origin: [
+      // 4200 el prospecto, 4201 el panel. Ambos en las dos formas del
+      // loopback: `ng serve` escucha en 127.0.0.1 y el navegador manda como
+      // Origin exactamente lo que se tecleó en la barra, así que
+      // `localhost:4201` y `127.0.0.1:4201` son orígenes distintos y hacen
+      // falta los dos. Faltaba 4201 entero: el panel no podía hablarle al
+      // Worker desde un navegador, aunque con curl pasara.
       'http://localhost:4200',
-      'http://localhost:4300',
+      'http://127.0.0.1:4200',
+      'http://localhost:4201',
+      'http://127.0.0.1:4201',
       'https://onp-web.pages.dev',
       'https://onp-panel.pages.dev',
     ],
