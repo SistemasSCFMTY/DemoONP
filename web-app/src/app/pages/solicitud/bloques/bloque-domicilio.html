@@ -1,0 +1,103 @@
+<div [formGroup]="grupo()">
+  <onp-select
+    [idCampo]="id('tipo-vialidad')"
+    etiqueta="Tipo de vialidad"
+    [opciones]="vialidades"
+    [obligatorio]="true"
+    [control]="grupo().controls.tipoVialidad"
+  />
+  <onp-field
+    [idCampo]="id('nombre-vialidad')"
+    etiqueta="Nombre de la vialidad"
+    marcador="Ej: Benito Juárez, Paseo de la Reforma"
+    autocompletar="address-line1"
+    [obligatorio]="true"
+    [control]="grupo().controls.nombreVialidad"
+  />
+
+  <onp-fila>
+    <onp-field
+      [idCampo]="id('numero-exterior')"
+      etiqueta="Número exterior"
+      marcador="Ej: 123"
+      [obligatorio]="true"
+      [control]="grupo().controls.numeroExterior"
+    />
+    <onp-field
+      [idCampo]="id('numero-interior')"
+      etiqueta="Número interior (Opcional)"
+      marcador="Ej: Apto 5B"
+      [control]="grupo().controls.numeroInterior"
+    />
+  </onp-fila>
+
+  <fieldset class="mb-3.5 rounded-control border-0 bg-surface-muted p-3">
+    <legend class="mb-2.5 text-status text-text-soft">
+      <strong>Entre (Opcional)</strong> — Indica las vialidades perpendiculares
+    </legend>
+    <onp-field
+      [idCampo]="id('entre-1')"
+      etiqueta="Entre:"
+      marcador="Ej: Avenida Paseo"
+      [control]="grupo().controls.entre1"
+    />
+    <onp-field
+      [idCampo]="id('entre-2')"
+      etiqueta="y:"
+      marcador="Ej: Calle Benito"
+      [control]="grupo().controls.entre2"
+    />
+  </fieldset>
+
+  <onp-fila>
+    <onp-field
+      [idCampo]="id('codigo-postal')"
+      etiqueta="Código postal"
+      marcador="Ej: 64000"
+      modoEntrada="numeric"
+      autocompletar="postal-code"
+      [maxlength]="5"
+      [obligatorio]="true"
+      [control]="grupo().controls.codigoPostal"
+    />
+  </onp-fila>
+
+  <onp-field
+    [idCampo]="id('colonia')"
+    etiqueta="Colonia"
+    marcador="Ej: Centro, Del Valle"
+    [obligatorio]="true"
+    [control]="grupo().controls.colonia"
+  />
+  <onp-field
+    [idCampo]="id('municipio')"
+    etiqueta="Municipio o alcaldía"
+    marcador="Ej: Monterrey"
+    [obligatorio]="true"
+    [control]="grupo().controls.municipio"
+  />
+  <onp-field
+    [idCampo]="id('ciudad')"
+    etiqueta="Ciudad"
+    marcador="Ej: Monterrey"
+    [obligatorio]="true"
+    [control]="grupo().controls.ciudad"
+  />
+
+  <onp-fila>
+    <onp-select
+      [idCampo]="id('estado')"
+      etiqueta="Entidad Federativa"
+      [opciones]="estados"
+      [obligatorio]="true"
+      [control]="grupo().controls.entidadFederativa"
+    />
+    <onp-field
+      [idCampo]="id('pais')"
+      etiqueta="País"
+      [soloLectura]="true"
+      [obligatorio]="true"
+      [control]="grupo().controls.pais"
+    />
+  </onp-fila>
+</div>

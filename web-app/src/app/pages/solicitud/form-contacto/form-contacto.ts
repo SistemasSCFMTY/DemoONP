@@ -20,19 +20,7 @@ import { BloqueContacto } from '../bloques/bloque-contacto';
   selector: 'onp-form-contacto',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule, OnpTitulo, OnpButton, BloqueContacto],
-  template: `
-    <onp-titulo
-      texto="Información General"
-      lede="Completa todos los campos. Los campos marcados con * son obligatorios."
-    />
-
-    <h2 class="mt-4 mb-2 font-heading text-h3 font-bold text-navy-deep">Datos de Contacto</h2>
-
-    <form [formGroup]="formulario" (ngSubmit)="continuar()">
-      <onp-bloque-contacto [grupo]="formulario" idPrefijo="pf" />
-      <onp-button tipo="submit">Continuar</onp-button>
-    </form>
-  `,
+  templateUrl: './form-contacto.html',
 })
 export class FormContacto {
   private readonly fb = inject(FormBuilder);

@@ -25,22 +25,7 @@ import { OnpButton } from '../onp-button/onp-button';
   selector: 'onp-modal',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [OnpButton],
-  template: `
-    <dialog
-      class="w-11/12 max-w-sm rounded-card border border-border bg-surface p-6 shadow-e3 backdrop:bg-navy-deep/50"
-      [attr.aria-labelledby]="idModal() + '-titulo'"
-      (close)="cerrar.emit()"
-      (click)="clicEnFondo($event)"
-    >
-      <h2 [id]="idModal() + '-titulo'" class="mb-3 font-heading text-h2 font-bold text-navy-deep">
-        {{ titulo() }}
-      </h2>
-      <div class="mb-4 text-body leading-relaxed whitespace-pre-line text-text">
-        <ng-content />
-      </div>
-      <onp-button (pulsar)="cerrar.emit()">{{ textoCerrar() }}</onp-button>
-    </dialog>
-  `,
+  templateUrl: './onp-modal.html',
 })
 export class OnpModal {
   readonly idModal = input.required<string>();

@@ -14,18 +14,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 @Component({
   selector: 'onp-preview-box',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <figure class="my-2.5">
-      <img
-        [src]="fuente()"
-        [alt]="descripcion()"
-        class="block w-full rounded-card border border-border bg-surface"
-      />
-      @if (pie()) {
-        <figcaption class="mt-1 text-status text-text-soft">{{ pie() }}</figcaption>
-      }
-    </figure>
-  `,
+  templateUrl: './onp-preview-box.html',
 })
 export class OnpPreviewBox {
   readonly fuente = input.required<string>();

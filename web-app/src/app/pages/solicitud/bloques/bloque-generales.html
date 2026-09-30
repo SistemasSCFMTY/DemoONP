@@ -1,0 +1,111 @@
+<div [formGroup]="grupo()">
+  <div (input)="regenerar()" (change)="regenerar()">
+    <onp-fila>
+      <onp-field
+        [idCampo]="id('apellido-p')"
+        etiqueta="Apellido paterno"
+        marcador="Páez"
+        autocompletar="family-name"
+        [obligatorio]="true"
+        [control]="grupo().controls.apellidoPaterno"
+      />
+      <onp-field
+        [idCampo]="id('apellido-m')"
+        etiqueta="Apellido materno"
+        marcador="Esquivel"
+        [obligatorio]="true"
+        [control]="grupo().controls.apellidoMaterno"
+      />
+    </onp-fila>
+
+    <onp-field
+      [idCampo]="id('nombres')"
+      etiqueta="Nombre(s)"
+      marcador="Fernando"
+      ayuda="Sin abreviaturas."
+      autocompletar="given-name"
+      [obligatorio]="true"
+      [control]="grupo().controls.nombres"
+    />
+    <onp-select
+      [idCampo]="id('genero')"
+      etiqueta="Género"
+      [opciones]="generos"
+      [obligatorio]="true"
+      [control]="grupo().controls.genero"
+    />
+    <onp-fecha-trio
+      [idBase]="id('nac')"
+      etiqueta="Fecha de nacimiento (DD/MM/AAAA)"
+      [obligatorio]="true"
+      [grupo]="grupo().controls.nacimiento"
+    />
+    <onp-select
+      [idCampo]="id('estado-nac')"
+      etiqueta="Entidad federativa de nacimiento"
+      [opciones]="estados"
+      [obligatorio]="true"
+      [control]="grupo().controls.entidadNacimiento"
+    />
+  </div>
+
+  <onp-fila>
+    <onp-field
+      [idCampo]="id('pais-nac')"
+      etiqueta="País de nacimiento"
+      [soloLectura]="true"
+      [obligatorio]="true"
+      [control]="grupo().controls.paisNacimiento"
+    />
+    <onp-field
+      [idCampo]="id('nacionalidad')"
+      etiqueta="Nacionalidad"
+      [soloLectura]="true"
+      [obligatorio]="true"
+      [control]="grupo().controls.nacionalidad"
+    />
+  </onp-fila>
+
+  <div (input)="curpEditada()">
+    <onp-field
+      [idCampo]="id('curp')"
+      etiqueta="CURP (Se genera automáticamente)"
+      marcador="PAEF990319HDFRND09"
+      [maxlength]="18"
+      [obligatorio]="true"
+      [detectado]="generadaPorLaApp()"
+      [control]="grupo().controls.curp"
+    />
+  </div>
+
+  <onp-alert tono="info">
+    La CURP se genera automáticamente conforme a los datos anteriores. Puedes editarla
+    manualmente, pero debe coincidir con los datos proporcionados.
+  </onp-alert>
+
+  @if (estadoCurp(); as estado) {
+    <onp-status [tono]="estado.tono">{{ estado.texto }}</onp-status>
+  }
+
+  <div class="mt-4" (input)="rfcMayusculas()">
+    <onp-field
+      [idCampo]="id('rfc')"
+      etiqueta="RFC (Opcional)"
+      marcador="PAEF990319..."
+      [maxlength]="13"
+      [control]="grupo().controls.rfc"
+    />
+  </div>
+
+  @if (estadoRfc(); as estado) {
+    <onp-status [tono]="estado.tono">{{ estado.texto }}</onp-status>
+  }
+
+  <div class="mt-4">
+    <onp-field
+      [idCampo]="id('fea')"
+      etiqueta="Número de serie de firma electrónica avanzada (Opcional)"
+      [control]="grupo().controls.serieFea"
+    />
+  </div>
+</div>

@@ -16,27 +16,7 @@ import type { Opcion } from '../../model/interfaces/opcion';
   selector: 'onp-radio-group',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule],
-  template: `
-    <div class="mb-3" role="radiogroup" [attr.aria-labelledby]="idGrupo() + '-etiqueta'">
-      <p [id]="idGrupo() + '-etiqueta'" class="mb-1 text-label font-semibold text-text">
-        {{ etiqueta() }}@if (obligatorio()) {<span class="text-error" aria-hidden="true"> *</span>}
-      </p>
-      @for (opcion of opciones(); track opcion.valor) {
-        <label
-          class="flex min-h-11 cursor-pointer items-center gap-2 py-1 text-label leading-relaxed text-text"
-        >
-          <input
-            type="radio"
-            class="size-5 shrink-0 accent-navy"
-            [name]="idGrupo()"
-            [value]="opcion.valor"
-            [formControl]="control()"
-          />
-          <span>{{ opcion.texto }}</span>
-        </label>
-      }
-    </div>
-  `,
+  templateUrl: './onp-radio-group.html',
 })
 export class OnpRadioGroup {
   readonly idGrupo = input.required<string>();

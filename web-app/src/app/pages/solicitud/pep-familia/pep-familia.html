@@ -1,0 +1,99 @@
+<onp-titulo
+  texto="Funciones públicas de familiares"
+  lede="Indica si algún familiar cercano desempeña o ha desempeñado funciones públicas destacadas."
+/>
+
+<onp-pep-section>
+  <p>
+    <strong>¿Algún familiar de usted de hasta segundo grado de consanguinidad o afinidad</strong>
+    se encuentra en el supuesto antes mencionado?
+  </p>
+</onp-pep-section>
+
+<form [formGroup]="formulario" (ngSubmit)="continuar()">
+  <div class="mb-3" role="radiogroup" aria-labelledby="pep-familia-pregunta">
+    <p id="pep-familia-pregunta" class="sr-only">
+      ¿Algún familiar hasta segundo grado se encuentra en ese supuesto?
+    </p>
+    <label class="flex min-h-11 cursor-pointer items-center gap-2 text-label text-text">
+      <input
+        type="radio"
+        name="pep-familia"
+        class="size-5 accent-navy"
+        [checked]="!aplica()"
+        (change)="responder(false)"
+      />
+      <span>No</span>
+    </label>
+    <label class="flex min-h-11 cursor-pointer items-center gap-2 text-label text-text">
+      <input
+        type="radio"
+        name="pep-familia"
+        class="size-5 accent-navy"
+        [checked]="aplica()"
+        (change)="responder(true)"
+      />
+      <span>Sí</span>
+    </label>
+  </div>
+
+  @if (aplica()) {
+    <onp-card>
+      <onp-select
+        idCampo="pep-familia-ambito"
+        etiqueta="Ámbito"
+        [opciones]="ambitos"
+        [obligatorio]="true"
+        [control]="formulario.controls.ambito"
+      />
+      <onp-select
+        idCampo="pep-familia-institucion"
+        etiqueta="Institución de la que forma parte"
+        [opciones]="instituciones"
+        [obligatorio]="true"
+        [control]="formulario.controls.institucion"
+      />
+      <onp-field
+        idCampo="pep-familia-puesto"
+        etiqueta="Puesto desempeñado por el familiar"
+        marcador="Ej: Diputado Federal, Juez, Gobernador"
+        [obligatorio]="true"
+        [control]="formulario.controls.puesto"
+      />
+      <onp-select
+        idCampo="pep-familia-parentesco"
+        etiqueta="Parentesco"
+        [opciones]="parentescos"
+        [obligatorio]="true"
+        [control]="formulario.controls.parentesco"
+      />
+      <onp-fecha-trio
+        idBase="pep-familia-inicio"
+        etiqueta="Fecha de inicio (DD/MM/AAAA)"
+        [obligatorio]="true"
+        [grupo]="formulario.controls.inicio"
+      />
+
+      <div (change)="cambioVigencia()">
+        <onp-checkbox idCampo="pep-familia-vigente" [control]="formulario.controls.vigente">
+          Aún vigente (actualmente en funciones)
+        </onp-checkbox>
+      </div>
+
+      @if (formulario.controls.vigente.value) {
+        <onp-status tono="aviso">
+          Marcaste que el cargo sigue vigente, por lo que no se requiere fecha de terminación.
+        </onp-status>
+      } @else {
+        <onp-fecha-trio
+          idBase="pep-familia-fin"
+          etiqueta="Fecha de terminación (DD/MM/AAAA)"
+          [obligatorio]="true"
+          [grupo]="formulario.controls.fin"
+        />
+      }
+    </onp-card>
+  }
+
+  <onp-button tipo="submit">Continuar</onp-button>
+</form>

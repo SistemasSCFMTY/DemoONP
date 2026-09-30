@@ -26,41 +26,7 @@ export type TipoCampo = 'text' | 'email' | 'tel' | 'password' | 'number';
   selector: 'onp-field',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule],
-  template: `
-    <label [for]="idCampo()" class="mb-1 block self-end text-label font-semibold text-text">
-      {{ etiqueta() }}@if (obligatorio()) {<span class="text-error" aria-hidden="true"> *</span>}
-    </label>
-
-    <input
-      [id]="idCampo()"
-      [type]="tipo()"
-      [formControl]="control()"
-      [attr.placeholder]="marcador() || null"
-      [attr.maxlength]="maxlength() || null"
-      [attr.inputmode]="modoEntrada() || null"
-      [attr.autocomplete]="autocompletar() || null"
-      [attr.aria-required]="obligatorio() ? 'true' : null"
-      [attr.aria-invalid]="muestraError() ? 'true' : null"
-      [attr.aria-describedby]="descritoPor()"
-      [readonly]="soloLectura()"
-      [class]="clasesInput()"
-    />
-
-    <div>
-      @if (ayuda()) {
-        <p [id]="idCampo() + '-ayuda'" class="mt-1 text-status leading-relaxed text-text-soft">
-          {{ ayuda() }}
-        </p>
-      }
-      @if (muestraError()) {
-        <p [id]="idCampo() + '-error'" class="mt-1 text-status font-medium text-error" role="alert">
-          {{ textoError() }}
-        </p>
-      } @else if (exito()) {
-        <p class="mt-1 text-status font-medium text-success" aria-live="polite">{{ exito() }}</p>
-      }
-    </div>
-  `,
+  templateUrl: './onp-field.html',
   // Exactly three children — label, control, messages — and the spacing on
   // the host rather than an inner wrapper. `onp-fila` relies on that shape:
   // it makes each field a subgrid of the row, so a label that wraps to two

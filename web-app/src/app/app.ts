@@ -30,23 +30,7 @@ import { NavegacionState } from './state/navegacion/navegacion.state';
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterOutlet, Topbar, BarraProgreso],
-  template: `
-    <div class="flex min-h-dvh w-full flex-col bg-bg">
-      @if (muestraTopbar()) {
-        <onp-topbar
-          [titulo]="titulo()"
-          [puedeRegresar]="puedeRegresar()"
-          (regresar)="regresar()"
-        />
-      }
-      @if (muestraProgreso()) {
-        <onp-barra-progreso [porcentaje]="progreso()" />
-      }
-      <main class="mx-auto w-full max-w-app flex-1 px-5 pt-6 pb-10">
-        <router-outlet />
-      </main>
-    </div>
-  `,
+  templateUrl: './app.html',
 })
 export class App {
   private readonly store = inject(Store);

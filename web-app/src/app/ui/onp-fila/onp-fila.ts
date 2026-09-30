@@ -40,6 +40,6 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 @Component({
   selector: 'onp-fila',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<ng-content />`,
+  templateUrl: './onp-fila.html',
 })
 export class OnpFila {}

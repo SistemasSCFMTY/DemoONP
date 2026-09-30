@@ -20,59 +20,7 @@ import { mensajeDeError } from '../../services/domain/validadores';
   selector: 'onp-fecha-trio',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule],
-  template: `
-    <fieldset class="mb-4 min-w-0 border-0 p-0" [formGroup]="grupo()">
-      <legend class="mb-1 block text-label font-semibold text-text">
-        {{ etiqueta() }}@if (obligatorio()) {<span class="text-error" aria-hidden="true"> *</span>}
-      </legend>
-
-      <div class="grid grid-cols-4 gap-2">
-        <div>
-          <label [for]="idBase() + '-dia'" class="sr-only">Día</label>
-          <input
-            [id]="idBase() + '-dia'"
-            formControlName="dia"
-            type="text"
-            inputmode="numeric"
-            maxlength="2"
-            placeholder="DD"
-            [attr.aria-required]="obligatorio() ? 'true' : null"
-            [class]="clases()"
-          />
-        </div>
-        <div>
-          <label [for]="idBase() + '-mes'" class="sr-only">Mes</label>
-          <input
-            [id]="idBase() + '-mes'"
-            formControlName="mes"
-            type="text"
-            inputmode="numeric"
-            maxlength="2"
-            placeholder="MM"
-            [attr.aria-required]="obligatorio() ? 'true' : null"
-            [class]="clases()"
-          />
-        </div>
-        <div class="col-span-2">
-          <label [for]="idBase() + '-anio'" class="sr-only">Año</label>
-          <input
-            [id]="idBase() + '-anio'"
-            formControlName="anio"
-            type="text"
-            inputmode="numeric"
-            maxlength="4"
-            placeholder="AAAA"
-            [attr.aria-required]="obligatorio() ? 'true' : null"
-            [class]="clases()"
-          />
-        </div>
-      </div>
-
-      @if (muestraError()) {
-        <p class="mt-1 text-status font-medium text-error" role="alert">{{ textoError() }}</p>
-      }
-    </fieldset>
-  `,
+  templateUrl: './onp-fecha-trio.html',
 })
 export class OnpFechaTrio {
   readonly idBase = input.required<string>();

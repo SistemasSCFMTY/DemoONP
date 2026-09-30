@@ -1,0 +1,95 @@
+<onp-titulo
+  texto="Declaratoria de Funciones Públicas"
+  lede="Indica si desempeñas o has desempeñado funciones públicas destacadas."
+/>
+
+<onp-pep-section>
+  <p>
+    <strong>¿Usted desempeña o ha desempeñado funciones públicas destacadas</strong> en un país
+    extranjero o en territorio nacional, considerando entre otros, a los jefes de estado o de
+    gobierno, líderes políticos, funcionarios gubernamentales, judiciales o militares de alta
+    jerarquía, altos ejecutivos de empresas estatales o funcionarios o miembros Importantes de
+    partidos políticos?
+  </p>
+</onp-pep-section>
+
+<form [formGroup]="formulario" (ngSubmit)="continuar()">
+  <div class="mb-3" role="radiogroup" aria-labelledby="pep-propio-pregunta">
+    <p id="pep-propio-pregunta" class="sr-only">
+      ¿Desempeña o ha desempeñado funciones públicas destacadas?
+    </p>
+    <label class="flex min-h-11 cursor-pointer items-center gap-2 text-label text-text">
+      <input
+        type="radio"
+        name="pep-propio"
+        class="size-5 accent-navy"
+        [checked]="!aplica()"
+        (change)="responder(false)"
+      />
+      <span>No</span>
+    </label>
+    <label class="flex min-h-11 cursor-pointer items-center gap-2 text-label text-text">
+      <input
+        type="radio"
+        name="pep-propio"
+        class="size-5 accent-navy"
+        [checked]="aplica()"
+        (change)="responder(true)"
+      />
+      <span>Sí</span>
+    </label>
+  </div>
+
+  @if (aplica()) {
+    <onp-card>
+      <onp-select
+        idCampo="pep-propio-ambito"
+        etiqueta="Ámbito"
+        [opciones]="ambitos"
+        [obligatorio]="true"
+        [control]="formulario.controls.ambito"
+      />
+      <onp-select
+        idCampo="pep-propio-institucion"
+        etiqueta="Institución de la que forma parte"
+        [opciones]="instituciones"
+        [obligatorio]="true"
+        [control]="formulario.controls.institucion"
+      />
+      <onp-field
+        idCampo="pep-propio-puesto"
+        etiqueta="Puesto desempeñado"
+        marcador="Ej: Diputado Federal, Juez, Gobernador"
+        [obligatorio]="true"
+        [control]="formulario.controls.puesto"
+      />
+      <onp-fecha-trio
+        idBase="pep-propio-inicio"
+        etiqueta="Fecha de inicio (DD/MM/AAAA)"
+        [obligatorio]="true"
+        [grupo]="formulario.controls.inicio"
+      />
+
+      <div (change)="cambioVigencia()">
+        <onp-checkbox idCampo="pep-propio-vigente" [control]="formulario.controls.vigente">
+          Aún vigente (actualmente en funciones)
+        </onp-checkbox>
+      </div>
+
+      @if (formulario.controls.vigente.value) {
+        <onp-status tono="aviso">
+          Marcaste que el cargo sigue vigente, por lo que no se requiere fecha de terminación.
+        </onp-status>
+      } @else {
+        <onp-fecha-trio
+          idBase="pep-propio-fin"
+          etiqueta="Fecha de terminación (DD/MM/AAAA)"
+          [obligatorio]="true"
+          [grupo]="formulario.controls.fin"
+        />
+      }
+    </onp-card>
+  }
+
+  <onp-button tipo="submit">Continuar</onp-button>
+</form>

@@ -10,7 +10,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 @Component({
   selector: 'onp-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<ng-content />`,
+  templateUrl: './onp-card.html',
   host: {
     class: 'mb-3 block rounded-card border border-border bg-surface p-4',
   },

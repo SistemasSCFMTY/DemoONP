@@ -19,19 +19,7 @@ import { BloqueLaborales } from '../bloques/bloque-laborales';
   selector: 'onp-form-laborales',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule, OnpTitulo, OnpButton, BloqueLaborales],
-  template: `
-    <onp-titulo
-      texto="Información General"
-      lede="Completa todos los campos. Los campos marcados con * son obligatorios."
-    />
-
-    <h2 class="mt-4 mb-2 font-heading text-h3 font-bold text-navy-deep">Datos Laborales</h2>
-
-    <form [formGroup]="formulario" (ngSubmit)="continuar()">
-      <onp-bloque-laborales [grupo]="formulario" idPrefijo="pf" />
-      <onp-button tipo="submit">Continuar</onp-button>
-    </form>
-  `,
+  templateUrl: './form-laborales.html',
 })
 export class FormLaborales {
   private readonly fb = inject(FormBuilder);

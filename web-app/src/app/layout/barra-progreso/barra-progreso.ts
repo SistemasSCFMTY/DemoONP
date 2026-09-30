@@ -10,19 +10,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 @Component({
   selector: 'onp-barra-progreso',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div
-      class="mx-auto h-1 w-full max-w-app bg-border"
-      role="progressbar"
-      aria-label="Avance de tu solicitud"
-      [attr.aria-valuenow]="porcentaje()"
-      aria-valuemin="0"
-      aria-valuemax="100"
-      [attr.aria-valuetext]="porcentaje() + ' por ciento'"
-    >
-      <div class="h-full bg-gold-light transition-[width] duration-300" [style.width.%]="porcentaje()"></div>
-    </div>
-  `,
+  templateUrl: './barra-progreso.html',
 })
 export class BarraProgreso {
   readonly porcentaje = input.required<number>();

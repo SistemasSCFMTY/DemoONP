@@ -53,6 +53,10 @@ The port source is `../ONP/onp_fer_etapa2_pf.html` (6,052 lines, single file).
   tenant-authored or legal text — the declaratoria renders exactly as written.
 - **No inline function calls in templates** — computed signals or pure pipes
   (`web-app/src/app/pipes/`); no `protected readonly Enum = Enum` bridges.
+- **Every component's markup is a `.html` file beside the class** —
+  `templateUrl: './topbar.html'`, never an inline `template:` literal. All of them,
+  one-line `<ng-content />` wrappers included. Only a test host inside a `.spec.ts`
+  stays inline. `styles:` is unaffected.
 - **NGXS is the single source of truth** for the expediente. Each wizard step owns a
   typed `FormGroup` and dispatches on valid submit; steps rehydrate from the store on
   back-navigation.

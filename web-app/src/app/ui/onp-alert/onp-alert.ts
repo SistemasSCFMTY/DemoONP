@@ -18,28 +18,7 @@ export type TonoAlerta = 'info' | 'warning' | 'error';
   selector: 'onp-alert',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LucideInfo, LucideTriangleAlert, LucideCircleAlert],
-  template: `
-    <div
-      class="mb-4 flex gap-2 rounded-control border p-3 text-label leading-relaxed"
-      [class]="clases()"
-      [attr.role]="tono() === 'error' ? 'alert' : null"
-    >
-      <span class="mt-px shrink-0">
-        @switch (tono()) {
-          @case ('info') {
-            <svg lucideInfo class="size-4" aria-hidden="true"></svg>
-          }
-          @case ('warning') {
-            <svg lucideTriangleAlert class="size-4" aria-hidden="true"></svg>
-          }
-          @default {
-            <svg lucideCircleAlert class="size-4" aria-hidden="true"></svg>
-          }
-        }
-      </span>
-      <div class="min-w-0 flex-1"><ng-content /></div>
-    </div>
-  `,
+  templateUrl: './onp-alert.html',
 })
 export class OnpAlert {
   readonly tono = input<TonoAlerta>('info');

@@ -24,29 +24,7 @@ import {
 @Component({
   selector: 'onp-otp-input',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <div
-      role="group"
-      aria-labelledby="otp-etiqueta"
-      class="my-4 flex justify-center gap-2"
-      (paste)="pegar($event)"
-    >
-      <p id="otp-etiqueta" class="sr-only">Código de verificación de 6 dígitos</p>
-      @for (indice of indices; track indice) {
-        <input
-          type="text"
-          inputmode="numeric"
-          autocomplete="one-time-code"
-          maxlength="1"
-          [attr.aria-label]="'Dígito ' + (indice + 1) + ' de 6'"
-          [value]="digitos()[indice]"
-          [class]="claseCaja(digitos()[indice])"
-          (input)="escribir($event, indice)"
-          (keydown)="teclear($event, indice)"
-        />
-      }
-    </div>
-  `,
+  templateUrl: './onp-otp-input.html',
 })
 export class OnpOtpInput {
   protected readonly indices = [0, 1, 2, 3, 4, 5];

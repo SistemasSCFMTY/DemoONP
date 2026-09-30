@@ -16,7 +16,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 @Component({
   selector: 'onp-hoja-documento',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<div class="hoja" [innerHTML]="contenido()"></div>`,
+  templateUrl: './onp-hoja-documento.html',
   styles: `
     :host {
       display: block;

@@ -1,0 +1,8 @@
+<button
+  [type]="tipo()"
+  [disabled]="deshabilitado()"
+  [class]="clases()"
+  (click)="pulsar.emit()"
+>
+  <ng-content />
+</button>

@@ -17,20 +17,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
   selector: 'onp-checkbox',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule],
-  template: `
-    <div class="mb-3 flex min-h-11 items-start gap-2 py-1.5">
-      <input
-        type="checkbox"
-        [id]="idCampo()"
-        [formControl]="control()"
-        class="mt-0.5 size-5 shrink-0 accent-navy"
-        [attr.aria-required]="obligatorio() ? 'true' : null"
-      />
-      <label [for]="idCampo()" class="flex-1 cursor-pointer text-label leading-relaxed text-text">
-        <ng-content />
-      </label>
-    </div>
-  `,
+  templateUrl: './onp-checkbox.html',
 })
 export class OnpCheckbox {
   readonly idCampo = input.required<string>();

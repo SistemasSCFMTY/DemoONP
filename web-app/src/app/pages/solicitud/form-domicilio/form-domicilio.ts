@@ -20,19 +20,7 @@ import { BloqueDomicilio } from '../bloques/bloque-domicilio';
   selector: 'onp-form-domicilio',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule, OnpTitulo, OnpButton, BloqueDomicilio],
-  template: `
-    <onp-titulo
-      texto="Información General"
-      lede="Completa todos los campos. Los campos marcados con * son obligatorios."
-    />
-
-    <h2 class="mt-4 mb-2 font-heading text-h3 font-bold text-navy-deep">Domicilio de Residencia</h2>
-
-    <form [formGroup]="formulario" (ngSubmit)="continuar()">
-      <onp-bloque-domicilio [grupo]="formulario" idPrefijo="pf" />
-      <onp-button tipo="submit">Continuar</onp-button>
-    </form>
-  `,
+  templateUrl: './form-domicilio.html',
 })
 export class FormDomicilio {
   private readonly fb = inject(FormBuilder);

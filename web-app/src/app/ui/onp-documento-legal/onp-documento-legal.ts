@@ -14,7 +14,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 @Component({
   selector: 'onp-documento-legal',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<ng-content />`,
+  templateUrl: './onp-documento-legal.html',
   styles: `
     :host {
       display: block;

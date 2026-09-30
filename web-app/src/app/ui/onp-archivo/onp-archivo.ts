@@ -26,55 +26,7 @@ import { LucideFileText, LucideUpload, LucideX } from '@lucide/angular';
   selector: 'onp-archivo',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LucideUpload, LucideFileText, LucideX],
-  template: `
-    <div class="mb-4">
-      <label [for]="idCampo()" class="mb-1 block text-label font-semibold text-text">
-        {{ etiqueta() }}@if (obligatorio()) {<span class="text-error" aria-hidden="true"> *</span>}
-      </label>
-
-      <input
-        #entrada
-        type="file"
-        class="sr-only"
-        [id]="idCampo()"
-        [accept]="acepta()"
-        [attr.aria-required]="obligatorio() ? 'true' : null"
-        [attr.aria-describedby]="seleccionado() ? idCampo() + '-elegido' : idCampo() + '-tipos'"
-        (change)="elegido($event)"
-      />
-
-      <label
-        [for]="idCampo()"
-        class="flex min-h-11 cursor-pointer items-center gap-2 rounded-control border border-dashed border-border bg-surface px-3 py-2.5 text-label text-navy hover:border-navy"
-      >
-        @if (seleccionado(); as archivo) {
-          <svg lucideFileText class="size-4 shrink-0 text-success" aria-hidden="true"></svg>
-          <span [id]="idCampo() + '-elegido'" class="min-w-0 flex-1 truncate text-text">
-            {{ archivo.name }}
-          </span>
-          <span class="shrink-0 text-status text-text-soft">{{ tamano() }}</span>
-        } @else {
-          <svg lucideUpload class="size-4 shrink-0" aria-hidden="true"></svg>
-          <span class="flex-1">Elegir archivo</span>
-        }
-      </label>
-
-      @if (seleccionado()) {
-        <button
-          type="button"
-          class="mt-1 inline-flex min-h-11 cursor-pointer items-center gap-1 text-status font-semibold text-navy underline underline-offset-2"
-          (click)="quitar()"
-        >
-          <svg lucideX class="size-4" aria-hidden="true"></svg>
-          Quitar archivo
-        </button>
-      } @else {
-        <p [id]="idCampo() + '-tipos'" class="mt-1 text-status text-text-soft">
-          {{ descripcionTipos() }}
-        </p>
-      }
-    </div>
-  `,
+  templateUrl: './onp-archivo.html',
 })
 export class OnpArchivo {
   readonly idCampo = input.required<string>();

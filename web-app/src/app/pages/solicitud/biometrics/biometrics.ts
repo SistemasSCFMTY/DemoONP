@@ -25,68 +25,7 @@ import { OnpTitulo } from '../../../ui/onp-titulo/onp-titulo';
   selector: 'onp-biometrics',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [OnpTitulo, OnpAlert, OnpCard, OnpButton, OnpStatus],
-  template: `
-    <onp-titulo
-      texto="Validación biométrica"
-      lede="Captura tu huella dactilar y/o rostro para verificar tu identidad contra bases de datos oficiales (INE, SRE)."
-    />
-
-    <onp-alert tono="info">
-      <strong>Nota:</strong> Ambos mecanismos (huella y rostro) deben complementarse para otorgar
-      créditos de mayor cuantía. El umbral mínimo de aceptación es 90% de coincidencia.
-    </onp-alert>
-
-    @if (captura.simulada) {
-      <p
-        class="mb-3.5 rounded-control border border-dashed border-gold-light bg-surface-warning px-3 py-2.5 text-status leading-relaxed text-warning"
-      >
-        <strong>Modo demostración:</strong> la captura biométrica está simulada. En producción se
-        realiza contra un proveedor de verificación con detección de vitalidad.
-      </p>
-    }
-
-    <onp-card>
-      <h2 class="mb-1 font-heading text-h3 font-bold text-navy-deep">Huella dactilar</h2>
-      <p class="mb-3 text-label leading-relaxed text-text-soft">
-        Captura con detección de vitalidad (distingue tejido vivo de réplicas).
-      </p>
-      <onp-button
-        variante="secondary"
-        [deshabilitado]="capturando() === 'huella' || huellaLista()"
-        (pulsar)="capturar('huella')"
-      >
-        {{ capturando() === 'huella' ? 'Capturando…' : 'Capturar huella' }}
-      </onp-button>
-      @if (huella(); as confianza) {
-        <onp-status tono="exito">Capturado ({{ confianza }})</onp-status>
-      } @else {
-        <onp-status tono="pendiente">Pendiente</onp-status>
-      }
-    </onp-card>
-
-    <onp-card>
-      <h2 class="mb-1 font-heading text-h3 font-bold text-navy-deep">Rostro</h2>
-      <p class="mb-3 text-label leading-relaxed text-text-soft">
-        Captura con detección de vitalidad facial (diferencia rostro real de fotos/videos).
-      </p>
-      <onp-button
-        variante="secondary"
-        [deshabilitado]="capturando() === 'rostro' || rostroListo()"
-        (pulsar)="capturar('rostro')"
-      >
-        {{ capturando() === 'rostro' ? 'Capturando…' : 'Capturar rostro' }}
-      </onp-button>
-      @if (rostro(); as confianza) {
-        <onp-status tono="exito">Capturado ({{ confianza }})</onp-status>
-      } @else {
-        <onp-status tono="pendiente">Pendiente</onp-status>
-      }
-    </onp-card>
-
-    <onp-button [deshabilitado]="!completa()" (pulsar)="continuar()">
-      Continuar a grabación de vídeo
-    </onp-button>
-  `,
+  templateUrl: './biometrics.html',
 })
 export class Biometrics {
   private readonly store = inject(Store);

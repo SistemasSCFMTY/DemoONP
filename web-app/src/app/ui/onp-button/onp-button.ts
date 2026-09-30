@@ -16,16 +16,7 @@ export type VarianteBoton = 'primary' | 'secondary' | 'enlace';
 @Component({
   selector: 'onp-button',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <button
-      [type]="tipo()"
-      [disabled]="deshabilitado()"
-      [class]="clases()"
-      (click)="pulsar.emit()"
-    >
-      <ng-content />
-    </button>
-  `,
+  templateUrl: './onp-button.html',
 })
 export class OnpButton {
   readonly variante = input<VarianteBoton>('primary');

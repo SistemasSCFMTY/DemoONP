@@ -34,59 +34,7 @@ import { OnpTitulo } from '../../../ui/onp-titulo/onp-titulo';
   selector: 'onp-verificar-cliente',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule, OnpTitulo, OnpField, OnpButton, OnpStatus],
-  template: `
-    <onp-titulo texto="Verifica tu identidad" lede="Confirma tus datos para localizar tu expediente." />
-
-    <p
-      class="mb-3.5 rounded-control border border-dashed border-gold-light bg-surface-warning px-3 py-2.5 text-status leading-relaxed text-warning"
-    >
-      <strong>Modo demostración:</strong> escribe cualquier número de cliente y la CURP
-      <code class="font-mono">{{ curpDemo }}</code> para simular un cliente registrado.
-    </p>
-
-    <form [formGroup]="formulario" (ngSubmit)="verificar()">
-      <onp-field
-        idCampo="ver-num-cliente"
-        etiqueta="Número de cliente"
-        marcador="Aparece en tu contrato o estado de cuenta"
-        [obligatorio]="true"
-        [control]="formulario.controls.numeroCliente"
-      />
-
-      <onp-field
-        idCampo="ver-nombre"
-        etiqueta="Nombre completo"
-        marcador="Como aparece en tu contrato"
-        [obligatorio]="true"
-        [control]="formulario.controls.nombre"
-      />
-
-      <div (input)="mayusculas()">
-        <onp-field
-          idCampo="ver-curp"
-          etiqueta="CURP"
-          marcador="18 caracteres"
-          [maxlength]="18"
-          [obligatorio]="true"
-          [control]="formulario.controls.curp"
-        />
-      </div>
-
-      <p class="mb-2.5 text-status leading-relaxed text-text-soft">
-        Al verificar tus datos te enviaremos un código de un solo uso a tu teléfono registrado,
-        conforme a las Disposiciones de Carácter General aplicables.
-      </p>
-
-      @if (error()) {
-        <onp-status tono="error">{{ error() }}</onp-status>
-      }
-
-      <onp-button tipo="submit" [deshabilitado]="verificando()">
-        {{ verificando() ? 'Verificando…' : 'Verificar' }}
-      </onp-button>
-      <onp-button variante="secondary" (pulsar)="noSoyCliente()">No soy cliente</onp-button>
-    </form>
-  `,
+  templateUrl: './verificar-cliente.html',
 })
 export class VerificarCliente {
   private readonly fb = inject(FormBuilder);

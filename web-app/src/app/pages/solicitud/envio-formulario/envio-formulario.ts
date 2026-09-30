@@ -22,40 +22,7 @@ import { OnpTitulo } from '../../../ui/onp-titulo/onp-titulo';
   selector: 'onp-envio-formulario',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule, OnpTitulo, OnpCard, OnpAlert, OnpCheckbox, OnpButton],
-  template: `
-    <onp-titulo
-      texto="Envío de tu información"
-      lede="Terminaste de capturar tus datos de identificación. Antes de enviarlos, lee lo siguiente."
-    />
-
-    <onp-card>
-      <p class="text-body leading-loose text-text">
-        "El envío de la presente información constituye una autorización para que tu voz, imagen o,
-        en su caso, ambas sean grabadas para concluir con el proceso de identificación".
-      </p>
-    </onp-card>
-
-    <onp-alert tono="info">
-      <strong>¿Qué significa esto?</strong>
-      <span class="mt-1.5 block leading-relaxed">
-        Al enviar tus datos autorizas que, más adelante en este mismo proceso, se grabe tu imagen y
-        tu voz. Esa grabación forma parte del expediente de identificación y se conserva conforme a
-        la normativa aplicable.
-      </span>
-    </onp-alert>
-
-    <onp-checkbox idCampo="auth-recording" [obligatorio]="true" [control]="autorizo">
-      He leído la manifestación anterior y autorizo el envío de mi información en los términos
-      señalados.
-    </onp-checkbox>
-
-    <onp-button [deshabilitado]="!autorizo.value" (pulsar)="continuar()">
-      Enviar y continuar
-    </onp-button>
-    <onp-button variante="secondary" (pulsar)="regresar()">
-      Regresar y revisar mis datos
-    </onp-button>
-  `,
+  templateUrl: './envio-formulario.html',
 })
 export class EnvioFormulario {
   private readonly fb = inject(FormBuilder);

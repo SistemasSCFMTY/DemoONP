@@ -14,33 +14,7 @@ import { mensajeDeError } from '../../services/domain/validadores';
   selector: 'onp-select',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule],
-  template: `
-    <label [for]="idCampo()" class="mb-1 block self-end text-label font-semibold text-text">
-      {{ etiqueta() }}@if (obligatorio()) {<span class="text-error" aria-hidden="true"> *</span>}
-    </label>
-
-    <select
-      [id]="idCampo()"
-      [formControl]="control()"
-      [attr.aria-required]="obligatorio() ? 'true' : null"
-      [attr.aria-invalid]="muestraError() ? 'true' : null"
-      [attr.aria-describedby]="muestraError() ? idCampo() + '-error' : null"
-      [class]="clases()"
-    >
-      <option value="">Selecciona...</option>
-      @for (opcion of opciones(); track opcion.valor) {
-        <option [value]="opcion.valor">{{ opcion.texto }}</option>
-      }
-    </select>
-
-    <div>
-      @if (muestraError()) {
-        <p [id]="idCampo() + '-error'" class="mt-1 text-status font-medium text-error" role="alert">
-          {{ textoError() }}
-        </p>
-      }
-    </div>
-  `,
+  templateUrl: './onp-select.html',
   // Three children, same shape as `onp-field`, so the two can share a row.
   host: { class: 'mb-4 block' },
 })

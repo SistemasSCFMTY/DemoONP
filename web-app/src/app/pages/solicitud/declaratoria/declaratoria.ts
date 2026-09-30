@@ -54,61 +54,7 @@ import { BloqueLaborales } from '../bloques/bloque-laborales';
     BloqueContacto,
     BloqueLaborales,
   ],
-  template: `
-    <onp-titulo
-      texto="Declaratoria Propietario Real"
-      lede="Indica si actúas a nombre propio o si el crédito es para un tercero (propietario real)."
-    />
-
-    <onp-card>
-      <div role="radiogroup" aria-labelledby="declaratoria-pregunta">
-        <p id="declaratoria-pregunta" class="sr-only">¿Por cuenta de quién actúas?</p>
-        <label class="flex min-h-11 cursor-pointer items-center gap-2 text-label text-text">
-          <input
-            type="radio"
-            name="declaratoria"
-            class="size-5 shrink-0 accent-navy"
-            [checked]="!esTercero()"
-            (change)="elegir('propio')"
-          />
-          <span>Actúo a nombre y cuenta propia</span>
-        </label>
-        <label class="flex min-h-11 cursor-pointer items-center gap-2 text-label text-text">
-          <input
-            type="radio"
-            name="declaratoria"
-            class="size-5 shrink-0 accent-navy"
-            [checked]="esTercero()"
-            (change)="elegir('tercero')"
-          />
-          <span>Actúo por cuenta de un tercero (propietario real)</span>
-        </label>
-      </div>
-    </onp-card>
-
-    @if (grupos(); as g) {
-      <onp-alert tono="info">
-        Manifestaste actuar por cuenta de un tercero. Completa la información del propietario real.
-        Los campos marcados con * son obligatorios.
-      </onp-alert>
-
-      <h2 class="mt-4 mb-2 font-heading text-h3 font-bold text-navy-deep">Datos Generales</h2>
-      <onp-bloque-generales [grupo]="g.generales" idPrefijo="pr" />
-
-      <h2 class="mt-5 mb-2 font-heading text-h3 font-bold text-navy-deep">
-        Domicilio de Residencia
-      </h2>
-      <onp-bloque-domicilio [grupo]="g.domicilio" idPrefijo="pr" />
-
-      <h2 class="mt-5 mb-2 font-heading text-h3 font-bold text-navy-deep">Datos de Contacto</h2>
-      <onp-bloque-contacto [grupo]="g.contacto" idPrefijo="pr" />
-
-      <h2 class="mt-5 mb-2 font-heading text-h3 font-bold text-navy-deep">Datos Laborales</h2>
-      <onp-bloque-laborales [grupo]="g.laborales" idPrefijo="pr" />
-    }
-
-    <onp-button (pulsar)="continuar()">Continuar</onp-button>
-  `,
+  templateUrl: './declaratoria.html',
 })
 export class Declaratoria {
   private readonly fb = inject(FormBuilder);

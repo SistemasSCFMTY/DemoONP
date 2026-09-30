@@ -18,24 +18,7 @@ import { LucideArrowLeft } from '@lucide/angular';
   selector: 'onp-topbar',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LucideArrowLeft],
-  template: `
-    <header class="w-full bg-navy">
-      <div class="mx-auto flex w-full max-w-app items-center gap-2 px-3 py-2">
-        <button
-          type="button"
-          class="grid size-11 shrink-0 place-items-center rounded-full text-white transition-colors hover:bg-navy-deep disabled:opacity-35"
-          [disabled]="!puedeRegresar()"
-          (click)="regresar.emit()"
-        >
-          <svg lucideArrowLeft class="size-5" aria-hidden="true"></svg>
-          <span class="sr-only">Regresar al paso anterior</span>
-        </button>
-        <p class="min-w-0 truncate font-heading text-topbar font-semibold text-white">
-          {{ titulo() }}
-        </p>
-      </div>
-    </header>
-  `,
+  templateUrl: './topbar.html',
   styles: `
     :host {
       position: sticky;

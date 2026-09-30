@@ -1,0 +1,32 @@
+<onp-titulo
+  texto="Autorización Buró de Crédito"
+  lede="Debes autorizar la consulta a tu historial crediticio."
+/>
+
+<onp-leyenda>
+  Autorizo a {{ marca.razonSocial }} lleve a cabo investigaciones sobre mi comportamiento
+  Crediticio o, en su caso, el de la empresa a la que represento. Conozco la naturaleza y
+  alcance de la información que se solicitará y del uso que se dará. Acepto que este documento
+  quede bajo propiedad de {{ marca.razonSocial }} para efectos del control y cumplimiento del
+  artículo 28 de la Ley para Regular a las Sociedades de Información Crediticia.
+</onp-leyenda>
+
+<form [formGroup]="formulario" (ngSubmit)="continuar()">
+  <onp-field
+    idCampo="buro-nip"
+    etiqueta="NIP de confirmación"
+    marcador="Ingresa el NIP proporcionado"
+    modoEntrada="numeric"
+    [maxlength]="6"
+    [obligatorio]="true"
+    [control]="formulario.controls.nip"
+  />
+
+  <onp-checkbox idCampo="auth-buro" [obligatorio]="true" [control]="formulario.controls.autorizo">
+    Autorizo la consulta a mi expediente de Buró de Crédito conforme al Artículo 28 LRSIC
+  </onp-checkbox>
+
+  <onp-button tipo="submit" [deshabilitado]="!formulario.controls.autorizo.value">
+    Continuar
+  </onp-button>
+</form>

@@ -1,0 +1,21 @@
+<onp-titulo
+  texto="Revisa tu solicitud"
+  lede="Este es el documento que vas a firmar. Léelo con atención y confirma que tus datos sean correctos."
+/>
+
+<onp-alert tono="warning">
+  Si encuentras algún error, regresa con la flecha de arriba y corrígelo antes de firmar.
+</onp-alert>
+
+<onp-hoja-documento [contenido]="documento()" />
+
+<div class="mt-4">
+  <onp-checkbox idCampo="confirma-lectura" [obligatorio]="true" [control]="confirma">
+    He leído la solicitud y confirmo que la información contenida es correcta y corresponde a
+    lo que declaré.
+  </onp-checkbox>
+</div>
+
+<onp-button [deshabilitado]="!confirma.value" (pulsar)="continuar()">
+  Continuar a firma
+</onp-button>

@@ -23,18 +23,7 @@ import {
 @Component({
   selector: 'onp-titulo',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <h1
-      #encabezado
-      tabindex="-1"
-      class="mb-2 font-heading text-h2 font-bold text-navy-deep outline-none"
-    >
-      {{ texto() }}
-    </h1>
-    @if (lede()) {
-      <p class="mb-4 text-body leading-relaxed text-text-soft">{{ lede() }}</p>
-    }
-  `,
+  templateUrl: './onp-titulo.html',
 })
 export class OnpTitulo {
   readonly texto = input.required<string>();

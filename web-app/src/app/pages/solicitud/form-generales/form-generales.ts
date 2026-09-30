@@ -20,19 +20,7 @@ import { BloqueGenerales } from '../bloques/bloque-generales';
   selector: 'onp-form-generales',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule, OnpTitulo, OnpButton, BloqueGenerales],
-  template: `
-    <onp-titulo
-      texto="Información General"
-      lede="Completa todos los campos. Los campos marcados con * son obligatorios."
-    />
-
-    <h2 class="mt-4 mb-2 font-heading text-h3 font-bold text-navy-deep">Datos Generales</h2>
-
-    <form [formGroup]="formulario" (ngSubmit)="continuar()">
-      <onp-bloque-generales [grupo]="formulario" idPrefijo="pf" />
-      <onp-button tipo="submit">Continuar</onp-button>
-    </form>
-  `,
+  templateUrl: './form-generales.html',
 })
 export class FormGenerales {
   private readonly fb = inject(FormBuilder);

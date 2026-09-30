@@ -19,25 +19,7 @@ export type TonoEstado = 'pendiente' | 'exito' | 'error' | 'aviso';
   selector: 'onp-status',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [LucideCheck, LucideX, LucideTriangleAlert, LucideCircleDashed],
-  template: `
-    <p class="mt-1.5 flex items-center gap-1.5 text-status font-medium" [class]="color()" aria-live="polite">
-      @switch (tono()) {
-        @case ('exito') {
-          <svg lucideCheck class="size-4 shrink-0" aria-hidden="true"></svg>
-        }
-        @case ('error') {
-          <svg lucideX class="size-4 shrink-0" aria-hidden="true"></svg>
-        }
-        @case ('aviso') {
-          <svg lucideTriangleAlert class="size-4 shrink-0" aria-hidden="true"></svg>
-        }
-        @default {
-          <svg lucideCircleDashed class="size-4 shrink-0" aria-hidden="true"></svg>
-        }
-      }
-      <span><ng-content /></span>
-    </p>
-  `,
+  templateUrl: './onp-status.html',
 })
 export class OnpStatus {
   readonly tono = input<TonoEstado>('pendiente');

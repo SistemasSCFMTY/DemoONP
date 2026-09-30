@@ -10,7 +10,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 @Component({
   selector: 'onp-pep-section',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<ng-content />`,
+  templateUrl: './onp-pep-section.html',
   host: {
     class:
       'my-3 block rounded-control border-l-4 border-warning bg-surface-muted p-3.5 text-label leading-relaxed text-text',

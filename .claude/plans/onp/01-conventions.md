@@ -184,6 +184,16 @@ Angular 21, standalone, signals, **zoneless**. No NgModules.
 - No logic in templates. A computed signal or a pure pipe in `app/pipes/`.
 - One component per file, one concern per component. A wizard step is a component;
   the thing it renders is composed of primitives.
+- **Markup lives in a `.html` file beside the class — `templateUrl: './x.html'`, never
+  an inline `template:`.** Named for the `.ts`, so `topbar.ts` has `topbar.html`. A
+  template literal buried in a decorator gets no HTML tooling: no formatter, no
+  Angular language service on some setups, no clean diff when one attribute changes.
+  It also hides the size of a screen behind a class that looks small. The rule is
+  every component, including the one-line `<ng-content />` wrappers, because "some of
+  them have a file" means nobody knows where to look. Owner, 2026-09-30.
+  The exception is a **test host** inside a `.spec.ts`: it is a fixture, it belongs
+  with the assertions it serves, and a second file would be indirection for nothing.
+  `styles:` stays inline — the amount is small and it is not what was asked for.
 - Lazy-load every route with `loadComponent`.
 
 ### Folder layout (`web-app/src/app/`; `superadmin-app/` mirrors it)

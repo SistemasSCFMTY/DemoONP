@@ -20,44 +20,7 @@ import { OnpFila } from '../../../ui/onp-fila/onp-fila';
   selector: 'onp-bloque-contacto',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule, OnpField, OnpFila],
-  template: `
-    <div [formGroup]="grupo()">
-      <div (input)="formatear()">
-        <onp-fila>
-          <onp-field
-            [idCampo]="id('telefono')"
-            etiqueta="Teléfono celular"
-            tipo="tel"
-            marcador="81 1234 5678"
-            modoEntrada="numeric"
-            autocompletar="tel-national"
-            [maxlength]="14"
-            [obligatorio]="true"
-            [control]="grupo().controls.telefonoCelular"
-          />
-          <onp-field
-            [idCampo]="id('telefono-fijo')"
-            etiqueta="Teléfono fijo (Opcional)"
-            tipo="tel"
-            marcador="81 5555 5555"
-            modoEntrada="numeric"
-            [maxlength]="14"
-            [control]="grupo().controls.telefonoFijo"
-          />
-        </onp-fila>
-      </div>
-
-      <onp-field
-        [idCampo]="id('email')"
-        etiqueta="Correo electrónico"
-        tipo="email"
-        marcador="fernando@example.com"
-        autocompletar="email"
-        [obligatorio]="true"
-        [control]="grupo().controls.correo"
-      />
-    </div>
-  `,
+  templateUrl: './bloque-contacto.html',
 })
 export class BloqueContacto {
   readonly grupo = input.required<GrupoContacto>();

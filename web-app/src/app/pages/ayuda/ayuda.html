@@ -1,0 +1,130 @@
+<onp-titulo texto="Ayuda y contacto" lede="Estamos para atenderte." />
+
+<onp-alert tono="warning">
+  <strong>Datos de ejemplo.</strong> Sustituye esta información por los datos reales de la
+  institución.
+</onp-alert>
+
+<onp-card>
+  <dl class="divide-y divide-border">
+    <div class="flex gap-3 py-2.5 first:pt-0">
+      <svg lucidePhone class="mt-0.5 size-4 shrink-0 text-gold" aria-hidden="true"></svg>
+      <div class="min-w-0">
+        <dt class="text-label font-semibold text-text">Teléfono</dt>
+        <dd class="text-label leading-relaxed text-text-soft">
+          {{ marca.contacto.telefono }}<br />Lunes a viernes de 9:00 a 18:00 h
+        </dd>
+      </div>
+    </div>
+    <div class="flex gap-3 py-2.5">
+      <svg lucideMail class="mt-0.5 size-4 shrink-0 text-gold" aria-hidden="true"></svg>
+      <div class="min-w-0">
+        <dt class="text-label font-semibold text-text">Correo electrónico</dt>
+        <dd class="text-label break-words text-text-soft">{{ marca.contacto.correo }}</dd>
+      </div>
+    </div>
+    <div class="flex gap-3 py-2.5">
+      <svg lucideMapPin class="mt-0.5 size-4 shrink-0 text-gold" aria-hidden="true"></svg>
+      <div class="min-w-0">
+        <dt class="text-label font-semibold text-text">Domicilio</dt>
+        <dd class="text-label leading-relaxed text-text-soft">{{ marca.domicilio }}</dd>
+      </div>
+    </div>
+    <div class="flex gap-3 py-2.5 last:pb-0">
+      <svg lucideGlobe class="mt-0.5 size-4 shrink-0 text-gold" aria-hidden="true"></svg>
+      <div class="min-w-0">
+        <dt class="text-label font-semibold text-text">Sitio web</dt>
+        <dd class="text-label text-text-soft">{{ marca.contacto.sitioWeb }}</dd>
+      </div>
+    </div>
+  </dl>
+</onp-card>
+
+<h2 class="mt-5 mb-2 font-heading text-h3 font-bold text-navy-deep">
+  Unidad Especializada de Atención a Usuarios
+</h2>
+<onp-card>
+  <dl class="divide-y divide-border">
+    <div class="flex gap-3 py-2.5 first:pt-0">
+      <svg lucideUser class="mt-0.5 size-4 shrink-0 text-gold" aria-hidden="true"></svg>
+      <div class="min-w-0">
+        <dt class="text-label font-semibold text-text">Titular</dt>
+        <dd class="text-label text-text-soft">{{ marca.une.titular }}</dd>
+      </div>
+    </div>
+    <div class="flex gap-3 py-2.5">
+      <svg lucidePhone class="mt-0.5 size-4 shrink-0 text-gold" aria-hidden="true"></svg>
+      <div class="min-w-0">
+        <dt class="text-label font-semibold text-text">Teléfono UNE</dt>
+        <dd class="text-label text-text-soft">{{ marca.une.telefono }}</dd>
+      </div>
+    </div>
+    <div class="flex gap-3 py-2.5 last:pb-0">
+      <svg lucideMail class="mt-0.5 size-4 shrink-0 text-gold" aria-hidden="true"></svg>
+      <div class="min-w-0">
+        <dt class="text-label font-semibold text-text">Correo UNE</dt>
+        <dd class="text-label break-words text-text-soft">{{ marca.une.correo }}</dd>
+      </div>
+    </div>
+  </dl>
+</onp-card>
+
+<h2 class="mt-5 mb-2 font-heading text-h3 font-bold text-navy-deep">CONDUSEF</h2>
+<p class="mb-3 text-label leading-relaxed text-text-soft">
+  Si no quedas conforme con la atención recibida, puedes acudir a la Comisión Nacional para la
+  Protección y Defensa de los Usuarios de Servicios Financieros.
+</p>
+<onp-card>
+  <dl class="divide-y divide-border">
+    <div class="flex gap-3 py-2.5 first:pt-0">
+      <svg lucidePhone class="mt-0.5 size-4 shrink-0 text-gold" aria-hidden="true"></svg>
+      <div class="min-w-0">
+        <dt class="text-label font-semibold text-text">Teléfono</dt>
+        <dd class="text-label text-text-soft">55 5340 0999 · 800 999 8080</dd>
+      </div>
+    </div>
+    <div class="flex gap-3 py-2.5 last:pb-0">
+      <svg lucideGlobe class="mt-0.5 size-4 shrink-0 text-gold" aria-hidden="true"></svg>
+      <div class="min-w-0">
+        <dt class="text-label font-semibold text-text">Sitio web</dt>
+        <dd class="text-label text-text-soft">www.gob.mx/condusef</dd>
+      </div>
+    </div>
+  </dl>
+</onp-card>
+
+<h2 class="mt-5 mb-2 font-heading text-h3 font-bold text-navy-deep">Preguntas frecuentes</h2>
+<onp-card>
+  <dl>
+    <dt class="mb-1 text-label font-semibold text-navy-deep">¿Cuánto tarda el proceso?</dt>
+    <dd class="mb-3.5 text-label leading-relaxed text-text-soft">
+      La captura toma alrededor de 15 minutos. La resolución de tu solicitud se te informa en
+      esta misma aplicación.
+    </dd>
+
+    <dt class="mb-1 text-label font-semibold text-navy-deep">
+      ¿Por qué me piden video y huella?
+    </dt>
+    <dd class="mb-3.5 text-label leading-relaxed text-text-soft">
+      Las Disposiciones de Carácter General aplicables exigen mecanismos de identificación no
+      presencial que incluyen videograbación y validación biométrica.
+    </dd>
+
+    <dt class="mb-1 text-label font-semibold text-navy-deep">
+      ¿Puedo interrumpir y continuar después?
+    </dt>
+    <dd class="mb-3.5 text-label leading-relaxed text-text-soft">
+      Sí. Tu avance se conserva por un periodo limitado y puedes retomarlo iniciando sesión.
+    </dd>
+
+    <dt class="mb-1 text-label font-semibold text-navy-deep">
+      ¿Qué pasa si rechazan mi solicitud?
+    </dt>
+    <dd class="text-label leading-relaxed text-text-soft">
+      Te lo informaremos por esta vía. Podrás presentar una nueva solicitud transcurrido el
+      plazo que se te indique.
+    </dd>
+  </dl>
+</onp-card>
+
+<onp-button variante="secondary" (pulsar)="volver()">Volver</onp-button>

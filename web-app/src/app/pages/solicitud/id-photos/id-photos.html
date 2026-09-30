@@ -1,0 +1,134 @@
+<onp-titulo
+  texto="Fotografía de identificación"
+  lede="Captura ambos lados de tu identificación. Válidos: INE, Pasaporte mexicano o Matrícula consular."
+/>
+
+<onp-alert tono="info">
+  <strong>Requisitos:</strong> La foto debe ser nítida, a color, bien iluminada, completa y
+  legible. Evita reflejos, sombras y dedos sobre el documento.
+</onp-alert>
+
+<onp-select
+  idCampo="tipo-identificacion"
+  etiqueta="Tipo de identificación"
+  [opciones]="tipos"
+  [obligatorio]="true"
+  [control]="tipo"
+/>
+
+@if (!tipo.value) {
+  <onp-status tono="pendiente">
+    Selecciona el tipo de identificación para poder capturar las fotografías.
+  </onp-status>
+}
+
+<onp-captura-lado
+  lado="front"
+  titulo="Lado A — Frente"
+  pista="Lado con tu fotografía y datos personales."
+  [habilitado]="!!tipo.value"
+  [progresoOcr]="progresoFrente()"
+  (capturada)="fotoLista($event)"
+  (descartada)="fotoDescartada($event)"
+/>
+
+@if (esIne() && hayFrente()) {
+  <section class="mb-4 rounded-card border border-border bg-surface p-4">
+    <h3 class="mb-1 font-heading text-h3 font-bold text-navy-deep">
+      Datos de la credencial — Frente
+    </h3>
+    <p class="mb-3 text-status leading-relaxed text-text-soft">
+      La app intentará leerlos de la fotografía. Si alguno no aparece o no coincide, escríbelo
+      tú. <b>La primera lectura puede tardar hasta medio minuto.</b>
+    </p>
+    <div (input)="mayusculasClave()">
+      <onp-field
+        idCampo="ine-clave-elector"
+        etiqueta="Clave de elector"
+        marcador="18 caracteres"
+        [maxlength]="18"
+        [detectado]="detectado('claveElector')"
+        [control]="formulario.controls.claveElector"
+      />
+    </div>
+    <onp-fila>
+      <onp-field
+        idCampo="ine-anio-registro"
+        etiqueta="Año de registro"
+        marcador="AAAA"
+        modoEntrada="numeric"
+        [maxlength]="4"
+        [detectado]="detectado('anioRegistro')"
+        [control]="formulario.controls.anioRegistro"
+      />
+      <onp-field
+        idCampo="ine-num-emision"
+        etiqueta="Número de emisión"
+        marcador="00"
+        modoEntrada="numeric"
+        [maxlength]="2"
+        [detectado]="detectado('numEmision')"
+        [control]="formulario.controls.numEmision"
+      />
+    </onp-fila>
+    <onp-fila>
+      <onp-field
+        idCampo="ine-anio-emision"
+        etiqueta="Año de emisión"
+        marcador="AAAA"
+        modoEntrada="numeric"
+        [maxlength]="4"
+        [detectado]="detectado('anioEmision')"
+        [control]="formulario.controls.anioEmision"
+      />
+    </onp-fila>
+  </section>
+}
+
+<onp-captura-lado
+  lado="back"
+  titulo="Lado B — Reverso"
+  pista="Lado con el código de barras / banda magnética."
+  [habilitado]="!!tipo.value"
+  [progresoOcr]="progresoReverso()"
+  (capturada)="fotoLista($event)"
+  (descartada)="fotoDescartada($event)"
+/>
+
+@if (esIne() && hayReverso()) {
+  <section class="mb-4 rounded-card border border-border bg-surface p-4">
+    <h3 class="mb-1 font-heading text-h3 font-bold text-navy-deep">
+      Datos de la credencial — Reverso
+    </h3>
+    <p class="mb-3 text-status leading-relaxed text-text-soft">
+      La app intentará leerlos de la fotografía. Si alguno no aparece o no coincide, escríbelo
+      tú. <b>La primera lectura puede tardar hasta medio minuto.</b>
+    </p>
+    <onp-field
+      idCampo="ine-cic"
+      etiqueta="CIC (Código Identificador de Credencial)"
+      marcador="9 dígitos"
+      modoEntrada="numeric"
+      [maxlength]="9"
+      [detectado]="detectado('cic')"
+      [control]="formulario.controls.cic"
+    />
+    <onp-field
+      idCampo="ine-ocr"
+      etiqueta="OCR (Reconocimiento Óptico de Caracteres)"
+      marcador="13 dígitos"
+      modoEntrada="numeric"
+      [maxlength]="13"
+      [detectado]="detectado('ocr')"
+      [control]="formulario.controls.ocr"
+    />
+  </section>
+}
+
+@if (error()) {
+  <onp-status tono="error">{{ error() }}</onp-status>
+}
+
+<onp-button [deshabilitado]="!hayFrente() || !hayReverso()" (pulsar)="continuar()">
+  Continuar
+</onp-button>
