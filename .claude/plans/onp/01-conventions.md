@@ -261,10 +261,15 @@ Hono **4.13.11** on **Cloudflare Workers**. TypeScript, ESM. Load the `cloudflar
 `wrangler` and `workers-best-practices` skills before touching it.
 
 - **Every secret is a Worker secret**, set with `wrangler secret put`:
-  `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `JWT_SECRET`, `RESEND_API_KEY`, `DEMO_MODE`.
+  `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `SUPABASE_PUBLISHABLE_KEY`, `JWT_SECRET`,
+  `RESEND_API_KEY`, `DEMO_SOFOM_ID`. `DEMO_MODE` is the one plain `var`.
   **Never in `wrangler.jsonc`** — that file is committed. Ship a `.dev.vars.example`
-  listing every key with no value; `.dev.vars` is gitignored. No credential literal in
-  source, ever; the source HTML's admin-panel-configured connection string is gone.
+  listing every key with no value; `.dev.vars` is gitignored (that exact filename —
+  wrangler reads no other). No credential literal in source, ever; the source HTML's
+  admin-panel-configured connection string is gone.
+  **Both Supabase keys are server-side.** The publishable one too: it exists for a
+  single `signInWithPassword` call and never leaves the Worker. "Publishable" is
+  Supabase's name for it, not an instruction.
 - **What cannot run in a Worker.** Tesseract OCR cannot: the WASM core plus a ~15MB
   `traineddata` blow past the 3MB/10MB bundle cap and the CPU budget. OCR therefore
   runs in the browser, as the source already does it. `html2pdf` likewise. This
@@ -296,15 +301,62 @@ checkpoints survive.
 `hash_sha256`, `capturado_en`. **Keep the SHA-256.** It is the evidentiary value of the
 whole exercise and it costs one function call.
 
-Migrations live in `backend/supabase/migrations/`, numbered and forward-only.
+Migrations live in `backend/supabase/migrations/`, numbered and forward-only — and
+**idempotent and additive**, because they run against a database that already exists
+and whose exact state we cannot see. `create table if not exists`,
+`add column if not exists`, `drop policy if exists` before each create. Never drop,
+never recreate. `backend/supabase/verificacion.sql` reads and nothing else; run it
+first.
+
+**The database was already there.** Probed read-only 2026-09-30: nine tables,
+`expedientes` with 106 columns, the `expedientes` bucket private, one active SOFOM and
+one active panel user. Our job is to write against it, not to create it.
+
+**Three Postgres enums, and the contract had two of them wrong.** A value outside an
+enum is not a validation error — it is a 500 from the insert, halfway through a
+submission whose photos already uploaded.
+
+| Enum | Values |
+|---|---|
+| `estado_expediente` | `borrador · pendiente · revision · aprobado · rechazado · cancelado` |
+| `rol_usuario` | `administrador · analista · consulta` |
+| `tipo_archivo` | `id_frente · id_reverso · firma · video_identificacion · huella · rostro · comprobante_domicilio · constancia_curp · constancia_fiscal · constancia_fea · poder_notarial · id_propietario_real · domicilio_propietario_real · otro` |
+
+It is **`revision`**, not `en_revision`. And **none of the contract's eight `doc_*`
+part names exist in `tipo_archivo`** — the Worker maps them on the way in
+(`src/schemas/comunes.ts`); the multipart part names stay as the contract has them,
+because `web-app/` is built against those.
+
+**`expedientes.sofom_id` is NOT NULL with an FK** and is a leftover of the multi-tenant
+stage. We are single-tenant and do not manage `sofoms`, so the Worker fills it from the
+`DEMO_SOFOM_ID` secret. **Without that secret no submission works at all.**
+
+**Staff passwords live in Supabase Auth**, not in `usuarios_panel` — that table is the
+profile (`rol`, `activo`, `nombre_completo`) and has no password column. The Worker
+calls `signInWithPassword` with the publishable key, checks the profile with the secret
+key, mints **its own** HS256 JWT signed with `JWT_SECRET`, and discards the Supabase
+session. **This API never validates a Supabase-issued token — no JWKS anywhere.**
+
+**Write `historial_estados` on every estado change.** The table already exists
+(`expediente_id`, `estado_anterior`, `estado_nuevo`, `motivo`, `usuario_id`,
+`creado_en`). An audit table nobody fills is worse than no audit table: it looks like
+there is a record.
 
 **Do not port `../ONP/arreglo_permisos_final.sql`.** It grants `SELECT` on the whole
 `expedientes` bucket to `public` and `INSERT with check (true)` on five tables — so
-anyone holding the anon key can read every INE photo and signature in the bucket. It
-was written to unblock a browser client talking to Supabase directly. Nothing does that
-any more: the Worker holds the service key. Revoke public access instead of reproducing
-it. Read the file for the traps it documents (`storage.prefixes` needs its own
-policies), then supersede it.
+anyone holding the publishable key can read every INE photo and signature in the
+bucket. It was written to unblock a browser client talking to Supabase directly, and
+none of our three projects is one.
+
+**But the original single-file app still is, and it still runs against this database.**
+So the revocation is its own migration, `0002_cerrar_acceso_publico.sql`, clearly
+marked as breaking that app, and **the owner decides when to run it**. It is not a
+prerequisite for us: `service_role` bypasses RLS, so the Worker works either way. What
+it buys is closing the read hole, not unblocking us.
+
+Read that file for the trap it documents — `storage.prefixes` needs a policy per folder
+level, which is why the storage path stays one level deep, `{folio}/{tipo}.{ext}` —
+then supersede it.
 
 ---
 
@@ -486,6 +538,11 @@ a reviewer who sees a token changed in one place only should block it.
 | D6 | The mocked biometric confidence (`"98%"` / `"95%"`) is kept verbatim | Owner's call: this is a demo, and the figure sits behind a "Modo demostración" label. It is the one carve-out from "no invented numbers" — everything financial stays computed | owner | 2026-09-30 |
 | D7 | OCR runs in the browser, not server-side | Forced by Cloudflare Workers: Tesseract's WASM and traineddata exceed the bundle cap and CPU budget. Reverses an earlier decision, by platform constraint not preference | platform | 2026-09-30 |
 | D8 | Resend sends from the sandbox sender `onboarding@resend.dev` | Owner's call: no verified domain before the demo. It delivers **only** to the Resend account owner's address, so the demo registers with that address | owner | 2026-09-30 |
+| D9 | The Supabase project is reused, not created, and its schema is authoritative over the contract | Owner's call. A read-only probe found the schema already complete and a superset of what we specified. Where the two disagreed, the database won and `02-api-contract.md` was corrected: `revision` not `en_revision`, and the eight `doc_*` names mapped onto the real `tipo_archivo` enum | owner | 2026-09-30 |
+| D10 | Panel auth goes through Supabase Auth; `usuarios_panel` keeps no password | Forced by the reused project. That table has no password column and adding one would require knowing the existing users' passwords. The Worker still mints its own session JWT and never forwards a Supabase token | owner | 2026-09-30 |
+| D11 | Three tables added beyond the plan's list — `prospectos`, `otp_codigos`, `producto` | The contract promises `POST /prospectos → { id }`, so the id must point at something; the OTP needs a store and Supabase is already a hard dependency while a KV namespace would be one more thing to provision; CP-B9 needs a row to read and write | `onp-backend` | 2026-09-30 |
+| D12 | `documento_html` added to the `POST /solicitudes` payload | CP-B3 must insert the signed `documentos` row and `GET /expedientes/:id` returns it, but no contract field carried the HTML. The source sent it from the browser (`:3130`) and the Worker renders no templates (CP-B11 is P2) | `onp-backend` | 2026-09-30 |
+| D13 | Prospect passwords are PBKDF2-SHA256, not argon2id | PBKDF2 is what Web Crypto gives a Worker natively; an argon2 WASM build costs bundle size and startup. Adequate for a one-day demo, and the first debt to pay if it outlives that | `onp-backend` | 2026-09-30 |
 
 No open questions. The Charis SIL / Archivo split was confirmed by the owner on
 2026-09-30 and is recorded in §2.
