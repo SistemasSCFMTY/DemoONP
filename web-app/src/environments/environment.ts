@@ -15,19 +15,24 @@ export const environment = {
   /** El Worker desplegado. `onp-fer-api.workers.dev` nunca existió. */
   apiBaseUrl: 'https://demo-onp-api.emnsistemas.workers.dev',
   /**
-   * Local only — the production build sets this to false.
+   * Off here too, by owner decision (2026-09-30): **datos reales siempre**,
+   * también en desarrollo, para que quien corra esto localmente vea lo mismo
+   * que está desplegado.
    *
-   * The http services fall back to an in-memory stand-in so the wizard runs
-   * with no backend up. Two things to know before trusting it:
+   * It was true here until now, and what it enabled was not the safety net it
+   * looked like:
    *
    *  - `conRespaldo` catches EVERY `HttpErrorResponse`, not just an
-   *    unreachable Worker. A 401, a 500 and a rate-limit all become a
+   *    unreachable Worker. A 401, a 500 and a rate-limit all became a
    *    fallback.
-   *  - The "Modo demostración" label this used to promise is NOT there.
-   *    Checked with the Worker unreachable: the simulador rendered invented
-   *    product parameters in silence. Do not read a fallback as visible.
+   *  - There was no "Modo demostración" label. Checked with the Worker
+   *    unreachable: the simulador rendered invented product parameters in
+   *    silence. Do not read a fallback as visible.
+   *
+   * The stand-ins stay in the tree. Turning this back on is a deliberate
+   * one-file edit for working offline — never a default.
    */
-  permitirMocks: true,
+  permitirMocks: false,
   /**
    * The videograbación kill switch (03-videograbacion.md, CP-V2).
    *
