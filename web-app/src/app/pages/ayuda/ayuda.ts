@@ -69,7 +69,7 @@ import { OnpTitulo } from '../../ui/onp-titulo/onp-titulo';
           <svg lucideGlobe class="mt-0.5 size-4 shrink-0 text-gold" aria-hidden="true"></svg>
           <div class="min-w-0">
             <dt class="text-label font-semibold text-text">Sitio web</dt>
-            <dd class="text-label text-text-soft">[SITIO WEB]</dd>
+            <dd class="text-label text-text-soft">{{ marca.contacto.sitioWeb }}</dd>
           </div>
         </div>
       </dl>
@@ -84,21 +84,21 @@ import { OnpTitulo } from '../../ui/onp-titulo/onp-titulo';
           <svg lucideUser class="mt-0.5 size-4 shrink-0 text-gold" aria-hidden="true"></svg>
           <div class="min-w-0">
             <dt class="text-label font-semibold text-text">Titular</dt>
-            <dd class="text-label text-text-soft">[NOMBRE DEL TITULAR]</dd>
+            <dd class="text-label text-text-soft">{{ marca.une.titular }}</dd>
           </div>
         </div>
         <div class="flex gap-3 py-2.5">
           <svg lucidePhone class="mt-0.5 size-4 shrink-0 text-gold" aria-hidden="true"></svg>
           <div class="min-w-0">
             <dt class="text-label font-semibold text-text">Teléfono UNE</dt>
-            <dd class="text-label text-text-soft">[TELÉFONO UNE]</dd>
+            <dd class="text-label text-text-soft">{{ marca.une.telefono }}</dd>
           </div>
         </div>
         <div class="flex gap-3 py-2.5 last:pb-0">
           <svg lucideMail class="mt-0.5 size-4 shrink-0 text-gold" aria-hidden="true"></svg>
           <div class="min-w-0">
             <dt class="text-label font-semibold text-text">Correo UNE</dt>
-            <dd class="text-label text-text-soft">[CORREO UNE]</dd>
+            <dd class="text-label break-words text-text-soft">{{ marca.une.correo }}</dd>
           </div>
         </div>
       </dl>
