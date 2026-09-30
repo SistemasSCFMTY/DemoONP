@@ -348,6 +348,60 @@ audience just watched being made, arriving with its photos and signature. It is 
 the screen that displays the most PII in the product: no field value in a URL, none in
 a log, none in an analytics event, and signed URLs short-lived and never persisted.
 
+### Settled in CP-S1 – CP-S3
+
+These were decided while building the panel. They are conventions now, not choices to
+revisit per screen.
+
+**Type size.** The §2 scale is the *390px* scale. The panel reads body at 14px and
+uses Tailwind's standard scale for desktop headings — page `h1` at `text-2xl`, section
+headings at `text-base`, rows at `text-sm`, chips and hashes at `text-status`. Same
+faces, same weights, same tokens; a desktop reading distance is not a different design
+language. The `@theme` token block stays byte-identical to `web-app/`'s — panel-only
+rules go **below** it in `styles.css`, under a banner saying so.
+
+**PrimeNG cascade layers.** `styles.css` opens, above the imports, with
+`@layer theme, base, primeng, components, utilities;` and `providePrimeNG` passes the
+same order as its `cssLayer`. That puts PrimeNG below Tailwind's utilities, so a
+utility class wins without `!important`. The two must be changed together.
+
+**Estado slugs.** `pendiente | en_revision | aprobado | rechazado`. The source spells
+the second one `revision` (`:5443`); `02-api-contract.md` spells it `en_revision` and
+the contract is the referee. Labels are the source's, verbatim — short form in the
+table badge, long form in the detail selector.
+
+**Estado colour.** Each estado tints a §3 token and pairs it with a Lucide icon, since
+colour must not carry meaning alone (§9): `pendiente` warning + `Clock`, `en_revision`
+navy + `Search`, `aprobado` success + `Check`, `rechazado` error + `X`. The source's
+badge palette used five hexes that are not in §3 — rather than widen the shared
+palette for one chip, `en_revision` reads navy where the source read blue.
+
+**The list's URL contract.** `q`, `estado`, `desde`. `queryParamMap` is the single
+load path: a control writes to the URL and nothing else dispatches. `q` is an
+operator's own search term and is the only value this app puts in a URL — **no
+expediente field value ever is**, and the detail route carries the opaque id alone.
+
+**One API seam.** `PanelApi` is an abstract class with two implementations, chosen in
+`app.config.ts` from `environment.usarApiSimulada`. No service holds a base-URL
+literal. The mock is a full stand-in, not a happy path: it fails with the same
+`{ error: { code, message } }` shape and the same latency.
+
+**No storage plugin in this app, at all.** Not for the expediente, and not for the
+signed URLs, which live in `ExpedientesState` for the life of the detail view and are
+dropped on destroy.
+
+**"Descargar PDF" in the panel is a print view**, not `html2pdf`. The prospect app
+rasterises because it must; a staff tool should not take half a megabyte to do worse
+than the browser's own Save as PDF, which keeps the document as selectable text.
+
+### Open question for the owner
+
+**May an operator delete an expediente?** The source offers "Eliminar expediente"
+(`:5652`) behind a `confirm()`. There is no delete endpoint in `02-api-contract.md`,
+and destroying a KYC file with its evidentiary hashes is not a call to infer. The
+button is **not built** until the owner says otherwise. If the answer is yes, it needs
+a backend endpoint, a decision on soft versus hard delete, and a bitácora row (CP-B12).
+
 ### The duplication policy
 
 Three independent projects, no shared package — the owner's call. The design tokens

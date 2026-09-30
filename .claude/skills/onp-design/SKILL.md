@@ -141,13 +141,31 @@ Preset-first: stock Aura plus an ONP preset built from the tokens above. Never a
 `theme/` override sheet for looks; a sheet is only for layout integration, and every one
 opens with a comment saying why it exists.
 
+Cascade order matters and is set in two places that must agree: `styles.css` opens,
+above its imports, with `@layer theme, base, primeng, components, utilities;` and
+`providePrimeNG` passes the same order as its `cssLayer`. PrimeNG then sits below
+Tailwind's utilities, so a utility class wins without `!important`.
+
 Tabular data is a `p-table` with header/body templates, `rowHover`, whole-row click into
 detail, `[scrollable]` + `scrollHeight`, and an `emptymessage` — never a hand-rolled
-`<div>` row list. Filters and page persist as URL query params.
+`<div>` row list. A clickable row is also focusable and answers Enter and Space.
+Filters and page persist as URL query params, and `queryParamMap` is the single load
+path: a control writes to the URL, and nothing else dispatches.
 
 The expediente detail view displays more PII than anything else in the product. No
 field value in a URL, a log, or an analytics event; signed URLs for media are
-short-lived and never persisted.
+short-lived and never persisted. An operator's own search term is the one exception —
+it belongs in the URL, because a reloaded panel must show the same rows.
+
+**Desktop type sizes.** The scale above is the 390px scale. The panel reads body at
+14px and takes desktop headings from Tailwind's standard scale — `text-2xl` page title,
+`text-base` section heading, `text-sm` rows. Same faces, same weights, same tokens.
+The shared `@theme` block stays byte-identical across the two apps; panel-only rules
+live below it, under a banner saying so.
+
+**Estado chips.** `pendiente | en_revision | aprobado | rechazado`, each tinting a
+palette token and pairing it with a Lucide icon — `Clock`, `Search`, `Check`, `X` —
+because colour must not carry meaning alone. `rounded-control`, not a pill.
 
 ## Anti-slop
 

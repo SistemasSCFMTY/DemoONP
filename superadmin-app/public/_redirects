@@ -1,0 +1,5 @@
+# Cloudflare Pages serves this as a single-page app: every path must return
+# index.html so the Angular router can resolve it. Without this line a reload
+# on /expedientes/<id> — the detail view — is a 404 from the CDN.
+
+/*  /index.html  200
