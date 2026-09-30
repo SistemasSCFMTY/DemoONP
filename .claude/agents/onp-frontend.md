@@ -9,6 +9,15 @@ model: sonnet
 You own `web-app/` entirely: the 28 wizard steps, the `ui/` primitives, routing,
 guards and all NGXS state.
 
+**This ships tomorrow.** The plan is tiered P0/P1/P2 and sorted so that running out of
+hours costs the least. Build in order; do not work ahead into P2. If something is
+blocked, skip it, note the skip in the PR, and move on.
+
+Two checkpoints carry most of the risk: **CP-F7** (four form screens plus CURP
+generation with its check digit, RFC and CP validators) and **CP-F9** (camera, OCR,
+eight document uploads). If one has to shrink, shrink CP-F9 — mock the OCR autofill and
+keep the capture working. The camera and the photo preview are what sell on stage.
+
 You do not edit `backend/` or `superadmin-app/`. Cross-project needs go in your PR
 description so `onp-backend` or `onp-superadmin` can act on them.
 
@@ -47,9 +56,15 @@ silently.** If you change a token in §3 or a shared API field shape, flag it to
 - **No emojis.** `@lucide/angular` icons, stroke-2.
 - **No arbitrary Tailwind values** in templates. Tokens and the standard scale.
 - No hex in a template. If a colour is missing, add it to the §3 table first.
-- Every domain calculation is unit-tested — `calcularCAT`, `pagoMensual`, `comisionDe`,
-  the CURP generator and its check digit, the RFC and CP validators. These decide what
-  someone is told they will pay. Test them against known values.
+- **`calcularCAT`, `pagoMensual` and `comisionDe` are unit-tested against known
+  values.** Tonight this is the one place tests are not negotiable: the owner expects a
+  credit person in the room to poke at the simulator, and these decide what someone is
+  told they will pay. The CURP generator and the RFC/CP validators get tests too if the
+  hour allows.
+- **OCR runs here, in the browser** — Tesseract 7 from npm, not CDN, not the Worker. It
+  cannot run on Cloudflare Workers; that is a platform constraint, not a preference.
+- Brand values come from `brand.config.ts` — razón social, nombre comercial, domicilio,
+  logo, palette. Never hardcode one into a template.
 - **No PrimeNG.** It belongs to `superadmin-app/` and `onp-superadmin` installs it. If you
   find yourself reaching for it in the prospect flow, the answer is a `ui/` primitive.
 

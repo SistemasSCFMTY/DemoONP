@@ -1,13 +1,16 @@
 # DemoONP — ONP FER
 
-Solicitud de crédito en línea para SOFOMs mexicanas (es-MX). **Tres proyectos
-independientes**, cada uno con su propio `package.json` y lockfile:
+Solicitud de crédito en línea para una SOFOM mexicana (es-MX). **Demo, se presenta el
+2026-10-01.** Un solo whitelabel, en un solo archivo de configuración.
 
-- **`web-app/`** — el flujo del prospecto. Angular 21, standalone + signals, zoneless;
-  NGXS 21; Tailwind 4. **Sin PrimeNG.** Mobile first, 390px.
-- **`superadmin-app/`** — el panel del operador, sobre todas las SOFOMs. Angular 21 +
-  NGXS 21 + Tailwind 4 + **PrimeNG 21**. Desktop first.
-- **`backend/`** — Hono 4 sobre Node, Supabase como base de datos y almacén.
+**Tres proyectos independientes**, cada uno con su `package.json` y lockfile:
+
+- **`web-app/`** — el flujo del prospecto, 28 pantallas. Angular 21, standalone +
+  signals, zoneless; NGXS 21; Tailwind 4. **Sin PrimeNG.** Mobile first, 390px.
+  Despliega a Cloudflare Pages.
+- **`superadmin-app/`** — el panel del personal, un solo tenant. Angular 21 + NGXS 21 +
+  Tailwind 4 + **PrimeNG 21**. Desktop first. Despliega a Cloudflare Pages.
+- **`backend/`** — Hono 4 sobre **Cloudflare Workers**, con Supabase y Resend.
 
 Canonical docs — read these first:
 
@@ -33,9 +36,12 @@ The port source is `../ONP/onp_fer_etapa2_pf.html` (6,052 lines, single file).
   `max-width: 390px` centered. Build at 390 and let it breathe upward — never design at
   desktop and squeeze down. **`superadmin-app/` is the exception**: a desktop tool for
   staff, and it should not pretend otherwise.
-- **The superadmin reaches every SOFOM.** Authorization is enforced in the backend by
-  role, never by a frontend hiding a button. Every superadmin mutation writes a
-  `bitacora` row.
+- **One whitelabel, one file.** `web-app/src/app/brand.config.ts` — razón social,
+  nombre comercial, domicilio, logo, palette. No `sofoms` table, no tenant switcher, no
+  branding UI. Swapping client is a one-file edit.
+- **OCR runs in the browser.** Tesseract cannot run in a Worker — its WASM and
+  traineddata exceed the bundle cap and the CPU budget. Platform constraint, not
+  preference.
 - **No emojis; Lucide outlined icons only** (`@lucide/angular`, stroke-2; `size-4`
   inline, `size-5` nav). The source's `✓` glyphs in status text become icons.
 - **No arbitrary Tailwind values in templates** (`h-[235px]`, `w-[390px]`) — standard
@@ -55,7 +61,13 @@ The port source is `../ONP/onp_fer_etapa2_pf.html` (6,052 lines, single file).
 - **Motion = Angular `animate.enter`/`animate.leave` + `src/animations.scss` tokens** —
   no ad-hoc keyframes; everything collapses under `prefers-reduced-motion`.
 - **Nothing Supabase reaches a browser.** No URL, no anon key, no `supabase-js` in
-  either Angular app. The backend owns the credentials and reads them from env vars.
+  either Angular app. The Worker owns the credentials, set with `wrangler secret put`
+  and never written into the committed `wrangler.jsonc`.
+- **Do not port `arreglo_permisos_final.sql`.** It opens `SELECT` on the whole bucket
+  to `public`; anyone with the anon key could read every INE photo. It existed because
+  the browser talked to Supabase directly. It no longer does.
+- **Email never fails a request.** Resend is called after the write succeeds; failures
+  are logged and swallowed.
 - **Design tokens and API types exist in both Angular apps, by decision.** They drift
   silently; `01-conventions.md` §3 and `02-api-contract.md` are the referees. A PR
   changing one copy must change the other.
@@ -66,5 +78,13 @@ The port source is `../ONP/onp_fer_etapa2_pf.html` (6,052 lines, single file).
 ## Build + verification
 
 - `npm run build` green in **every project you touched** before closing a checkpoint.
-- Backend: `npm run typecheck` and the Zod contract tests must pass.
+- Backend: `npm run typecheck` passes and `wrangler dev` serves `/health`.
+- Load the `cloudflare`, `wrangler` and `workers-best-practices` skills before touching
+  the Worker. Guessing at `wrangler.jsonc` costs more time than reading them.
 - No screenshots unless asked (the owner watches :4200).
+
+## Tonight
+
+The plan is tiered **P0 / P1 / P2** and sorted so that running out of hours costs the
+least. Build in order. Do not work ahead into P2 because it is more interesting. If a
+checkpoint is blocked, skip it, note the skip in the PR, and move on.

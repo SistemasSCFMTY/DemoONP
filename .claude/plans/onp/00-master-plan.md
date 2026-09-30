@@ -1,362 +1,370 @@
 # ONP FER — master plan
 
-Port `../ONP/onp_fer_etapa2_pf.html` (6,052 lines, single file) into **three
-independent projects**:
+**Demo for stakeholders on 2026-10-01. Written 2026-09-30. This is a one-day plan.**
 
-| Project | Stack | Audience |
+Port `../ONP/onp_fer_etapa2_pf.html` (6,052 lines, single file) into three projects,
+rewritten and deployed:
+
+| Project | Stack | Deploys to |
 |---|---|---|
-| `web-app/` | Angular 21 + NGXS 21 + Tailwind 4, no PrimeNG | a stranger on a 390px phone |
-| `superadmin-app/` | Angular 21 + NGXS 21 + Tailwind 4 + PrimeNG 21 | the platform operator, across all SOFOMs |
-| `backend/` | Hono 4 + Supabase | both |
+| `web-app/` | Angular 21 + NGXS 21 + Tailwind 4, no PrimeNG | Cloudflare Pages |
+| `superadmin-app/` | Angular 21 + NGXS 21 + Tailwind 4 + PrimeNG 21 | Cloudflare Pages |
+| `backend/` | Hono 4 on **Cloudflare Workers** + Supabase + Resend | Cloudflare Workers |
 
-Copy and screen structure of the prospect flow are preserved verbatim. Conventions:
-`01-conventions.md`.
+Single tenant. One whitelabel, expressed as one config file — no `sofoms` table, no
+tenant switcher, no admin UI for branding. Copy and screen structure of the prospect
+flow are preserved verbatim. Conventions: `01-conventions.md`.
 
-## The superadmin is a new tier
+---
 
-The source has **one** panel, scoped to a single SOFOM: `usuarios_panel` rows carry a
-`sofom_id`, every query filters by it, and a `sofoms` table exists as if multi-tenancy
-was anticipated and never built. `superadmin-app/` builds it out — one operator over
-all SOFOMs, managing the SOFOMs themselves and their panel users.
+## Read this before you plan your day
 
-**This changes the blast radius.** The source's panel could leak one SOFOM's
-expedientes. A superadmin session can reach every SOFOM's. Three things follow, and
-they are not optional:
+The owner chose the full rewrite knowing the timeline. Two things follow.
 
-- Authorization is **server-side and role-based**. The JWT carries a role; the backend
-  decides what is visible. A frontend that "only shows the right rows" is not security.
-- Unscoped queries exist only behind a `superadmin` role check. The default for every
-  endpoint is scoped.
-- **Every superadmin mutation writes a `bitacora` row.** An operator who can reach all
-  tenants must be auditable, and CP-S8 exists to make that log readable.
+**1. The order below is the order to build in.** It is sorted so that if you run out of
+hours, what is missing is the least damaging thing. Do not work ahead into P2 because
+it is more interesting.
+
+| Tier | Meaning |
+|---|---|
+| **P0** | The demo does not happen without it. |
+| **P1** | The demo is materially worse without it. |
+| **P2** | Cut first, without discussion. |
+
+**2. The realistic risks, named now rather than at 3am.** CP-F7 (four form screens,
+CURP generation with check digit, RFC and CP validators) and CP-F9 (camera, OCR, eight
+document uploads) are the two largest pieces of work in the frontend track and the most
+likely to slip. If one must be reduced, reduce CP-F9: mock the OCR autofill and keep the
+capture working. The camera and the photo preview are what sell on stage; the OCR
+reading the CURP off the INE is a bonus nobody will ask you to prove.
+
+---
+
+## The Cloudflare constraint — OCR moves back to the browser
+
+**This reverses an earlier decision, and not by preference.** The owner previously chose
+to run Tesseract OCR server-side. That is not possible on Cloudflare Workers:
+
+- Tesseract.js needs a multi-MB WASM core plus a ~15MB `traineddata` file. A Worker
+  bundle is capped at 3MB compressed on the free tier, 10MB on paid.
+- Workers give 128MB of memory and a CPU-time budget per request. OCR of a photographed
+  INE exceeds both.
+
+So OCR runs in the browser, as the source already does it (`:4818`), installed from npm
+instead of CDN. `html2pdf` was already staying in the browser. **JSZip `.docx` parsing
+is P2 and probably gets cut**, so the Worker stays small.
+
+If OCR server-side ever matters, the answer is Workers AI or a container — not Tesseract
+in a Worker. Out of scope for tomorrow.
 
 ---
 
 ## Checkpoint protocol
 
-1. A checkpoint is one branch, one PR, reviewed by the owner. Nothing merges unreviewed.
-2. Branch naming: `cp/b3-expedientes-api`, `cp/f7-form-screens`, `cp/s2-sofoms`.
-3. A checkpoint is **closeable** only when all of these hold:
-   - `npm run build` is green in the project it touches.
-   - `npm run typecheck` is green (backend) / the build has no template errors (Angular).
-   - Unit tests for anything in `services/domain/` or `backend/src/services/` pass.
-   - The box below is ticked **in the same PR** that does the work.
-   - Conventions that changed are written into `01-conventions.md` **and** the
-     `onp-design` skill in that same PR.
-4. If a checkpoint uncovers a decision the plan does not answer, **stop and ask the
-   owner** — do not infer. Record the answer in `01-conventions.md`.
-5. Do not start a checkpoint whose dependencies are unmerged.
+1. A checkpoint is one branch, one PR, reviewed by the owner.
+2. Branch naming: `cp/b3-solicitudes`, `cp/f7-form-screens`, `cp/s2-expedientes-list`.
+3. Closeable when: the project builds, the box below is ticked **in the same PR**, and
+   any convention that changed is written into `01-conventions.md` in that same PR.
+4. **Tonight only:** if a checkpoint is blocked, skip it and move to the next rather
+   than stalling. Note the skip in the PR. The dependency table says what that breaks.
+5. If a decision is missing, **ask the owner** — do not infer. They are available today.
 
 ## Agents
 
 | Agent | Owns | Model |
 |---|---|---|
-| `onp-backend` | `backend/`, Supabase migrations, the API contract, the role model | Sonnet |
+| `onp-backend` | `backend/`, Supabase schema, Resend, the Worker deploy | Sonnet |
 | `onp-frontend` | `web-app/` — the 28-step prospect wizard and its `ui/` | Sonnet |
-| `onp-superadmin` | `superadmin-app/` — the cross-SOFOM panel and PrimeNG | Sonnet |
+| `onp-superadmin` | `superadmin-app/` — the single-tenant staff panel | Sonnet |
 
-Each agent owns one directory and does not write in another's. Cross-project needs go
-in the PR description, not into someone else's folder.
+Each owns one directory. Cross-project needs go in the PR description.
+
+**Load the `cloudflare`, `wrangler` and `workers-best-practices` skills before touching
+the Worker.** They are installed and they are current; guessing at `wrangler.jsonc` will
+cost more time than reading them.
 
 ## The duplication policy
 
-Three independent projects, no shared package — the owner's call, twice. So the design
-tokens exist in two `styles.css` files and the API types exist in two Angular apps plus
-the backend's Zod schemas. **These drift silently; the compiler will not catch it.**
-
-The referees are `01-conventions.md` §3 (tokens) and `02-api-contract.md` (the API).
-A PR that changes one copy must change the others in the same PR, and a reviewer who
-sees a token or a field changed in one place only should block it.
+Three projects, no shared package — the owner's call. Design tokens live in two
+`styles.css` files; API types live in two Angular apps plus the Worker. **They drift
+silently.** `01-conventions.md` §3 and `02-api-contract.md` are the referees; a PR
+changing one copy changes the other.
 
 ---
 
-## Phase 0 — foundations (shared, sequential)
+## Phase 0 — foundations · P0 · do these first, nothing works without them
 
-- [ ] **CP-0.1 — Repo restructure.** `git mv` `src/ angular.json tsconfig*.json public/
-      .postcssrc.json .editorconfig .prettierrc package.json package-lock.json` into
-      `web-app/`. Scaffold `backend/` (own `package.json`, `tsconfig.json`,
-      `.env.example`, `.gitignore`) and `superadmin-app/` (`ng new`, Angular 21,
-      Tailwind 4, own lockfile). Root keeps only `CLAUDE.md`, `.claude/`, `README.md`,
-      `.git`. Verify `npm install && npm run build` in each of the three.
+- [ ] **CP-0.1 — Restructure + brand config.** `git mv` the Angular app into `web-app/`.
+      Scaffold `superadmin-app/` (`ng new`, Angular 21, Tailwind 4) and `backend/`
+      (Hono + wrangler). Root keeps `CLAUDE.md`, `.claude/`, `README.md`.
+      **`web-app/src/app/brand.config.ts`** holds razón social, nombre comercial,
+      domicilio, logo path and the palette — the whole whitelabel story in one file,
+      swappable in a commit. Verify all three build.
 - [ ] **CP-0.2 — Design tokens.** Charis SIL + Archivo `@import`; the §3 colour table
-      and §4 radius/elevation ladders as Tailwind 4 `@theme` tokens; `animations.scss`.
-      Authored once, **copied verbatim into both Angular apps**, with a comment at the
-      top of each naming `01-conventions.md` §3 as the source of truth. `web-app/` also
-      gets the 390px shell; `superadmin-app/` does not — it is a desktop surface.
-- [ ] **CP-0.3 — API contract.** Write `.claude/plans/onp/02-api-contract.md`: every
-      endpoint, its Zod shape, its error codes, **and which role may call it**. Derived
-      from `mapearExpediente` (`:2851`), `mapearPropietario` (`:2948`) and
-      `subirArchivo` (`:2998`). All three agents code against this document.
+      and §4 ladders as Tailwind 4 `@theme`. Authored once, **copied verbatim into both
+      Angular apps** with a comment naming `01-conventions.md` §3 as the source of
+      truth. `web-app/` gets the 390px shell; `superadmin-app/` does not.
+- [ ] **CP-0.3 — API contract.** `02-api-contract.md`: every endpoint, its shape, its
+      errors. Derived from `mapearExpediente` (`:2851`), `mapearPropietario` (`:2948`),
+      `subirArchivo` (`:2998`). Keep it short — it exists so three agents agree, not as
+      documentation.
 
----
+## Backend — `onp-backend`
 
-## Backend track — `onp-backend`
+- [ ] **CP-B1 · P0 — Worker scaffold.** Hono 4.13.11 on Workers, `wrangler.jsonc`,
+      TypeScript, `/health`, CORS for both Pages origins, the
+      `{ error: { code, message } }` envelope. Secrets via `wrangler secret put`:
+      `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `JWT_SECRET`, `RESEND_API_KEY`,
+      `DEMO_MODE`. **No secret in source, no secret in `wrangler.jsonc`.**
+- [ ] **CP-B2 · P0 — Supabase schema.** Migrations for `expedientes`,
+      `propietarios_reales`, `archivos`, `documentos`, `usuarios_panel`, plus the
+      `expedientes` bucket. **No `sofoms` table** — single tenant. `plantillas` and
+      `bitacora` only if P2 survives.
+      **Lock the RLS down.** `../ONP/arreglo_permisos_final.sql` opens `SELECT` on the
+      whole bucket to `public` and `INSERT with check (true)` on five tables. That was
+      written to unblock the browser client. The browser no longer talks to Supabase —
+      the Worker does, with the service key — so revoke public access entirely rather
+      than porting those policies.
+- [ ] **CP-B3 · P0 — `POST /solicitudes`.** Accepts the whole expediente. Generates the
+      folio **server-side** (the source does it client-side at `:3422`, guessable and
+      racy). Uploads `id_frente`, `id_reverso`, `firma` and the eight document files to
+      the bucket at `{folio}/{tipo}.{ext}`, computing **SHA-256 per file** — that hash
+      is the evidentiary point of the whole exercise, do not drop it. Inserts the
+      expediente, the propietario real if present, the `archivos` rows and the signed
+      `documentos` row. Returns the folio.
+- [ ] **CP-B4 · P0 — Panel read API.** `GET /expedientes` (list for the table),
+      `GET /expedientes/:id` (detail), `GET /expedientes/:id/archivos/:tipo` (a
+      short-lived signed URL), `PATCH /expedientes/:id` (estado).
+- [ ] **CP-B5 · P0 — OTP.** `POST /otp/enviar`, `POST /otp/validar`. Server-generated
+      6-digit code, 120-second TTL matching the source, single-use. Returns the code in
+      the body **only** when `DEMO_MODE=true`, so the UI keeps its "Modo demostración"
+      label honest. No SMS provider.
+- [ ] **CP-B6 · P0 — Resend welcome email.** Sent when the prospect registers. An HTML
+      template built from `brand.config` — Charis SIL heading, Archivo body, the navy
+      and cream palette, the razón social in the footer. **From `onboarding@resend.dev`
+      (Resend's sandbox sender), which delivers only to the address that owns the Resend
+      account.** That is the owner's deliberate choice: during the demo they will type
+      their own email at the registro step. Put this constraint in a comment at the top
+      of the mailer so nobody debugs a silent 403 tomorrow. Email failure must **never**
+      fail the request — log it and move on.
+- [ ] **CP-B7 · P0 — Admin login.** `POST /admin/login` against `usuarios_panel`,
+      returning an httpOnly session JWT. `GET /admin/me`, `POST /admin/logout`,
+      `requireAuth` middleware on the panel routes. The source's hardcoded `PASS_ADMIN`
+      does not survive.
+- [ ] **CP-B8 · P0 — Deploy.** `wrangler deploy`, secrets set, CORS verified against
+      both Pages URLs, `/health` green from a browser.
+- [ ] **CP-B9 · P1 — Producto endpoint.** The simulator parameters (`:2340`) read and
+      written, so CP-S4 can edit what the prospect sees.
+- [ ] **CP-B10 · P1 — Confirmation email.** A second Resend template on submission,
+      carrying the folio. Same sandbox-sender constraint.
+- [ ] **CP-B11 · P2 — Plantillas.** `.docx` parsing with JSZip (port `leerDocx`
+      `:3756`) and `POST /solicitud/render`. **Expected to be cut.** Until it is,
+      `PLANTILLA_BASE` (`:3861`) is seeded as a constant and the solicitud renders from
+      that.
+- [ ] **CP-B12 · P2 — Bitácora.** Append-only audit rows per mutation.
 
-- [ ] **CP-B1 — Scaffold.** Hono 4.13.11, Node adapter, TS ESM, env loading with a
-      typed config module that throws on a missing key, `/health`, CORS (two origins
-      now), structured logging with request ids, the `{ error: { code, message } }`
-      envelope, graceful shutdown.
-- [ ] **CP-B2 — Schema + migrations.** `backend/supabase/migrations/`: the eight tables,
-      `v_lista_expedientes`, the `expedientes` bucket. **`usuarios_panel` gains a `rol`
-      of `superadmin | admin`**, and `sofom_id` becomes nullable for a superadmin, who
-      belongs to no single SOFOM. Bucket is not publicly writable. Read
-      `../ONP/arreglo_permisos_final.sql` for the RLS traps the original hit, then
-      supersede it. Seed: one superadmin, two SOFOMs, one admin each.
-- [ ] **CP-B3 — Expedientes API.** `POST /expedientes` (folio generated **server-side**;
-      the source generates it client-side at `:3422`, guessable and racy), `GET
-      /expedientes`, `GET /expedientes/:id`, `PATCH /expedientes/:id` (estado),
-      `DELETE /expedientes/:id`, plus `propietarios_reales` on create. **Scoped by
-      `sofom_id` by default; a `superadmin` token may pass a `sofom_id` filter or omit
-      it to query across tenants. The scoping is enforced here, never in a frontend.**
-      Writes a `bitacora` row per mutation.
-- [ ] **CP-B4 — Files API.** `POST /expedientes/:id/archivos` (multipart), SHA-256
-      computed server-side, `archivos` row written; `GET
-      /expedientes/:id/archivos/:tipo` returning a short-lived signed URL. All eleven
-      types: `id_frente`, `id_reverso`, `firma`, and the eight document uploads the
-      source declares but never reads. Mime and size allowlist.
-- [ ] **CP-B5 — OTP.** `POST /otp/enviar`, `POST /otp/validar`. Server-generated
-      6-digit code, 120-second TTL matching the source, single-use, rate-limited per
-      phone and per IP. Returns the code in the body **only** when `DEMO_MODE=true`, so
-      the UI keeps its "Modo demostración" label honest. No SMS provider in scope.
-- [ ] **CP-B6 — Auth + roles.** `POST /admin/login` against Supabase Auth plus the
-      `usuarios_panel` profile (`activo`, `rol`, `sofom_id`), issuing an httpOnly
-      session JWT signed with `JWT_SECRET` **carrying the role**. `POST /admin/logout`,
-      `GET /admin/me`. Two middlewares: `requireAuth` and `requireSuperadmin`. The
-      source's hardcoded `PASS_ADMIN` does not survive.
-- [ ] **CP-B7 — OCR.** `POST /ocr/ine`, Tesseract **7.0.0** server-side, returning
-      parsed fields. Port `parsearFrente` (`:4886`), `parsearReverso` (`:4929`) and
-      `analizarCalidad` (`:4686`). The source pins Tesseract 5.1.0 — the v7 API differs,
-      budget for it. Cap image size; this endpoint is CPU-expensive.
-- [ ] **CP-B8 — Plantillas.** `.docx` parsing with JSZip 3.10.2 (port `leerDocx`
-      `:3756`, which reads `word/document.xml` and its run styles), plantilla CRUD per
-      SOFOM, `PLANTILLA_BASE` (`:3861`) seeded as the default, and `POST
-      /solicitud/render` filling a template from an expediente and returning HTML.
-- [ ] **CP-B9 — Producto, ajustes, sofom.** Product parameters feeding the simulator
-      (`:2340`) and SOFOM identity (razón social, domicilio, logo) — both per SOFOM.
-      Everything the source's Ajustes tab edited, minus the connection settings.
-- [ ] **CP-B10 — Superadmin API.** `requireSuperadmin` on all of it: SOFOM CRUD
-      (create, edit, deactivate), `usuarios_panel` CRUD (invite, set role, activate,
-      deactivate), cross-tenant expediente search, and `GET /bitacora` with filters.
-      **A superadmin cannot silently delete their own audit trail** — bitácora is
-      append-only, enforced in the schema.
-- [ ] **CP-B11 — Hardening.** Zod on every route in and out, rate limits, request size
-      caps, a smoke test per endpoint asserting **both** the happy path and the
-      403 for a wrong-role caller, `.env.example` complete, README with setup.
+## Prospect app — `onp-frontend`
 
-## Frontend track — `onp-frontend` (prospect flow)
-
-- [ ] **CP-F1 — Shell + routing + NGXS root.** App shell (topbar, progress, body),
-      `provideStore` with the five prospect states from §7, the step-order guard, the
-      route map for the 28 screens, the `historial` back behavior mapped onto router
-      history.
-- [ ] **CP-F2 — Design system.** `ui/`: `onp-field`, `onp-card`, `onp-alert`,
+- [ ] **CP-F1 · P0 — Shell, routing, NGXS.** The 390px shell (topbar, progress, body),
+      `provideStore`, the step-order guard, the route map for the 28 screens, back
+      navigation on router history, `brand.config` wired into the shell.
+- [ ] **CP-F2 · P0 — UI primitives.** `onp-field`, `onp-card`, `onp-alert`,
       `onp-button`, `onp-checkbox-group`, `onp-radio-group`, `onp-status`,
       `onp-leyenda`, `onp-modal`, `onp-progress`, `onp-topbar`, `onp-otp-input`,
-      `onp-fecha-trio`, `onp-preview-box`, `onp-pep-section`. Each meets the §9 a11y
-      contract. No page work in this checkpoint.
-- [ ] **CP-F3 — Portada + informativas.** `bienvenida`, `catalogo`, `privacidad`,
-      `terminos`, `ayuda`.
-- [ ] **CP-F4 — Simulador.** `es-cliente`, `simulador`, `requisitos`. Port and
-      unit-test `pagoMensual` (`:2380`), `comisionDe` (`:2386`), `calcularCAT` (`:2395`,
-      bisection), `pesos`/`pesosCent`. The CAT function is the highest-risk math in the
-      product — test it against known values.
-- [ ] **CP-F5 — Registro + OTP.** `registro`, `verificar-cliente`, `otp`. Password
-      strength meter (`:2522`), phone formatting (`:2515`), the six-box OTP input with
-      paste support and the 120-second countdown, against CP-B5.
-- [ ] **CP-F6 — Geolocalización.** Permission flow (`:2288`) and capture at the four
-      evidentiary moments — autorización, fotos, video, firma (`:2263`) — plus
-      `auth-location`. Denial must not dead-end the flow.
-- [ ] **CP-F7 — Formulario.** `form-generales`, `form-domicilio`, `form-contacto`,
+      `onp-fecha-trio`, `onp-preview-box`, `onp-pep-section`.
+- [ ] **CP-F3 · P0 — Portada + informativas.** `bienvenida`, `catalogo`, `privacidad`,
+      `terminos`, `ayuda`. Text comes from `brand.config`, as `pintarDatosSofom`
+      (`:2197`) does in the source.
+- [ ] **CP-F4 · P0 — Simulador.** `es-cliente`, `simulador`, `requisitos`. Port and
+      **unit-test** `pagoMensual` (`:2380`), `comisionDe` (`:2386`), `calcularCAT`
+      (`:2395`, bisection), `pesos`/`pesosCent`. The owner named live CAT math as a
+      thing stakeholders will poke at — if a credit person is in the room, this is the
+      screen they will test. It is the one place tonight where tests are not optional.
+- [ ] **CP-F5 · P0 — Registro + OTP.** `registro`, `verificar-cliente`, `otp`. Password
+      meter (`:2522`), phone formatting (`:2515`), the six-box OTP input with paste and
+      the 120-second countdown, against CP-B5. **Registration triggers CP-B6's email.**
+- [ ] **CP-F6 · P0 — Geolocalización.** Permission flow (`:2288`), capture at the four
+      evidentiary moments (`:2263`), `auth-location`. Denial must not dead-end.
+- [ ] **CP-F7 · P0 — Formulario.** `form-generales`, `form-domicilio`, `form-contacto`,
       `form-laborales`, `envio-formulario`. CURP generation (`:4102`) with check digit
-      (`:4171`), CURP/RFC validation and cross-checking against name and birth date
-      (`:4205`), CP and phone validators — all unit-tested. Conditional required-ness
-      declared per §8, replacing the source's DOM-visibility walk.
-- [ ] **CP-F8 — PEP + declaratoria.** `pep-propio`, `pep-familia`, `declaratoria`
-      (290 lines of legal copy, verbatim, set in Archivo), including the propietario
-      real / tercero branch and its parallel `pr_*` field set.
-- [ ] **CP-F9 — Identificación.** `auth-buro`, `id-photos`. `getUserMedia` capture
-      front and back, file-upload fallback, quality feedback, OCR through CP-B7 — the
-      multi-MB Tesseract bundle never reaches the phone. Three identification types
-      (`:4729`).
-- [ ] **CP-F10 — Documentos.** `documents`, with all eight uploads **actually wired** to
-      CP-B4. Required before advancing, per the owner. Includes the tercero branch.
-- [ ] **CP-F11 — Biometría + video.** `biometrics`, `video`. Both stay mocked behind
-      named service interfaces (`BiometriaService`, `VideoService`) a real provider can
-      replace. The `"98%"` / `"95%"` figures are kept verbatim — owner's call, it is a
-      demo, and they sit behind the "Modo demostración" label.
-- [ ] **CP-F12 — Solicitud + firma.** `solicitud` (rendered by CP-B8), `signature`
-      (canvas, pointer events, clear, 44px-safe controls), `complete`. PDF stays in the
-      browser with `html2pdf.js@0.14.0` from npm, not CDN.
-- [ ] **CP-F13 — QA pass.** 390px through tablet, keyboard-only traversal of all 28
-      steps, screen-reader pass on the form screens, `prefers-reduced-motion`, iOS
-      input-zoom check, tap-target audit, Lighthouse.
+      (`:4171`), CURP/RFC cross-checking against name and birth date (`:4205`), CP and
+      phone validators. Conditional required-ness declared per §8, not inferred from DOM
+      visibility. **Largest piece of work in this track.**
+- [ ] **CP-F8 · P0 — PEP + declaratoria.** `pep-propio`, `pep-familia`, `declaratoria`
+      (290 lines of legal copy, verbatim, set in Archivo), plus the propietario real /
+      tercero branch and its `pr_*` fields.
+- [ ] **CP-F9 · P0 — Identificación + documentos.** `auth-buro`, `id-photos`,
+      `documents`. `getUserMedia` capture front and back with a file-upload fallback,
+      quality feedback (`:4686`), **Tesseract 7 in the browser** from npm with the
+      parsers at `:4886` and `:4929`, and the eight document uploads **actually wired**
+      to CP-B3 — the source declares those inputs and never reads them.
+      **If the night runs short, mock the OCR autofill and keep the capture.**
+- [ ] **CP-F10 · P0 — Biometría + video.** `biometrics`, `video`, both mocked behind
+      named service interfaces. The `"98%"` / `"95%"` figures stay verbatim — owner's
+      call, it is a demo, and they sit behind the "Modo demostración" label.
+- [ ] **CP-F11 · P0 — Solicitud, firma, envío.** `solicitud` rendered from the template
+      constant, `signature` (canvas, pointer events, clear), `complete`. Submits the
+      whole expediente to CP-B3 and shows the returned folio. PDF stays in the browser
+      with `html2pdf.js@0.14.0` from npm.
+- [ ] **CP-F12 · P0 — Deploy to Pages.** Build, deploy, confirm the API origin resolves
+      and a full run-through submits successfully **from a phone**, not just a desktop
+      browser with a narrow window.
+- [ ] **CP-F13 · P2 — QA pass.** Keyboard traversal, screen-reader pass,
+      `prefers-reduced-motion`, tap-target audit. Cut tonight; schedule it after.
 
-## Superadmin track — `onp-superadmin`
+## Staff panel — `onp-superadmin`
 
-A separate deployable app. Desktop-first — it is the one surface in this product that
-is **not** mobile-first, and it should not pretend otherwise.
+Single tenant. The folder keeps its name; the cross-SOFOM tier is gone with the
+descope — no SOFOM management, no panel-user management, no cross-tenant search.
 
-- [ ] **CP-S1 — Scaffold, shell, auth.** The `superadmin-app/` Angular 21 project from
-      CP-0.1 wired up: tokens from CP-0.2, PrimeNG **21.1.10** + `@angular/cdk@21.2.14`
-      with stock Aura plus an ONP preset built from the §3 tokens, login against CP-B6,
-      the session guard, a **role guard that rejects a non-`superadmin` token**,
-      `SuperadminState`, logout, and the nav shell.
-- [ ] **CP-S2 — SOFOMs.** The new tier: list, create, edit and deactivate SOFOMs —
-      razón social, domicilio, logo. In the source this was a single SOFOM's Ajustes
-      tab (`:5836`); here it is a collection. Deactivation is reversible and never a
-      hard delete, because expedientes reference it.
-- [ ] **CP-S3 — Usuarios del panel.** Manage `usuarios_panel` across SOFOMs: invite,
-      assign `rol`, assign `sofom_id`, activate and deactivate, show `ultimo_acceso`.
-      The UI must make it obvious when it is granting cross-tenant reach.
-- [ ] **CP-S4 — Expedientes, cross-tenant.** A `p-table` with header/body templates,
+- [ ] **CP-S1 · P0 — Scaffold, shell, login.** The `superadmin-app/` project wired up:
+      tokens from CP-0.2, PrimeNG 21.1.10 + `@angular/cdk@21.2.14`, stock Aura plus an
+      ONP preset built from the §3 tokens, login against CP-B7, the session guard,
+      `PanelState`, the nav shell. Desktop-first — do not apply the 390px shell.
+- [ ] **CP-S2 · P0 — Expedientes list.** A `p-table` with header/body templates,
       `rowHover`, whole-row click into detail, `[scrollable]` + `scrollHeight`,
-      `emptymessage` — never a hand-rolled row list. A SOFOM column and a SOFOM filter,
-      plus the search from `pintarExpedientes` (`:5426`). Filters and page persist as
-      URL query params with `queryParamMap` as the single load path.
-- [ ] **CP-S5 — Expediente detail.** Every field row from `verExpediente` (`:5471`),
-      INE images and signature via CP-B4 signed URLs, estado changes (`:5640`), document
-      view, PDF download, delete with confirmation. **This screen displays more PII than
-      anything else in the product** — no field value in a URL, none in a log.
-- [ ] **CP-S6 — Producto.** Per-SOFOM simulator parameters (`:5354`–`:5426`): montos,
-      plazos, tasa, comisión, with a live preview of the catálogo copy they generate,
-      since these values feed the worked example and the CAT.
-- [ ] **CP-S7 — Formatos.** Per-SOFOM `.docx` upload against CP-B8, current-template
-      display, preview of the filled solicitud, removal. Port `subirPlantilla` (`:5735`)
-      and `verPreviewPlantilla` (`:5817`).
-- [ ] **CP-S8 — Bitácora.** The cross-tenant audit log: who did what, to which SOFOM,
-      when. Filterable by actor, SOFOM, entity and date. This checkpoint is what makes
-      the superadmin tier defensible — an operator who can reach every tenant must leave
-      a readable trail. Append-only; the UI offers no delete.
-- [ ] **CP-S9 — QA pass.** Desktop and tablet, keyboard-only traversal, table a11y,
-      focus management on the detail view and its dialogs, and a check that a non-
-      superadmin token is rejected by the backend and not merely hidden by the UI.
+      `emptymessage` — never a hand-rolled row list. Search per `pintarExpedientes`
+      (`:5426`). Filters persist as URL query params.
+- [ ] **CP-S3 · P0 — Expediente detail.** The field rows from `verExpediente` (`:5471`),
+      INE photos and signature via CP-B4 signed URLs, estado changes (`:5640`), PDF
+      download. **This is the payoff shot of the demo** — the submission the audience
+      just watched being made, arriving with its photos. Make it look finished.
+- [ ] **CP-S4 · P0 — Deploy to Pages.** Build, deploy, confirm login works against the
+      deployed Worker and the detail view renders real uploaded images.
+- [ ] **CP-S5 · P1 — Producto.** The simulator parameters (`:5354`) against CP-B9, with
+      a preview of the catálogo copy they generate.
+- [ ] **CP-S6 · P2 — Formatos and Ajustes.** `.docx` upload and the sofom identity
+      editor. **Expected to be cut** — branding is `brand.config.ts` now, and the
+      Ajustes tab's connection-string fields are gone with the Worker owning the
+      credentials.
 
 ---
 
 ## Progress board
 
-| CP | Title | Agent | Depends on | Status |
-|---|---|---|---|---|
-| 0.1 | Repo restructure | — | — | ☐ |
-| 0.2 | Design tokens | — | 0.1 | ☐ |
-| 0.3 | API contract | — | 0.1 | ☐ |
-| B1 | Hono scaffold | backend | 0.1 | ☐ |
-| B2 | Schema + migrations | backend | B1 | ☐ |
-| B3 | Expedientes API | backend | B2, 0.3 | ☐ |
-| B4 | Files API | backend | B2, 0.3 | ☐ |
-| B5 | OTP | backend | B1 | ☐ |
-| B6 | Auth + roles | backend | B2 | ☐ |
-| B7 | OCR | backend | B1 | ☐ |
-| B8 | Plantillas | backend | B2 | ☐ |
-| B9 | Producto/ajustes | backend | B2 | ☐ |
-| B10 | Superadmin API | backend | B6, B3 | ☐ |
-| B11 | Hardening | backend | B3–B10 | ☐ |
-| F1 | Shell + routing + NGXS | frontend | 0.2 | ☐ |
-| F2 | Design system | frontend | 0.2 | ☐ |
-| F3 | Portada + informativas | frontend | F1, F2 | ☐ |
-| F4 | Simulador | frontend | F2 | ☐ |
-| F5 | Registro + OTP | frontend | F2, B5 | ☐ |
-| F6 | Geolocalización | frontend | F1 | ☐ |
-| F7 | Formulario | frontend | F2 | ☐ |
-| F8 | PEP + declaratoria | frontend | F7 | ☐ |
-| F9 | Identificación | frontend | F2, B7 | ☐ |
-| F10 | Documentos | frontend | F9, B4 | ☐ |
-| F11 | Biometría + video | frontend | F2 | ☐ |
-| F12 | Solicitud + firma | frontend | F8, B8, B3 | ☐ |
-| F13 | QA pass | frontend | F1–F12 | ☐ |
-| S1 | Scaffold, shell, auth | superadmin | 0.2, B6 | ☐ |
-| S2 | SOFOMs | superadmin | S1, B10 | ☐ |
-| S3 | Usuarios del panel | superadmin | S1, B10 | ☐ |
-| S4 | Expedientes, cross-tenant | superadmin | S1, B3 | ☐ |
-| S5 | Expediente detail | superadmin | S4, B4 | ☐ |
-| S6 | Producto | superadmin | S2, B9 | ☐ |
-| S7 | Formatos | superadmin | S2, B8 | ☐ |
-| S8 | Bitácora | superadmin | S1, B10 | ☐ |
-| S9 | QA pass | superadmin | S1–S8 | ☐ |
+| CP | Title | Tier | Agent | Depends on | Status |
+|---|---|---|---|---|---|
+| 0.1 | Restructure + brand config | P0 | — | — | ☐ |
+| 0.2 | Design tokens | P0 | — | 0.1 | ☐ |
+| 0.3 | API contract | P0 | — | 0.1 | ☐ |
+| B1 | Worker scaffold | P0 | backend | 0.1 | ☐ |
+| B2 | Supabase schema | P0 | backend | B1 | ☐ |
+| B3 | POST /solicitudes | P0 | backend | B2, 0.3 | ☐ |
+| B4 | Panel read API | P0 | backend | B2, 0.3 | ☐ |
+| B5 | OTP | P0 | backend | B1 | ☐ |
+| B6 | Resend welcome email | P0 | backend | B1 | ☐ |
+| B7 | Admin login | P0 | backend | B2 | ☐ |
+| B8 | Deploy Worker | P0 | backend | B3–B7 | ☐ |
+| B9 | Producto endpoint | P1 | backend | B2 | ☐ |
+| B10 | Confirmation email | P1 | backend | B6, B3 | ☐ |
+| B11 | Plantillas | P2 | backend | B2 | ☐ |
+| B12 | Bitácora | P2 | backend | B2 | ☐ |
+| F1 | Shell, routing, NGXS | P0 | frontend | 0.2 | ☐ |
+| F2 | UI primitives | P0 | frontend | 0.2 | ☐ |
+| F3 | Portada + informativas | P0 | frontend | F1, F2 | ☐ |
+| F4 | Simulador | P0 | frontend | F2 | ☐ |
+| F5 | Registro + OTP | P0 | frontend | F2, B5, B6 | ☐ |
+| F6 | Geolocalización | P0 | frontend | F1 | ☐ |
+| F7 | Formulario | P0 | frontend | F2 | ☐ |
+| F8 | PEP + declaratoria | P0 | frontend | F7 | ☐ |
+| F9 | Identificación + documentos | P0 | frontend | F2, B3 | ☐ |
+| F10 | Biometría + video | P0 | frontend | F2 | ☐ |
+| F11 | Solicitud, firma, envío | P0 | frontend | F8, B3 | ☐ |
+| F12 | Deploy to Pages | P0 | frontend | F1–F11, B8 | ☐ |
+| F13 | QA pass | P2 | frontend | F12 | ☐ |
+| S1 | Scaffold, shell, login | P0 | superadmin | 0.2, B7 | ☐ |
+| S2 | Expedientes list | P0 | superadmin | S1, B4 | ☐ |
+| S3 | Expediente detail | P0 | superadmin | S2, B4 | ☐ |
+| S4 | Deploy to Pages | P0 | superadmin | S3, B8 | ☐ |
+| S5 | Producto | P1 | superadmin | S1, B9 | ☐ |
+| S6 | Formatos and Ajustes | P2 | superadmin | S1 | ☐ |
 
-36 checkpoints across three tracks.
+**26 P0 · 4 P1 · 5 P2.**
+
+---
+
+## Demo-day runbook
+
+Write this down before you sleep, not at 8am.
+
+1. The Resend sender is `onboarding@resend.dev` and it **only delivers to the address
+   that owns the Resend account.** At the registro step, type that address — not a
+   made-up prospect email. Nothing visibly fails otherwise; the email just never
+   arrives.
+2. Geolocation and camera need **HTTPS** and a permission grant. Pages gives you HTTPS.
+   Grant both before the audience is watching, and do not use an incognito window,
+   which re-prompts for everything.
+3. The OTP appears on screen under "Modo demostración". That is deliberate and it is
+   labelled — say so out loud before someone asks.
+4. Have one expediente already submitted and visible in the panel, so CP-S3 has
+   something to show even if the live run stumbles.
+5. Know which P2 items were cut, so you can answer "does it do X?" with "not in this
+   build" rather than hunting for a button.
 
 ---
 
 ## Screen inventory
 
-Prospect flow in order, with the source's progress percentage:
+| # | Screen | % | Line | | # | Screen | % | Line |
+|---|---|---|---|---|---|---|---|---|
+| 1 | bienvenida | 0 | 274 | | 15 | form-contacto | 24 | 1004 |
+| 2 | catalogo | 0 | 305 | | 16 | form-laborales | 29 | 1029 |
+| 3 | privacidad | 0 | 343 | | 17 | envio-formulario | 32 | 1074 |
+| 4 | terminos | 0 | 402 | | 18 | pep-propio | 36 | 1101 |
+| 5 | ayuda | 0 | 445 | | 19 | pep-familia | 39 | 1181 |
+| 6 | es-cliente | 2 | 522 | | 20 | declaratoria | 44 | 1278 |
+| 7 | simulador | 4 | 542 | | 21 | auth-buro | 50 | 1567 |
+| 8 | requisitos | 5 | 592 | | 22 | id-photos | 60 | 1589 |
+| 9 | registro | 6 | 623 | | 23 | documents | 68 | 1716 |
+| 10 | verificar-cliente | 6 | 654 | | 24 | biometrics | 75 | 1773 |
+| 11 | otp | 7 | 686 | | 25 | video | 82 | 1799 |
+| 12 | auth-location | 10 | 718 | | 26 | solicitud | 90 | 1832 |
+| 13 | form-generales | 14 | 774 | | 27 | signature | 96 | 1853 |
+| 14 | form-domicilio | 19 | 884 | | 28 | complete | 100 | 1871 |
 
-| # | Screen | % | Source line |
-|---|---|---|---|
-| 1 | bienvenida | 0 | 274 |
-| 2 | catalogo | 0 | 305 |
-| 3 | privacidad | 0 | 343 |
-| 4 | terminos | 0 | 402 |
-| 5 | ayuda | 0 | 445 |
-| 6 | es-cliente | 2 | 522 |
-| 7 | simulador | 4 | 542 |
-| 8 | requisitos | 5 | 592 |
-| 9 | registro | 6 | 623 |
-| 10 | verificar-cliente | 6 | 654 |
-| 11 | otp | 7 | 686 |
-| 12 | auth-location | 10 | 718 |
-| 13 | form-generales | 14 | 774 |
-| 14 | form-domicilio | 19 | 884 |
-| 15 | form-contacto | 24 | 1004 |
-| 16 | form-laborales | 29 | 1029 |
-| 17 | envio-formulario | 32 | 1074 |
-| 18 | pep-propio | 36 | 1101 |
-| 19 | pep-familia | 39 | 1181 |
-| 20 | declaratoria | 44 | 1278 |
-| 21 | auth-buro | 50 | 1567 |
-| 22 | id-photos | 60 | 1589 |
-| 23 | documents | 68 | 1716 |
-| 24 | biometrics | 75 | 1773 |
-| 25 | video | 82 | 1799 |
-| 26 | solicitud | 90 | 1832 |
-| 27 | signature | 96 | 1853 |
-| 28 | complete | 100 | 1871 |
-
-Panel source, for the superadmin track: `admin-login` (1896), `admin-home` (1917),
-`admin-detalle` (2087), panel logic (5252–6049).
+Panel source: `admin-login` (1896), `admin-home` (1917), `admin-detalle` (2087), panel
+logic (5252–6049).
 
 ---
 
 ## Pinned versions
 
 `@ngxs/store` + plugins **21.0.0** · `@lucide/angular` **1.49.0** · `primeng`
-**21.1.10** · `@angular/cdk` **21.2.14** · `hono` **4.13.11** · `tesseract.js`
-**7.0.0** · `jszip` **3.10.2** · `html2pdf.js` **0.14.0** · `@supabase/supabase-js`
-**2.117.2** (backend only).
+**21.1.10** · `@angular/cdk` **21.2.14** · `hono` **4.13.11** · `tesseract.js` **7.0.0**
+(browser) · `html2pdf.js` **0.14.0** (browser) · `jszip` **3.10.2** (P2 only) ·
+`@supabase/supabase-js` **2.117.2** (Worker only).
 
 **Do not install `@ngxs/store@22`** — it requires `@angular/core >=22.0.0 <23.0.0` and
-these apps are Angular 21.2. Bumping NGXS means bumping Angular first, which is not in
-this plan.
+these apps are Angular 21.2.
 
 ---
 
-## Defects in the source, fixed rather than ported
+## Departures from the source
 
-Each is a deliberate departure from "port verbatim", and each was cleared with the owner
-or follows directly from a decision they made.
+Cleared with the owner, or following directly from a decision they made.
 
-1. The eight `doc_*` file inputs (`:1728`–`:1765`) are never read by any JS. Wired up in
-   CP-F10 — owner's call.
-2. Base64 INE photos were written into IndexedDB. Dropped; the backend is the only
-   store — owner's call.
+1. The eight `doc_*` file inputs (`:1728`–`:1765`) are read by no JS. Wired in CP-F9.
+2. Base64 INE photos were written into IndexedDB. Dropped; the Worker is the only store.
 3. The OTP was generated in the browser and printed on screen. Moves to CP-B5, echoed
-   only under `DEMO_MODE` — owner's call.
+   only under `DEMO_MODE`.
 4. Supabase URL and anon key were entered in the admin panel and shipped to the browser.
-   Now backend env vars — owner's call.
-5. `PASS_ADMIN`, a hardcoded string comparison, authenticated the panel whenever the app
-   was in local mode. Gone with CP-B6.
-6. Supabase RLS error text was shown to the end user (`:3013`). Logged server-side
-   instead, per §10.
-7. The folio is generated client-side (`:3422`) from a date plus a short random — both
-   guessable and collidable. Server-side in CP-B3.
+   Now Worker secrets via `wrangler secret put`.
+5. `PASS_ADMIN`, a hardcoded string comparison, authenticated the panel in local mode.
+   Gone with CP-B7.
+6. Supabase RLS error text was shown to the end user (`:3013`). Logged server-side.
+7. The folio was generated client-side (`:3422`), guessable and collidable.
+   Server-side in CP-B3.
 8. `100vh` on the app shell breaks under mobile Safari's collapsing toolbar. `100dvh`.
-9. 32px tap targets on the back button and 16px checkboxes are below the 44px minimum.
-10. Required-ness was inferred by walking the DOM for visibility (`:3987`, `:4009`).
-    Declared explicitly per §8.
-11. `sofom_id` scoping was enforced only by the client's own queries. With a superadmin
-    tier this becomes a real boundary: enforced in the backend by role, per CP-B3/B6.
+9. 32px tap targets and 16px checkboxes are below the 44px minimum.
+10. Required-ness was inferred by walking the DOM (`:3987`, `:4009`). Declared per §8.
+11. **The RLS in `arreglo_permisos_final.sql` is not ported.** It opens `SELECT` on the
+    whole `expedientes` bucket to `public` and `INSERT with check (true)` on five
+    tables — meaning anyone holding the anon key could read every INE photo and
+    signature. It existed because the browser talked to Supabase directly. The browser
+    no longer does, so CP-B2 revokes public access instead of reproducing it.
+12. `sofoms`, multi-tenancy and the whole superadmin tier are dropped. One whitelabel,
+    one config file — owner's call, 2026-09-30.
 
 **Reviewed and deliberately kept:** the mocked `"98%"` / `"95%"` biometric confidence
-(`:5004`). Owner's call, 2026-09-30 — it is a demo and the figure sits behind the
-"Modo demostración" label. Recorded as deviation D6 in `01-conventions.md`.
+(`:5004`). Owner's call — it is a demo and the figure sits behind the "Modo
+demostración" label. Recorded as deviation D6 in `01-conventions.md`.

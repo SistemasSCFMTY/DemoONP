@@ -16,8 +16,11 @@ disagree, **the plan file wins** — and fix this file in the same commit.
 ## Two surfaces, one design language
 
 `web-app/` is the prospect wizard: mobile-first, 390px, no PrimeNG. `superadmin-app/`
-is the operator panel: desktop-first, PrimeNG. They are separate applications with
-separate copies of the tokens.
+is the staff panel: desktop-first, PrimeNG, single tenant. They are separate
+applications with separate copies of the tokens.
+
+Brand values — razón social, nombre comercial, domicilio, logo — come from
+`brand.config.ts`, never hardcoded into a template. One whitelabel, one file.
 
 Everything below applies to both **except** the 390px rules, which are `web-app/`'s.
 A different component library is not permission to look like a different company.
@@ -142,8 +145,9 @@ Tabular data is a `p-table` with header/body templates, `rowHover`, whole-row cl
 detail, `[scrollable]` + `scrollHeight`, and an `emptymessage` — never a hand-rolled
 `<div>` row list. Filters and page persist as URL query params.
 
-The panel reaches every SOFOM's data. No PII in a URL, a log, or an analytics event;
-signed URLs for media are short-lived and never persisted.
+The expediente detail view displays more PII than anything else in the product. No
+field value in a URL, a log, or an analytics event; signed URLs for media are
+short-lived and never persisted.
 
 ## Anti-slop
 

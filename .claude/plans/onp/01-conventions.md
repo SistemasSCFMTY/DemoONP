@@ -17,16 +17,22 @@ A loan application (`solicitud de crédito`) for Mexican SOFOMs. A prospect comp
 declarations, a legal declaratoria, INE photo capture with OCR, document uploads,
 biometrics, video, and a drawn signature.
 
+**A demo, presented 2026-10-01.** Built in a day, deployed, single tenant. That is
+context for every trade-off below, not an excuse for the ones marked non-negotiable —
+the PII rules hold regardless of how long the thing lives.
+
 **Three independent projects**, no shared package:
 
-| Project | Stack | Audience |
+| Project | Stack | Deploys to |
 |---|---|---|
-| `web-app/` | Angular 21 + NGXS 21 + Tailwind 4, no PrimeNG | a stranger on a 390px phone |
-| `superadmin-app/` | Angular 21 + NGXS 21 + Tailwind 4 + PrimeNG 21 | the platform operator, over all SOFOMs |
-| `backend/` | Hono 4 + Supabase | both |
+| `web-app/` | Angular 21 + NGXS 21 + Tailwind 4, no PrimeNG | Cloudflare Pages |
+| `superadmin-app/` | Angular 21 + NGXS 21 + Tailwind 4 + PrimeNG 21 | Cloudflare Pages |
+| `backend/` | Hono 4 on Cloudflare Workers + Supabase + Resend | Cloudflare Workers |
 
-The source has one panel scoped to a single SOFOM. `superadmin-app/` builds the tier
-above it — see §12.
+**One whitelabel, one config file.** `web-app/src/app/brand.config.ts` holds razón
+social, nombre comercial, domicilio, logo and the palette. No `sofoms` table, no tenant
+switcher, no admin UI for branding, no multi-tenancy. Swapping client means editing one
+file — which is the whitelabel story, told without building the machinery.
 
 It collects CURP, RFC, INE images, geolocation at four moments, income, and a signature.
 That is regulated personal data under the LFPDPPP. **Treat every field as PII.** Never
@@ -189,9 +195,8 @@ States, each in `state/<name>/`:
 | `NavegacionState` | reached steps, current step, progress — what the guard reads |
 
 
-`superadmin-app/` has its own store — `SuperadminState` (session and role), plus
-`SofomsState`, `UsuariosState`, `ExpedientesState` and `BitacoraState`. It does not
-share a state file with `web-app/`; they are separate applications.
+`superadmin-app/` has its own store — `PanelState` (session) and `ExpedientesState`.
+It does not share a state file with `web-app/`; they are separate applications.
 
 Rules:
 
@@ -252,12 +257,18 @@ Reactive Forms, typed, **one `FormGroup` per step**.
 
 ## 10. Backend (`backend/`)
 
-Hono **4.13.11** on Node. TypeScript, ESM.
+Hono **4.13.11** on **Cloudflare Workers**. TypeScript, ESM. Load the `cloudflare`,
+`wrangler` and `workers-best-practices` skills before touching it.
 
-- **Every secret comes from an env var.** `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`,
-  `JWT_SECRET`, `DEMO_MODE`, `PORT`, `CORS_ORIGIN`. Ship a `.env.example` with every
-  key and no value. `.env` is gitignored. No credential literal in source, ever — the
-  source HTML's admin-panel-configured connection string is gone.
+- **Every secret is a Worker secret**, set with `wrangler secret put`:
+  `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `JWT_SECRET`, `RESEND_API_KEY`, `DEMO_MODE`.
+  **Never in `wrangler.jsonc`** — that file is committed. Ship a `.dev.vars.example`
+  listing every key with no value; `.dev.vars` is gitignored. No credential literal in
+  source, ever; the source HTML's admin-panel-configured connection string is gone.
+- **What cannot run in a Worker.** Tesseract OCR cannot: the WASM core plus a ~15MB
+  `traineddata` blow past the 3MB/10MB bundle cap and the CPU budget. OCR therefore
+  runs in the browser, as the source already does it. `html2pdf` likewise. This
+  reverses an earlier decision and is forced by the platform, not preferred.
 - One route file per resource in `src/routes/`, mounted in `src/app.ts`.
 - **Zod on every request body and every response.** The schemas in `src/schemas/` are
   the API contract.
@@ -268,32 +279,32 @@ Hono **4.13.11** on Node. TypeScript, ESM.
   key and is never exported to a route that does not need it.
 - `src/services/` holds the logic (otp, ocr, plantillas, expedientes); routes stay thin.
 - Rate-limit the OTP endpoints. An unthrottled OTP endpoint is an SMS-bill attack.
-- **Every endpoint is scoped by `sofom_id` by default.** Unscoped access exists only
-  behind a `superadmin` role check on the JWT, enforced here. A frontend that shows the
-  right rows is a convenience, not a boundary.
-- Every superadmin mutation writes a `bitacora` row before returning.
-- CORS allows two origins now, both from env.
+- CORS allows exactly the two Pages origins. Not `*`.
+- **Email never fails a request.** Resend is called after the write succeeds; a failure
+  is logged and swallowed. A prospect whose application was accepted must not see an
+  error because a mail API was slow.
 - Structured logging with request ids. **Never log a request body** — see §1.
 
 ### Data model (ported from the source's Supabase usage)
 
-Tables: `sofoms`, `usuarios_panel`, `expedientes`, `propietarios_reales`, `archivos`,
-`documentos`, `plantillas`, `bitacora`. View: `v_lista_expedientes`. Storage bucket:
-`expedientes`, path `{folio}/{tipo}.{ext}`.
-
-`usuarios_panel.rol` is `superadmin | admin`, and `sofom_id` is nullable — a superadmin
-belongs to no single SOFOM. `bitacora` is **append-only**, enforced in the schema: an
-operator who can reach every tenant must not be able to erase the record of it.
+Tables: `expedientes`, `propietarios_reales`, `archivos`, `documentos`,
+`usuarios_panel`. Storage bucket `expedientes`, path `{folio}/{tipo}.{ext}`.
+**No `sofoms` table** — single tenant. `plantillas` and `bitacora` only if the P2
+checkpoints survive.
 
 `archivos` rows carry `tipo`, `ruta`, `nombre_original`, `tipo_mime`, `tamano_bytes`,
-`hash_sha256`, `capturado_en`. **Keep the SHA-256** — it is the evidentiary value of
-the whole exercise.
+`hash_sha256`, `capturado_en`. **Keep the SHA-256.** It is the evidentiary value of the
+whole exercise and it costs one function call.
 
 Migrations live in `backend/supabase/migrations/`, numbered and forward-only.
-`../ONP/arreglo_permisos_final.sql` documents the storage RLS problems the original hit
-(`storage.prefixes` needs its own policies; policies scoped to `anon` break once a panel
-session exists) — read it before writing bucket policies, then supersede it: with the
-service key server-side, the bucket should not be publicly writable at all.
+
+**Do not port `../ONP/arreglo_permisos_final.sql`.** It grants `SELECT` on the whole
+`expedientes` bucket to `public` and `INSERT with check (true)` on five tables — so
+anyone holding the anon key can read every INE photo and signature in the bucket. It
+was written to unblock a browser client talking to Supabase directly. Nothing does that
+any more: the Worker holds the service key. Revoke public access instead of reproducing
+it. Read the file for the traps it documents (`storage.prefixes` needs its own
+policies), then supersede it.
 
 ---
 
@@ -311,48 +322,36 @@ honest.
 
 ---
 
-## 12. The superadmin app
+## 12. The staff panel (`superadmin-app/`)
 
-`superadmin-app/` is a separate deployable application, not a route inside `web-app/`.
+A separate deployable application, not a route inside `web-app/`. The folder keeps its
+name; the cross-SOFOM tier it was briefly planned as is gone with the single-tenant
+descope. No SOFOM management, no panel-user management, no cross-tenant search.
 
 **It is the one surface in this product that is not mobile-first.** A desktop tool for
 staff. Do not apply the 390px shell, do not squeeze the tables, and do not treat the
-phone layout as the baseline it must degrade from.
+phone layout as a baseline it must degrade from.
 
 Everything else about the design language is shared and unchanged: Charis SIL headings,
-Archivo body, the §3 tokens, the §4 radius and elevation ladders, Lucide icons, Spanish
-copy with accents. A different component library is not permission to look like a
-different company.
+Archivo body, the §3 tokens, the §4 ladders, Lucide icons, Spanish copy with accents. A
+different component library is not permission to look like a different company.
 
 PrimeNG lives here and only here, preset-first: stock Aura plus an ONP preset built from
 the §3 tokens. Never a `theme/` override sheet for looks; a sheet is only for layout
 integration, and every one opens with a comment saying why it exists. Tabular data is a
 `p-table` — header/body templates, `rowHover`, whole-row click into detail,
-`[scrollable]` + `scrollHeight`, `emptymessage`. Filters and page persist as URL query
-params, `queryParamMap` the single load path.
+`[scrollable]` + `scrollHeight`, `emptymessage`. Filters persist as URL query params,
+`queryParamMap` the single load path.
 
-### The tier, and what it costs
-
-The source's panel is scoped to one SOFOM. This app is the tier above: one operator over
-all of them, managing the SOFOMs themselves and their panel users. The `sofoms` table
-and `usuarios_panel.sofom_id` anticipated it; nobody built it.
-
-A session here can reach every SOFOM's expedientes — every CURP, every INE image, every
-signature in the platform. Three consequences:
-
-1. **Authorization is server-side.** A role guard in this app improves the UX. It is not
-   security. The endpoint must reject a wrong-role caller, and the QA checkpoint tests
-   that it does rather than that the button is hidden.
-2. **Every mutation is audited**, and the audit log is readable (CP-S8) and append-only.
-   There is no UI affordance to delete from it.
-3. **No PII in a URL, a log, or an analytics event.** Signed URLs for media are
-   short-lived and never persisted.
+**The expediente detail view is the payoff shot of the demo** — the submission the
+audience just watched being made, arriving with its photos and signature. It is also
+the screen that displays the most PII in the product: no field value in a URL, none in
+a log, none in an analytics event, and signed URLs short-lived and never persisted.
 
 ### The duplication policy
 
-Three independent projects, no shared package — the owner's call, twice. The design
-tokens therefore exist in two `styles.css` files and the API types in two Angular apps
-plus the backend's Zod schemas.
+Three independent projects, no shared package — the owner's call. The design tokens
+exist in two `styles.css` files and the API types in two Angular apps plus the Worker.
 
 **These drift silently; the compiler will not catch it.** §3 and `02-api-contract.md`
 are the referees. A PR that changes one copy must change the others in the same PR, and
@@ -366,10 +365,12 @@ a reviewer who sees a token changed in one place only should block it.
 |---|---|---|---|---|
 | D1 | Fonts load by Google Fonts CDN `@import`, not self-hosted `@fontsource` | Owner's explicit call; this is a demo with no offline requirement. `@fontsource/charis-sil@5.3.0` exists if this is ever revisited | owner | 2026-09-30 |
 | D2 | Headings are Charis SIL, not Instrument Sans | Different company. ONP FER's identity is a serif heading over a cream ground; Instrument Sans is Manttio's | owner | 2026-09-30 |
-| D3 | Colour is hard-coded to ONP's navy/gold rather than built from `--brand-*` | Single tenant. The whitelabel indirection has no second tenant to serve | owner | 2026-09-30 |
+| D3 | Colour lives in one `brand.config.ts` rather than a `--brand-*` branding module | Single tenant, one whitelabel. Swapping client is a one-file edit; the full indirection has no second tenant to serve | owner | 2026-09-30 |
 | D4 | Tailwind 4, not 3.4 | The repo was scaffolded on 4 and nothing in the ruleset depends on 3.4 | owner | 2026-09-30 |
 | D5 | PrimeNG only in `superadmin-app/`, not the prospect flow | A 390px consumer wizard uses nothing PrimeNG is good at; the admin `p-table` does | owner | 2026-09-30 |
 | D6 | The mocked biometric confidence (`"98%"` / `"95%"`) is kept verbatim | Owner's call: this is a demo, and the figure sits behind a "Modo demostración" label. It is the one carve-out from "no invented numbers" — everything financial stays computed | owner | 2026-09-30 |
+| D7 | OCR runs in the browser, not server-side | Forced by Cloudflare Workers: Tesseract's WASM and traineddata exceed the bundle cap and CPU budget. Reverses an earlier decision, by platform constraint not preference | platform | 2026-09-30 |
+| D8 | Resend sends from the sandbox sender `onboarding@resend.dev` | Owner's call: no verified domain before the demo. It delivers **only** to the Resend account owner's address, so the demo registers with that address | owner | 2026-09-30 |
 
 No open questions. The Charis SIL / Archivo split was confirmed by the owner on
 2026-09-30 and is recorded in §2.
