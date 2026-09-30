@@ -5,11 +5,11 @@
 Port `../ONP/onp_fer_etapa2_pf.html` (6,052 lines, single file) into three projects,
 rewritten and deployed:
 
-| Project | Stack | Deploys to |
-|---|---|---|
-| `web-app/` | Angular 21 + NGXS 21 + Tailwind 4, no PrimeNG | Cloudflare Pages |
-| `superadmin-app/` | Angular 21 + NGXS 21 + Tailwind 4 + PrimeNG 21 | Cloudflare Pages |
-| `backend/` | Hono 4 on **Cloudflare Workers** + Supabase + Resend | Cloudflare Workers |
+| Project           | Stack                                                | Deploys to         |
+| ----------------- | ---------------------------------------------------- | ------------------ |
+| `web-app/`        | Angular 21 + NGXS 21 + Tailwind 4, no PrimeNG        | Cloudflare Pages   |
+| `superadmin-app/` | Angular 21 + NGXS 21 + Tailwind 4 + PrimeNG 21       | Cloudflare Pages   |
+| `backend/`        | Hono 4 on **Cloudflare Workers** + Supabase + Resend | Cloudflare Workers |
 
 Single tenant. One whitelabel, expressed as one config file — no `sofoms` table, no
 tenant switcher, no admin UI for branding. Copy and screen structure of the prospect
@@ -25,11 +25,11 @@ The owner chose the full rewrite knowing the timeline. Two things follow.
 hours, what is missing is the least damaging thing. Do not work ahead into P2 because
 it is more interesting.
 
-| Tier | Meaning |
-|---|---|
-| **P0** | The demo does not happen without it. |
+| Tier   | Meaning                                  |
+| ------ | ---------------------------------------- |
+| **P0** | The demo does not happen without it.     |
 | **P1** | The demo is materially worse without it. |
-| **P2** | Cut first, without discussion. |
+| **P2** | Cut first, without discussion.           |
 
 **2. The realistic risks, named now rather than at 3am.** CP-F7 (four form screens,
 CURP generation with check digit, RFC and CP validators) and CP-F9 (camera, OCR, eight
@@ -71,11 +71,11 @@ in a Worker. Out of scope for tomorrow.
 
 ## Agents
 
-| Agent | Owns | Model |
-|---|---|---|
-| `onp-backend` | `backend/`, Supabase schema, Resend, the Worker deploy | Sonnet |
-| `onp-frontend` | `web-app/` — the 28-step prospect wizard and its `ui/` | Sonnet |
-| `onp-superadmin` | `superadmin-app/` — the single-tenant staff panel | Sonnet |
+| Agent            | Owns                                                   | Model  |
+| ---------------- | ------------------------------------------------------ | ------ |
+| `onp-backend`    | `backend/`, Supabase schema, Resend, the Worker deploy | Sonnet |
+| `onp-frontend`   | `web-app/` — the 28-step prospect wizard and its `ui/` | Sonnet |
+| `onp-superadmin` | `superadmin-app/` — the single-tenant staff panel      | Sonnet |
 
 Each owns one directory. Cross-project needs go in the PR description.
 
@@ -117,15 +117,15 @@ changing one copy changes the other.
       `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `SUPABASE_PUBLISHABLE_KEY`, `JWT_SECRET`,
       `RESEND_API_KEY`, `DEMO_SOFOM_ID`. `DEMO_MODE` is a plain var.
       **No secret in source, no secret in `wrangler.jsonc`.**
-      *Done 2026-09-30. `SUPABASE_SERVICE_KEY` renamed to `SUPABASE_SECRET_KEY`;
-      `SUPABASE_PUBLISHABLE_KEY` and `DEMO_SOFOM_ID` added — see CP-B2 and CP-B7.*
-- [x] **CP-B2 · P0 — Supabase schema.** *Changed in flight, 2026-09-30: the owner is
+      _Done 2026-09-30. `SUPABASE_SERVICE_KEY` renamed to `SUPABASE_SECRET_KEY`;
+      `SUPABASE_PUBLISHABLE_KEY` and `DEMO_SOFOM_ID` added — see CP-B2 and CP-B7._
+- [x] **CP-B2 · P0 — Supabase schema.** _Changed in flight, 2026-09-30: the owner is
       **reusing the existing Supabase project**, not creating one. A read-only probe
       found the schema already complete — all nine tables, `expedientes` with 106
       columns (a superset of the contract), the `expedientes` bucket private. So this
       became a verification script plus the three tables that were genuinely missing
       (`prospectos`, `otp_codigos`, `producto`). Nothing is created that exists and no
-      column is added; none was missing.*
+      column is added; none was missing._
       **The RLS lockdown is now optional and separate** (`0002_cerrar_acceso_publico.sql`).
       `../ONP/arreglo_permisos_final.sql` opens `SELECT` on the whole bucket to `public`
       and `INSERT with check (true)` on five tables, which with the publishable key in a
@@ -160,18 +160,18 @@ changing one copy changes the other.
       their own email at the registro step. Put this constraint in a comment at the top
       of the mailer so nobody debugs a silent 403 tomorrow. Email failure must **never**
       fail the request — log it and move on.
-- [x] **CP-B7 · P0 — Admin login.** *Changed in flight, 2026-09-30: authentication goes
+- [x] **CP-B7 · P0 — Admin login.** _Changed in flight, 2026-09-30: authentication goes
       through **Supabase Auth**, not a password column. `usuarios_panel` has none and
       never had one — the source called `signInWithPassword` (`:5291`) and read the
       profile from that table (`:5300`). Adding our own hash would require knowing the
-      existing users' passwords.* The Worker calls `signInWithPassword` server-side with
+      existing users' passwords._ The Worker calls `signInWithPassword` server-side with
       `SUPABASE_PUBLISHABLE_KEY`, checks `activo` and `rol` with the secret key, mints
       **our own** httpOnly session JWT signed with `JWT_SECRET`, and discards the
       Supabase session. This API never validates a Supabase-issued token, so there is no
       JWKS. `GET /admin/me`, `POST /admin/logout`, `requireAuth` on the panel routes. The
       source's hardcoded `PASS_ADMIN` does not survive.
-- [x] **CP-B8 · P0 — Deploy.** *Deploy-ready, not deployed — the owner holds the
-      Cloudflare and Supabase accounts and deploys on their own signal.*
+- [x] **CP-B8 · P0 — Deploy.** _Deploy-ready, not deployed — the owner holds the
+      Cloudflare and Supabase accounts and deploys on their own signal._
       `wrangler deploy --dry-run` is clean (299 KiB gzipped, well under the 3MB cap),
       `wrangler check startup` measures 20ms, both rate-limit bindings resolve, and the
       README documents every secret with the exact commands and what breaks without
@@ -265,7 +265,7 @@ descope — no SOFOM management, no panel-user management, no cross-tenant searc
       owner's and is not the one `wrangler` is authenticated against here; they run it
       on their own signal. Landed: `wrangler@^4` as a devDependency, the `deploy`
       script (`wrangler pages deploy dist/superadmin-app/browser
-      --project-name=onp-panel`), `public/_redirects` with `/*  /index.html  200` so a
+    --project-name=onp-panel`), `public/_redirects` with `/*  /index.html  200` so a
       reload on the detail view is not a CDN 404, and `superadmin-app/README.md` with
       the build and deploy steps. Confirming login against the deployed Worker waits
       on CP-B8.
@@ -289,44 +289,53 @@ descope — no SOFOM management, no panel-user management, no cross-tenant searc
 
 ---
 
+## Videograbación real — `03-videograbacion.md`
+
+Owner, 2026-09-30: the identity recording stops being simulated. Five checkpoints
+(CP-V1 … CP-V5), P0 → P2, in `03-videograbacion.md`. The short version: the Postgres
+enum already has `video_identificacion` so there is no migration, and the upload loop
+already treats a failed part as non-fatal, so "the video never fails the submission" is
+the existing behaviour rather than new work. What is missing is the MIME allowlist, the
+part→enum mapping, and a `MediaRecorder`. Biometrics stay simulated.
+
 ## Progress board
 
-| CP | Title | Tier | Agent | Depends on | Status |
-|---|---|---|---|---|---|
-| 0.1 | Restructure + brand config | P0 | — | — | ☑ |
-| 0.2 | Design tokens | P0 | — | 0.1 | ☑ |
-| 0.3 | API contract | P0 | — | 0.1 | ☑ |
-| B1 | Worker scaffold | P0 | backend | 0.1 | ☑ |
-| B2 | Supabase schema | P0 | backend | B1 | ☑ |
-| B3 | POST /solicitudes | P0 | backend | B2, 0.3 | ☑ |
-| B4 | Panel read API | P0 | backend | B2, 0.3 | ☑ |
-| B5 | OTP | P0 | backend | B1 | ☑ |
-| B6 | Resend welcome email | P0 | backend | B1 | ☑ |
-| B7 | Admin login | P0 | backend | B2 | ☑ |
-| B8 | Deploy Worker | P0 | backend | B3–B7 | ☑ |
-| B9 | Producto endpoint | P1 | backend | B2 | ☑ |
-| B10 | Confirmation email | P1 | backend | B6, B3 | ☑ |
-| B11 | Plantillas | P2 | backend | B2 | ☑ |
-| B12 | Bitácora | P2 | backend | B2 | ☐ |
-| F1 | Shell, routing, NGXS | P0 | frontend | 0.2 | ☑ |
-| F2 | UI primitives | P0 | frontend | 0.2 | ☑ |
-| F3 | Portada + informativas | P0 | frontend | F1, F2 | ☑ |
-| F4 | Simulador | P0 | frontend | F2 | ☑ |
-| F5 | Registro + OTP | P0 | frontend | F2, B5, B6 | ☑ |
-| F6 | Geolocalización | P0 | frontend | F1 | ☑ |
-| F7 | Formulario | P0 | frontend | F2 | ☑ |
-| F8 | PEP + declaratoria | P0 | frontend | F7 | ☑ |
-| F9 | Identificación + documentos | P0 | frontend | F2, B3 | ☑ |
-| F10 | Biometría + video | P0 | frontend | F2 | ☑ |
-| F11 | Solicitud, firma, envío | P0 | frontend | F8, B3 | ☑ |
-| F12 | Deploy to Pages | P0 | frontend | F1–F11, B8 | ◐ build listo, deploy pendiente del owner |
-| F13 | QA pass | P2 | frontend | F12 | ☐ |
-| S1 | Scaffold, shell, login | P0 | superadmin | 0.2, B7 | ☑ |
-| S2 | Expedientes list | P0 | superadmin | S1, B4 | ☑ |
-| S3 | Expediente detail | P0 | superadmin | S2, B4 | ☑ |
-| S4 | Deploy to Pages | P0 | superadmin | S3, B8 | ◐ |
-| S5 | Producto | P1 | superadmin | S1, B9 | ☑ |
-| S6 | Formatos and Ajustes | P2 | superadmin | S1 | ☑ |
+| CP  | Title                       | Tier | Agent      | Depends on | Status                                    |
+| --- | --------------------------- | ---- | ---------- | ---------- | ----------------------------------------- |
+| 0.1 | Restructure + brand config  | P0   | —          | —          | ☑                                         |
+| 0.2 | Design tokens               | P0   | —          | 0.1        | ☑                                         |
+| 0.3 | API contract                | P0   | —          | 0.1        | ☑                                         |
+| B1  | Worker scaffold             | P0   | backend    | 0.1        | ☑                                         |
+| B2  | Supabase schema             | P0   | backend    | B1         | ☑                                         |
+| B3  | POST /solicitudes           | P0   | backend    | B2, 0.3    | ☑                                         |
+| B4  | Panel read API              | P0   | backend    | B2, 0.3    | ☑                                         |
+| B5  | OTP                         | P0   | backend    | B1         | ☑                                         |
+| B6  | Resend welcome email        | P0   | backend    | B1         | ☑                                         |
+| B7  | Admin login                 | P0   | backend    | B2         | ☑                                         |
+| B8  | Deploy Worker               | P0   | backend    | B3–B7      | ☑                                         |
+| B9  | Producto endpoint           | P1   | backend    | B2         | ☑                                         |
+| B10 | Confirmation email          | P1   | backend    | B6, B3     | ☑                                         |
+| B11 | Plantillas                  | P2   | backend    | B2         | ☑                                         |
+| B12 | Bitácora                    | P2   | backend    | B2         | ☐                                         |
+| F1  | Shell, routing, NGXS        | P0   | frontend   | 0.2        | ☑                                         |
+| F2  | UI primitives               | P0   | frontend   | 0.2        | ☑                                         |
+| F3  | Portada + informativas      | P0   | frontend   | F1, F2     | ☑                                         |
+| F4  | Simulador                   | P0   | frontend   | F2         | ☑                                         |
+| F5  | Registro + OTP              | P0   | frontend   | F2, B5, B6 | ☑                                         |
+| F6  | Geolocalización             | P0   | frontend   | F1         | ☑                                         |
+| F7  | Formulario                  | P0   | frontend   | F2         | ☑                                         |
+| F8  | PEP + declaratoria          | P0   | frontend   | F7         | ☑                                         |
+| F9  | Identificación + documentos | P0   | frontend   | F2, B3     | ☑                                         |
+| F10 | Biometría + video           | P0   | frontend   | F2         | ☑                                         |
+| F11 | Solicitud, firma, envío     | P0   | frontend   | F8, B3     | ☑                                         |
+| F12 | Deploy to Pages             | P0   | frontend   | F1–F11, B8 | ◐ build listo, deploy pendiente del owner |
+| F13 | QA pass                     | P2   | frontend   | F12        | ☐                                         |
+| S1  | Scaffold, shell, login      | P0   | superadmin | 0.2, B7    | ☑                                         |
+| S2  | Expedientes list            | P0   | superadmin | S1, B4     | ☑                                         |
+| S3  | Expediente detail           | P0   | superadmin | S2, B4     | ☑                                         |
+| S4  | Deploy to Pages             | P0   | superadmin | S3, B8     | ◐                                         |
+| S5  | Producto                    | P1   | superadmin | S1, B9     | ☑                                         |
+| S6  | Formatos and Ajustes        | P2   | superadmin | S1         | ☑                                         |
 
 **26 P0 · 4 P1 · 5 P2.** ◐ = built and documented, waiting on a dependency to close.
 
@@ -354,22 +363,22 @@ Write this down before you sleep, not at 8am.
 
 ## Screen inventory
 
-| # | Screen | % | Line | | # | Screen | % | Line |
-|---|---|---|---|---|---|---|---|---|
-| 1 | bienvenida | 0 | 274 | | 15 | form-contacto | 24 | 1004 |
-| 2 | catalogo | 0 | 305 | | 16 | form-laborales | 29 | 1029 |
-| 3 | privacidad | 0 | 343 | | 17 | envio-formulario | 32 | 1074 |
-| 4 | terminos | 0 | 402 | | 18 | pep-propio | 36 | 1101 |
-| 5 | ayuda | 0 | 445 | | 19 | pep-familia | 39 | 1181 |
-| 6 | es-cliente | 2 | 522 | | 20 | declaratoria | 44 | 1278 |
-| 7 | simulador | 4 | 542 | | 21 | auth-buro | 50 | 1567 |
-| 8 | requisitos | 5 | 592 | | 22 | id-photos | 60 | 1589 |
-| 9 | registro | 6 | 623 | | 23 | documents | 68 | 1716 |
-| 10 | verificar-cliente | 6 | 654 | | 24 | biometrics | 75 | 1773 |
-| 11 | otp | 7 | 686 | | 25 | video | 82 | 1799 |
-| 12 | auth-location | 10 | 718 | | 26 | solicitud | 90 | 1832 |
-| 13 | form-generales | 14 | 774 | | 27 | signature | 96 | 1853 |
-| 14 | form-domicilio | 19 | 884 | | 28 | complete | 100 | 1871 |
+| #   | Screen            | %   | Line |     | #   | Screen           | %   | Line |
+| --- | ----------------- | --- | ---- | --- | --- | ---------------- | --- | ---- |
+| 1   | bienvenida        | 0   | 274  |     | 15  | form-contacto    | 24  | 1004 |
+| 2   | catalogo          | 0   | 305  |     | 16  | form-laborales   | 29  | 1029 |
+| 3   | privacidad        | 0   | 343  |     | 17  | envio-formulario | 32  | 1074 |
+| 4   | terminos          | 0   | 402  |     | 18  | pep-propio       | 36  | 1101 |
+| 5   | ayuda             | 0   | 445  |     | 19  | pep-familia      | 39  | 1181 |
+| 6   | es-cliente        | 2   | 522  |     | 20  | declaratoria     | 44  | 1278 |
+| 7   | simulador         | 4   | 542  |     | 21  | auth-buro        | 50  | 1567 |
+| 8   | requisitos        | 5   | 592  |     | 22  | id-photos        | 60  | 1589 |
+| 9   | registro          | 6   | 623  |     | 23  | documents        | 68  | 1716 |
+| 10  | verificar-cliente | 6   | 654  |     | 24  | biometrics       | 75  | 1773 |
+| 11  | otp               | 7   | 686  |     | 25  | video            | 82  | 1799 |
+| 12  | auth-location     | 10  | 718  |     | 26  | solicitud        | 90  | 1832 |
+| 13  | form-generales    | 14  | 774  |     | 27  | signature        | 96  | 1853 |
+| 14  | form-domicilio    | 19  | 884  |     | 28  | complete         | 100 | 1871 |
 
 Panel source: `admin-login` (1896), `admin-home` (1917), `admin-detalle` (2087), panel
 logic (5252–6049).
@@ -418,7 +427,7 @@ Cleared with the owner, or following directly from a decision they made.
 
 13. **The panel's estado chip shows an unrecognised estado instead of relabelling
     it.** The source falls back to `pendiente` (`:5444`), which puts a record in a
-    state it is not in. (The slug itself is *not* a departure: `revision` is the
+    state it is not in. (The slug itself is _not_ a departure: `revision` is the
     Postgres enum value and the panel transmits it verbatim. An earlier version of
     `02-api-contract.md` said `en_revision`, the panel followed it, and the deployed
     Worker rejected every estado change — corrected here and in PR #4.)
@@ -462,7 +471,7 @@ flagged in the CP-F1–F12 pull request for the owner to confirm.
 18. **The CURP generator produces a 17-character CURP.** `generarCURPPF` (`:4102`)
     concatenates 16 characters and appends a check digit; position 17, the homonym
     differentiator, is missing. Its own `validarCURPLocal` (`:4185`) demands 18 and
-    *hides the status line* below that length rather than complaining, so every
+    _hides the status line_ below that length rather than complaining, so every
     generated CURP is invalid and nothing says so. Position 17 is restored per the
     published rule: `0` for births before 2000, `A` from 2000 on. The cross-check
     ignores that position, since RENAPO may have assigned a differentiator no generator
@@ -476,11 +485,11 @@ flagged in the CP-F1–F12 pull request for the owner to confirm.
     `verificarCliente` (`:2575`) runs `validarCURPLocal`, so the demo as documented is
     rejected. **The copy is the owner's call, so the string is kept verbatim** and
     `verificar-cliente` accepts that fixture by identity as well as by validation.
-    *The owner may prefer the digit corrected to `1` — that is a copy change and it is
-    theirs to make.*
+    _The owner may prefer the digit corrected to `1` — that is a copy change and it is
+    theirs to make._
 21. **The "entre calles" hint is misspelt on one of its two copies.** `Indícalas
-    vialidades perpendiculares` on `form-domicilio` (`:926`), `Indica las vialidades
-    perpendiculares` on the propietario real's copy of the same block (`:1430`). Ported
+vialidades perpendiculares` on `form-domicilio` (`:926`), `Indica las vialidades
+perpendiculares` on the propietario real's copy of the same block (`:1430`). Ported
     as the correct "Indica las". A predictable consequence of the two blocks being
     duplicated markup; in the port they share one component.
 22. **The OCR front parser destroys the accents it then looks for.**
