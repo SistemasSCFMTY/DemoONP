@@ -7,6 +7,8 @@ import {
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { provideStore } from '@ngxs/store';
 import { routes } from './app.routes';
+import { crearGrabacion } from './services/domain/grabacion-real';
+import { Grabacion } from './services/domain/videograbacion';
 import { IdentidadState } from './state/identidad/identidad.state';
 import { NavegacionState } from './state/navegacion/navegacion.state';
 import { SesionState } from './state/sesion/sesion.state';
@@ -36,5 +38,16 @@ export const appConfig: ApplicationConfig = {
       withInMemoryScrolling({ scrollPositionRestoration: 'top' }),
     ),
     provideStore([NavegacionState, SimuladorState, SesionState, SolicitudState, IdentidadState]),
+    /**
+     * The videograbación recorder, chosen once at bootstrap.
+     *
+     * `crearGrabacion` reads the `grabarVideo` kill switch and then this
+     * browser's capabilities, and returns `GrabacionSimulada` for any answer
+     * short of "yes, and with a codec I can name". Wiring it here rather
+     * than with `providedIn: 'root'` keeps `grabacion-real.ts` free to
+     * import the abstract class without a module cycle, and puts the one
+     * decision a stakeholder may ask about where the app is wired up.
+     */
+    { provide: Grabacion, useFactory: crearGrabacion },
   ],
 };

@@ -205,6 +205,14 @@ Angular 21, standalone, signals, **zoneless**. No NgModules.
   and `form-generales` and `declaratoria` both shipped to Pages broken. One-time setup
   that needs the inputs goes in `ngOnInit`; anything reacting to a change goes in an
   `effect`. Owner, 2026-09-30.
+- **An element a `viewChild` must reach before an `await` stays mounted, hidden with
+  a class.** Not `@if`. Zoneless Angular gives no guarantee that a view created by a
+  signal write exists by the next statement, so `grabando.set(true)` followed by
+  `this.visor()` is a race that passes locally and fails on a slower phone. The
+  videograbación's live preview keeps its `<video>` in the DOM and toggles
+  `[class.hidden]`; `captura-lado` gets away with `@if` only because it awaits
+  `getUserMedia` first and then uses `queueMicrotask`, which is luck, not design.
+  Established in CP-V2, 2026-09-30.
 - **A component whose markup is real gets a render test**, not only unit tests of the
   functions behind it. The CURP logic had full coverage and every test passed while
   the screen was unrenderable, because nothing ever mounted the component. Assert that
@@ -469,6 +477,22 @@ live product parameters (`:2220`) — keep it that way.
 
 Where the source labels something *"Modo demostración"*, that label stays and stays
 honest.
+
+**The label describes this run, not the build.** Where a capability can fall back at
+runtime — the videograbación records for real, but not on a browser without a codec,
+not with the `grabarVideo` kill switch off, and not when the prospect declines the
+camera — the note is bound to what actually happened on the attempt, and to nothing
+else. Before the first attempt it reflects the injected implementation; after one it
+reflects the result. Binding it to a build flag alone makes it lie in exactly the case
+it exists for. And the reasons get their own sentence: "no pudimos usar la cámara" and
+"este navegador no puede grabar" are different facts, and a prospect can act on only
+one of them. Established in CP-V2, 2026-09-30.
+
+**A runtime fallback is never silent and never a dead end.** A denied camera permission
+on a screen whose `Continuar` is gated on the capture would strand someone on step 25
+of 28. The failure is stated in words they can act on, and an explicit second control
+carries them on without the artifact — their choice, visible, rather than a fallback
+that quietly fakes the thing.
 
 ---
 

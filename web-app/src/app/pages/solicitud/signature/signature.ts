@@ -159,6 +159,11 @@ export class Signature {
       if (identidad.frente) archivos.set('id_frente', identidad.frente.imagen);
       if (identidad.reverso) archivos.set('id_reverso', identidad.reverso.imagen);
       archivos.set('firma', firma);
+      // The videograbación is a file in the expediente like any other, and
+      // it rides this same multipart POST. Absent when the recording was
+      // simulated — there are no bytes then, and the Worker treats a missing
+      // part as a part that was not sent.
+      if (identidad.video) archivos.set('video', identidad.video.blob);
       for (const [tipo, archivo] of Object.entries(identidad.documentos)) {
         if (archivo) archivos.set(tipo as TipoArchivo, archivo);
       }

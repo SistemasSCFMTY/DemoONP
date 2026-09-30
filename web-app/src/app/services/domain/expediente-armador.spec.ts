@@ -69,6 +69,7 @@ const IDENTIDAD: IdentidadModel = {
   confianzaHuella: '98%',
   confianzaRostro: '95%',
   videoGrabado: true,
+  video: null,
   firma: null,
 };
 

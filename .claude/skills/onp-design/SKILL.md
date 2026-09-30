@@ -115,6 +115,15 @@ second one.
 
 Where something is simulated, it says so — *"Modo demostración"* stays, and stays true.
 
+And it describes **this run, not the build**. Where a capability can fall back at
+runtime — the videograbación records for real, but not without a supported codec, not
+with the `grabarVideo` kill switch off, and not when the prospect declines the camera —
+bind the note to what actually happened, not to a flag. Give each reason its own
+sentence: "no pudimos usar la cámara" and "este navegador no puede grabar" are
+different facts. A runtime fallback is also never a dead end: say what failed in words
+the person can act on, and give them an explicit control to carry on without the
+artifact rather than quietly faking it.
+
 ## Validation and errors
 
 Inline, under the field, in Spanish, naming the field and what is wrong:
