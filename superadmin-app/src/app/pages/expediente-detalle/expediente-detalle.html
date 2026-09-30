@@ -7,7 +7,7 @@
       </div>
     </div>
   } @else if (errorDetalle(); as mensaje) {
-    <div class="px-8 py-10">
+    <div class="px-4 py-8 sm:px-8 sm:py-10">
       <a
         routerLink="/expedientes"
         class="inline-flex items-center gap-1.5 text-sm font-medium text-navy hover:underline"
@@ -26,7 +26,9 @@
   } @else if (expediente(); as e) {
     <!-- Header. The folio and the estado are the two things an operator
          checks first, so they sit above everything and stay put. -->
-    <header class="sticky top-0 z-10 border-b border-border bg-bg/95 px-8 pt-6 pb-4 backdrop-blur">
+    <header
+      class="sticky top-0 z-10 border-b border-border bg-bg/95 px-4 pt-5 pb-4 sm:px-8 sm:pt-6 backdrop-blur"
+    >
       <a
         routerLink="/expedientes"
         [queryParams]="filtrosPrevios()"
@@ -64,7 +66,9 @@
       </div>
     </header>
 
-    <div class="grid grid-cols-1 gap-5 px-8 py-6 xl:grid-cols-[minmax(0,1fr)_23rem]">
+    <div
+      class="grid grid-cols-1 gap-5 px-4 py-5 sm:px-8 sm:py-6 xl:grid-cols-[minmax(0,1fr)_23rem]"
+    >
       <!-- ── Evidence column. Photographs first: this is the thing the
            audience just watched being captured. ─────────────────────────── -->
       <div class="order-first flex flex-col gap-5 xl:order-last">
@@ -72,18 +76,10 @@
           @if (tieneFotos()) {
             <div class="grid grid-cols-2 gap-3">
               @if (tieneFrente()) {
-                <panel-archivo-imagen
-                  [expedienteId]="e.id"
-                  tipo="id_frente"
-                  pie="Frente"
-                />
+                <panel-archivo-imagen [expedienteId]="e.id" tipo="id_frente" pie="Frente" />
               }
               @if (tieneReverso()) {
-                <panel-archivo-imagen
-                  [expedienteId]="e.id"
-                  tipo="id_reverso"
-                  pie="Reverso"
-                />
+                <panel-archivo-imagen [expedienteId]="e.id" tipo="id_reverso" pie="Reverso" />
               }
             </div>
           } @else {
@@ -132,7 +128,11 @@
               @for (archivo of e.archivos; track archivo.tipo) {
                 <li class="border-b border-border/60 pb-3 last:border-b-0 last:pb-0">
                   <p class="flex items-start gap-2 text-sm font-medium">
-                    <svg lucidePaperclip class="mt-0.5 size-4 shrink-0 text-text-soft" aria-hidden="true"></svg>
+                    <svg
+                      lucidePaperclip
+                      class="mt-0.5 size-4 shrink-0 text-text-soft"
+                      aria-hidden="true"
+                    ></svg>
                     {{ nombreArchivo[archivo.tipo] }}
                   </p>
                   <p class="mt-1 pl-6 text-status text-text-soft">
@@ -161,10 +161,7 @@
             <panel-dato-fila clave="Monto solicitado" [valor]="e.monto_solicitado | pesos" />
             <panel-dato-fila clave="Plazo" [valor]="plazo()" />
             <panel-dato-fila clave="Tasa anual" [valor]="tasa()" />
-            <panel-dato-fila
-              clave="Pago mensual estimado"
-              [valor]="e.pago_estimado | pesos"
-            />
+            <panel-dato-fila clave="Pago mensual estimado" [valor]="e.pago_estimado | pesos" />
             <panel-dato-fila clave="Tipo de solicitante" [valor]="tipoSolicitante()" />
             <panel-dato-fila clave="Número de cliente" [valor]="e.numero_cliente" />
           </dl>
@@ -174,10 +171,7 @@
           <dl class="m-0">
             <panel-dato-fila clave="Nombre completo" [valor]="e.nombre_completo" />
             <panel-dato-fila clave="Género" [valor]="e.genero" />
-            <panel-dato-fila
-              clave="Fecha de nacimiento"
-              [valor]="e.fecha_nacimiento | fechaMx"
-            />
+            <panel-dato-fila clave="Fecha de nacimiento" [valor]="e.fecha_nacimiento | fechaMx" />
             <panel-dato-fila clave="Entidad de nacimiento" [valor]="e.entidad_nacimiento" />
             <panel-dato-fila clave="País de nacimiento" [valor]="e.pais_nacimiento" />
             <panel-dato-fila clave="Nacionalidad" [valor]="e.nacionalidad" />

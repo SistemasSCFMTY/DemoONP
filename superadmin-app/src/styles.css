@@ -58,9 +58,9 @@
      Registered in 01-conventions.md §3 before being used (no hex in a
      template, ever). */
   --color-surface-warning: #fdf6e3; /* warning wash — alert.warning       */
-  --color-surface-info: #eef2f7;    /* navy wash    — alert.info          */
+  --color-surface-info: #eef2f7; /* navy wash    — alert.info          */
   --color-surface-success: #eef6f1; /* success wash — OCR-detected field  */
-  --color-surface-muted: #f9f8f5;   /* cream wash   — leyenda, pep-section */
+  --color-surface-muted: #f9f8f5; /* cream wash   — leyenda, pep-section */
 
   /* --- Typography (§2). Charis SIL headings, Archivo body. ---
      Confirmed by the owner 2026-09-30: Charis SIL for main headings,
@@ -69,27 +69,27 @@
   --font-body: 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   /* Deliberately small — the prospect viewport is 390px. */
-  --text-status: 0.6875rem;   /* 11px — inline validation, status lines */
-  --text-label: 0.75rem;      /* 12px — field labels, checkbox copy      */
-  --text-body: 0.8125rem;     /* 13px — inputs, list copy, lede          */
-  --text-h3: 0.875rem;        /* 14px — section heading                  */
-  --text-topbar: 0.875rem;    /* 14px — sticky bar title                 */
-  --text-h2: 1.125rem;        /* 18px — screen title                     */
+  --text-status: 0.6875rem; /* 11px — inline validation, status lines */
+  --text-label: 0.75rem; /* 12px — field labels, checkbox copy      */
+  --text-body: 0.8125rem; /* 13px — inputs, list copy, lede          */
+  --text-h3: 0.875rem; /* 14px — section heading                  */
+  --text-topbar: 0.875rem; /* 14px — sticky bar title                 */
+  --text-h2: 1.125rem; /* 18px — screen title                     */
   --text-wordmark: 1.6875rem; /* 27px — the portada wordmark, and only
                                  there. Weight 700, which the §2 ladder
                                  already reserves for the wordmark.      */
 
   /* --- Shape (§4). Radius keyed to what the element IS, never one token
      applied everywhere. Buttons are rounded rectangles, not pills. --- */
-  --radius-control: 6px;      /* inputs, buttons, alerts, status chips   */
-  --radius-card: 8px;         /* cards, modal box, preview boxes         */
+  --radius-control: 6px; /* inputs, buttons, alerts, status chips   */
+  --radius-card: 8px; /* cards, modal box, preview boxes         */
 
   /* --- Elevation (§4). Encodes height off the page; not decoration.
      This product leans almost entirely on `ring` — 1px borders on cream.
      Keep that restraint: the same shadow everywhere means nothing. --- */
   --shadow-ring: 0 0 0 1px var(--color-border);
   --shadow-e1: 0 1px 2px rgb(14 32 54 / 0.06);
-  --shadow-e2: 0 2px 8px rgb(14 32 54 / 0.10);
+  --shadow-e2: 0 2px 8px rgb(14 32 54 / 0.1);
   --shadow-e3: 0 8px 28px rgb(14 32 54 / 0.18);
 }
 
@@ -172,6 +172,101 @@
 }
 
 /* --------------------------------------------------------------------------
+   The shell, and the rail that collapses (§12; owner, 2026-09-30)
+   --------------------------------------------------------------------------
+   §12 used to say this surface had no phone layout to degrade from. The owner
+   reversed that: stakeholders open the panel on their own phones, and a rail
+   pinned at 15rem leaves about 150px of table on a 390px screen. §12 now says
+   so, and this is the layout that implements it.
+
+   It lives here and not in the component for the same reason `onp-fila`'s
+   layout lives in web-app's stylesheet: the rail width and the breakpoint each
+   get exactly one definition, and `theme()` resolves the very same `lg` that
+   the `lg:` utility variant uses, so the drawer and the `lg:hidden` top bar
+   can never disagree about where the layout changes. It also keeps
+   `grid-cols-[15rem_1fr]` out of the markup, which CLAUDE.md forbids.
+
+   Below `lg` the rail is an off-canvas drawer. `visibility` carries the state,
+   not the transform alone: a drawer that is only translated off-screen still
+   holds its links in the tab order, so a keyboard walks into an invisible menu.
+   Both properties transition, and the `prefers-reduced-motion` block above
+   already flattens the duration for each.
+   -------------------------------------------------------------------------- */
+@theme {
+  /* The rail. 15rem is what the desktop shell has always used. */
+  --ancho-riel: 15rem;
+}
+
+@layer components {
+  /* Grid at every width — one column below `lg`, two above.
+     NOT `display: block` below the breakpoint: a block `main` takes its
+     height from its content, so the work area grew past the shell, the
+     DOCUMENT started scrolling instead of the page inside `main`, and the top
+     bar scrolled away with it. As a grid item `main` stretches to the row,
+     the row is the shell's own height, and the scrolling goes back where it
+     belongs — inside the page. */
+  .panel-armazon {
+    display: grid;
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .panel-riel {
+    position: fixed;
+    inset-block: 0;
+    left: 0;
+    z-index: 40;
+    width: var(--ancho-riel);
+    /* A narrow phone should still see the edge of what is behind. */
+    max-width: 85vw;
+    visibility: hidden;
+    transform: translateX(-100%);
+    transition:
+      transform 200ms cubic-bezier(0.2, 0, 0, 1),
+      visibility 200ms;
+  }
+
+  .panel-riel-abierto {
+    visibility: visible;
+    transform: none;
+  }
+
+  /* Layering, stated once so it cannot drift: top bar 20, veil 30, rail 40.
+     The rail is the topmost thing in the panel — it slides OVER the top bar
+     rather than out from under it, which is why the bar needs a z-index at
+     all (it is `position: relative` purely to get one). */
+  .panel-velo {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    background: rgb(14 32 54 / 0.45);
+  }
+
+  .panel-barra {
+    position: relative;
+    z-index: 20;
+  }
+
+  @media (width >= theme(--breakpoint-lg)) {
+    .panel-armazon {
+      grid-template-columns: var(--ancho-riel) 1fr;
+    }
+
+    /* Back to a plain column in the grid: no fixed positioning, no transform,
+       and always in the tab order. */
+    .panel-riel {
+      position: static;
+      z-index: auto;
+      width: auto;
+      max-width: none;
+      visibility: visible;
+      transform: none;
+      transition: none;
+    }
+  }
+}
+
+/* --------------------------------------------------------------------------
    PrimeNG layout integration — NOT looks.
    --------------------------------------------------------------------------
    Every rule here exists because a PrimeNG component needs to fit this app's
@@ -184,6 +279,24 @@
    `scrollHeight` is ignored. Pure layout plumbing. */
 .p-datatable-table-container {
   min-height: 0;
+}
+
+/* The expedientes table is the one place in the panel allowed to scroll
+   sideways (owner, 2026-09-30). Six columns of folio, name, CURP, amount,
+   timestamp and estado do not fit a phone, and the honest answer is a table
+   you push sideways — not five columns crushed into ellipses, and never a
+   page that scrolls as a whole.
+
+   `min-width` is what makes it scroll rather than squeeze: without a floor a
+   table just compresses its columns to fit and the overflow never happens.
+   The rounded card around it keeps `overflow-hidden`, so the corners still
+   clip and only this container moves. */
+.p-datatable-table-container {
+  overflow-x: auto;
+}
+
+.p-datatable-table {
+  min-width: 52rem;
 }
 
 /* Charis SIL is the heading face (§2). PrimeNG sets `font-family: inherit` on
@@ -216,11 +329,21 @@
   color: var(--color-text);
 }
 
-.doc-hoja p { margin: 0 0 9px 0; }
-.doc-hoja p.c { text-align: center; }
-.doc-hoja p.r { text-align: right; }
-.doc-hoja p.j { text-align: justify; }
-.doc-hoja p.b { font-weight: 700; }
+.doc-hoja p {
+  margin: 0 0 9px 0;
+}
+.doc-hoja p.c {
+  text-align: center;
+}
+.doc-hoja p.r {
+  text-align: right;
+}
+.doc-hoja p.j {
+  text-align: justify;
+}
+.doc-hoja p.b {
+  font-weight: 700;
+}
 
 .doc-hoja h1,
 .doc-hoja h2,
@@ -230,9 +353,16 @@
   margin: 14px 0 7px 0;
 }
 
-.doc-hoja h1 { font-size: 0.9375rem; text-align: center; }
-.doc-hoja h2 { font-size: 0.8125rem; }
-.doc-hoja h3 { font-size: 0.75rem; }
+.doc-hoja h1 {
+  font-size: 0.9375rem;
+  text-align: center;
+}
+.doc-hoja h2 {
+  font-size: 0.8125rem;
+}
+.doc-hoja h3 {
+  font-size: 0.75rem;
+}
 
 .doc-hoja table {
   width: 100%;
@@ -249,8 +379,15 @@
   vertical-align: top;
 }
 
-.doc-hoja .firma-zona { margin-top: 26px; text-align: center; }
-.doc-hoja .firma-zona img { max-width: 190px; display: block; margin: 0 auto 2px; }
+.doc-hoja .firma-zona {
+  margin-top: 26px;
+  text-align: center;
+}
+.doc-hoja .firma-zona img {
+  max-width: 190px;
+  display: block;
+  margin: 0 auto 2px;
+}
 
 /* --------------------------------------------------------------------------
    Motion — deferred content arriving.

@@ -37,8 +37,10 @@ The port source is `../ONP/onp_fer_etapa2_pf.html` (6,052 lines, single file).
   cage the page at 390**: layout containers span the viewport and only the content is
   capped, at `max-w-app` (64rem, the `lg` breakpoint). The source's centred 390px column
   put the navy topbar in a stub on any laptop; owner reversed it 2026-09-30.
-  **`superadmin-app/` is the exception**: a desktop tool for staff, and it should not
-  pretend otherwise.
+  **`superadmin-app/` is desktop-first** — desktop sizes and density, no 390px shell —
+  **but it must not break on a phone** (owner, 2026-09-30): the rail collapses to a
+  drawer below `lg`, gutters are `px-4 sm:px-8`, and the expedientes table is the only
+  thing in the panel allowed to scroll sideways. No page scrolls horizontally, ever.
 - **One whitelabel, one file.** `web-app/src/app/brand.config.ts` — razón social,
   nombre comercial, domicilio, logo, palette. No `sofoms` table, no tenant switcher, no
   branding UI. Swapping client is a one-file edit.

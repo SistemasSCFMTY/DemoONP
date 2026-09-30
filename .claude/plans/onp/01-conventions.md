@@ -478,9 +478,32 @@ A separate deployable application, not a route inside `web-app/`. The folder kee
 name; the cross-SOFOM tier it was briefly planned as is gone with the single-tenant
 descope. No SOFOM management, no panel-user management, no cross-tenant search.
 
-**It is the one surface in this product that is not mobile-first.** A desktop tool for
-staff. Do not apply the 390px shell, do not squeeze the tables, and do not treat the
-phone layout as a baseline it must degrade from.
+**Desktop-first, but it must not break on a phone.** Owner, 2026-09-30, reversing the
+earlier "the one surface that is not mobile-first". Stakeholders open the panel on
+their own phones, so a rail pinned at 15rem leaving 150px of table is not a defensible
+answer. Desktop stays the surface the design is decided at — desktop reading sizes,
+desktop density, no 390px shell and no pretending this is a consumer flow — and below
+`lg` the layout has to hold.
+
+What that means concretely:
+
+- **The nav rail collapses below `lg` (64rem).** At `lg` and up it is a column of the
+  shell grid, exactly as before. Below it, a top bar with a menu button and an
+  off-canvas drawer: backdrop, Escape, closes on navigation, focus moves in and back
+  out. `visibility` carries the open state and not the transform alone — a drawer only
+  translated off-screen keeps its links in the tab order.
+- **The geometry lives in `styles.css`**, under "The shell, and the rail that
+  collapses", so the rail width and the breakpoint have one definition each and the
+  drawer cannot disagree with the `lg:hidden` top bar. It also keeps
+  `grid-cols-[15rem_1fr]` out of the markup, which CLAUDE.md forbids.
+- **Tables are the only thing allowed to scroll sideways**, and they scroll because
+  `.p-datatable-table` has a `min-width` floor. Without one a table just compresses its
+  columns into ellipses and nothing ever overflows. Everything else reflows: gutters
+  are `px-4 sm:px-8`, and no page may scroll horizontally at any width.
+- **The bar to clear is measured, not eyeballed:** at 320, 360, 390, 414, 768, 1024 and
+  1280, `scrollingElement.scrollWidth` equals `clientWidth` on every route, and the
+  only element in the document with `overflow-x: auto` and real overflow is the table
+  container.
 
 Everything else about the design language is shared and unchanged: Charis SIL headings,
 Archivo body, the §3 tokens, the §4 ladders, Lucide icons, Spanish copy with accents. A
