@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  type OnInit,
+  computed,
+  input,
+  signal,
+} from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { ESTADOS_NACIMIENTO } from '../../../model/constants/catalogos/estados-nacimiento';
 import { GENEROS } from '../../../model/constants/catalogos/generos';
@@ -46,7 +53,7 @@ import { OnpStatus, type TonoEstado } from '../../../ui/onp-status/onp-status';
   ],
   templateUrl: './bloque-generales.html',
 })
-export class BloqueGenerales {
+export class BloqueGenerales implements OnInit {
   readonly grupo = input.required<GrupoGenerales>();
   /** `pf` for the applicant, `pr` for the propietario real. Keeps the two
    *  sets of element ids distinct when both are on one page. */
@@ -60,7 +67,25 @@ export class BloqueGenerales {
 
   /** Bumped on every edit so the status lines recompute. */
   private readonly version = signal(0);
-  private inicializado = false;
+
+  /**
+   * `sincronizarOrigen` writes a signal, so it runs here and NOT from inside
+   * `estadoCurp`.
+   *
+   * It used to be called from that `computed`, which throws NG0600 ("writing
+   * to signals is not allowed in a `computed`") the first time the template
+   * reads `estadoCurp()`. The throw aborted the update pass mid-traversal, so
+   * this component rendered its static markup and none of its bindings: every
+   * label came out blank, every `[class]` stayed unapplied, and the
+   * `Continuar` button after it in the parent never updated either. It read
+   * as "the CSS did not load" and it was not CSS at all.
+   *
+   * `ngOnInit` is the earliest point where the required inputs are set and a
+   * signal write is allowed.
+   */
+  ngOnInit(): void {
+    this.sincronizarOrigen();
+  }
 
   protected id(sufijo: string): string {
     return `${this.idPrefijo()}-${sufijo}`;
@@ -83,7 +108,6 @@ export class BloqueGenerales {
   protected readonly estadoCurp = computed<{ tono: TonoEstado; texto: string } | null>(() => {
     this.version();
     const grupo = this.grupo();
-    this.sincronizarOrigen();
 
     const curp = grupo.controls.curp.value.trim().toUpperCase();
     if (curp.length < 18) return null;
@@ -111,8 +135,6 @@ export class BloqueGenerales {
   /** A CURP restored from the store counts as auto-generated only if it is
    *  exactly what the generator would produce from the same data. */
   private sincronizarOrigen(): void {
-    if (this.inicializado) return;
-    this.inicializado = true;
     const guardada = this.grupo().controls.curp.value;
     this.generadaPorLaApp.set(!!guardada && guardada === generarCURP(this.datos()));
   }

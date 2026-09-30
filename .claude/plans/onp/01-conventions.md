@@ -195,6 +195,22 @@ Angular 21, standalone, signals, **zoneless**. No NgModules.
   with the assertions it serves, and a second file would be indirection for nothing.
   `styles:` stays inline — the amount is small and it is not what was asked for.
 - Lazy-load every route with `loadComponent`.
+- **A `computed` derives; it never writes.** No `signal.set()` / `.update()` inside a
+  `computed` — not directly and not through a helper it calls. Angular throws NG0600
+  and, because the template reads the computed during the update pass, the throw
+  aborts that pass *mid-traversal*: the static markup from the create pass is already
+  in the DOM, so the screen renders with blank interpolations and unapplied `[class]`
+  bindings and looks like a stylesheet that failed to load. It cost an afternoon on
+  `bloque-generales` — `estadoCurp` called a one-time initialiser that set a signal,
+  and `form-generales` and `declaratoria` both shipped to Pages broken. One-time setup
+  that needs the inputs goes in `ngOnInit`; anything reacting to a change goes in an
+  `effect`. Owner, 2026-09-30.
+- **A component whose markup is real gets a render test**, not only unit tests of the
+  functions behind it. The CURP logic had full coverage and every test passed while
+  the screen was unrenderable, because nothing ever mounted the component. Assert that
+  nothing reached the `ErrorHandler` *and* that a binding resolved — Angular reports a
+  template error and leaves the half-updated DOM standing, so "it did not throw" on
+  its own proves nothing.
 
 ### Folder layout (`web-app/src/app/`; `superadmin-app/` mirrors it)
 
