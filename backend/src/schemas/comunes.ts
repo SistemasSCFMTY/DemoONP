@@ -117,7 +117,7 @@ export const EstadoLeidoSchema = z.enum([
 /**
  * Dos vocabularios, un mapa.
  *
- * `POST /solicitudes` recibe las once partes con los nombres del
+ * `POST /solicitudes` recibe las doce partes con los nombres del
  * contrato, que son los `id` de los inputs de la fuente
  * (onp_fer_etapa2_pf.html:1728–1765). La columna `archivos.tipo`, en
  * cambio, es el enum `tipo_archivo` de Postgres, y **ninguno de los
@@ -133,6 +133,14 @@ export const EstadoLeidoSchema = z.enum([
  * fotos, y reusarlos haría que el PDF pisara la foto: misma ruta
  * `{folio}/{tipo}.{ext}` y mismo renglón. `otro` es el único valor del
  * enum que queda libre y no miente.
+ *
+ * **El orden de las claves es el orden en que se suben.** `PARTES_ARCHIVO`
+ * sale de `Object.keys` y el ciclo de `services/solicitudes.ts` lo
+ * recorre tal cual, uno por uno. Por eso `video` va al final: es la
+ * parte más pesada (hasta 25 MB contra 10 MB) y la única que puede
+ * faltar sin que el expediente pierda valor. Si el Worker se queda sin
+ * tiempo o sin memoria a media subida, lo que ya aterrizó son las
+ * fotos de la INE, la firma y los comprobantes.
  */
 export const TIPO_ARCHIVO_POR_PARTE = {
   id_frente: 'id_frente',
@@ -146,6 +154,7 @@ export const TIPO_ARCHIVO_POR_PARTE = {
   doc_poder: 'poder_notarial',
   doc_id_propietario: 'id_propietario_real',
   doc_domicilio_propietario: 'domicilio_propietario_real',
+  video: 'video_identificacion',
 } as const satisfies Record<string, TipoArchivo>;
 
 /** Los nombres de parte del multipart, tal como los nombra el contrato. */
@@ -158,9 +167,12 @@ export type ParteArchivo = keyof typeof TIPO_ARCHIVO_POR_PARTE;
 /**
  * El enum `tipo_archivo` de Postgres, verbatim.
  *
- * Incluye valores que este backend no escribe todavía
- * (`video_identificacion`, `huella`, `rostro`): están en la base y el
- * panel puede encontrárselos en expedientes viejos.
+ * `video_identificacion` sí se escribe desde CP-V1 — la parte `video`
+ * del multipart cae en él. Sondeado en solo lectura contra la base el
+ * 2026-09-30: el valor ya existía en el enum, así que **no hay
+ * migración**. `huella` y `rostro` siguen sin escribirse: la biometría
+ * continúa simulada, y el panel puede encontrárselos en expedientes
+ * viejos.
  */
 export const TIPOS_ARCHIVO = [
   'id_frente',
