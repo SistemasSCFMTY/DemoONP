@@ -266,6 +266,14 @@ creado_en }`
 [{ tipo, tamano_bytes, hash_sha256, capturado_en }], documento: { contenido_html,
 firmado_en } }`
 
+`tipo` here is the **stored enum**, not the part name — `constancia_curp`, not
+`doc_curp`. The mapping table under `POST /solicitudes` is the referee. This is not a
+detail: `superadmin-app` keyed its label map on the part names, so eight of the twelve
+rows in "Archivos recibidos" rendered nameless against the real backend from CP-S3
+until CP-V3 caught it. The mock spoke the part vocabulary too, so the panel and its
+mock agreed with each other and both disagreed with the API. Anything consuming this
+payload keys on the enum.
+
 **No signed URLs in this payload** — fetch them one at a time below, so a list view
 never mints URLs it does not render.
 
