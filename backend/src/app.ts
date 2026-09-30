@@ -7,6 +7,7 @@ import { log } from './lib/log';
 import { admin } from './routes/admin';
 import { expedientes } from './routes/expedientes';
 import { otp } from './routes/otp';
+import { producto } from './routes/producto';
 import { prospectos } from './routes/prospectos';
 import { solicitudes } from './routes/solicitudes';
 
@@ -66,6 +67,7 @@ app.route('/solicitudes', solicitudes);
 app.route('/expedientes', expedientes);
 app.route('/otp', otp);
 app.route('/prospectos', prospectos);
+app.route('/producto', producto);
 
 /**
  * Un solo sobre de salida: `{ error: { code, message } }`.
