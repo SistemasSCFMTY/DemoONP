@@ -4,6 +4,7 @@ import { requestId } from 'hono/request-id';
 import type { Env } from './env';
 import { ApiError, internal } from './lib/errors';
 import { log } from './lib/log';
+import { admin } from './routes/admin';
 import { expedientes } from './routes/expedientes';
 import { otp } from './routes/otp';
 import { prospectos } from './routes/prospectos';
@@ -60,6 +61,7 @@ app.use('*', async (c, next) => {
 
 app.get('/health', (c) => c.json({ ok: true, at: new Date().toISOString() }));
 
+app.route('/admin', admin);
 app.route('/solicitudes', solicitudes);
 app.route('/expedientes', expedientes);
 app.route('/otp', otp);
