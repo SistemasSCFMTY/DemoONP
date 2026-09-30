@@ -221,7 +221,7 @@ descope — no SOFOM management, no panel-user management, no cross-tenant searc
       tokens from CP-0.2, PrimeNG 21.1.10 + `@angular/cdk@21.2.14`, stock Aura plus an
       ONP preset built from the §3 tokens, login against CP-B7, the session guard,
       `PanelState`, the nav shell. Desktop-first — do not apply the 390px shell.
-- [ ] **CP-S2 · P0 — Expedientes list.** A `p-table` with header/body templates,
+- [x] **CP-S2 · P0 — Expedientes list.** A `p-table` with header/body templates,
       `rowHover`, whole-row click into detail, `[scrollable]` + `scrollHeight`,
       `emptymessage` — never a hand-rolled row list. Search per `pintarExpedientes`
       (`:5426`). Filters persist as URL query params.
@@ -273,7 +273,7 @@ descope — no SOFOM management, no panel-user management, no cross-tenant searc
 | F12 | Deploy to Pages | P0 | frontend | F1–F11, B8 | ☐ |
 | F13 | QA pass | P2 | frontend | F12 | ☐ |
 | S1 | Scaffold, shell, login | P0 | superadmin | 0.2, B7 | ☑ |
-| S2 | Expedientes list | P0 | superadmin | S1, B4 | ☐ |
+| S2 | Expedientes list | P0 | superadmin | S1, B4 | ☑ |
 | S3 | Expediente detail | P0 | superadmin | S2, B4 | ☐ |
 | S4 | Deploy to Pages | P0 | superadmin | S3, B8 | ☐ |
 | S5 | Producto | P1 | superadmin | S1, B9 | ☐ |
