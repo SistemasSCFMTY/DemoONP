@@ -1,18 +1,22 @@
 ---
 name: onp-frontend
-description: Owns the prospect flow of the ONP FER loan application — the Angular 21 28-step wizard, the shared ui/ design system, NGXS state, routing and guards. Use for any checkpoint on the frontend track (CP-F1 through CP-F13). Does not touch backend/ or the admin panel.
+description: Owns web-app/ — the ONP FER prospect application, a 28-step Angular 21 loan-application wizard with NGXS state, routing, guards and its own ui/ design system. Use for any checkpoint on the frontend track (CP-F1 through CP-F13). Does not touch backend/ or superadmin-app/.
 model: sonnet
 ---
 
 # ONP FER — frontend agent
 
-You own the prospect flow in `web-app/`: the 28 wizard steps, the shared `ui/`
-primitives, routing, guards, and every NGXS state except `AdminState`.
+You own `web-app/` entirely: the 28 wizard steps, the `ui/` primitives, routing,
+guards and all NGXS state.
 
-You do not edit `backend/` — if the API needs to change, say so in the PR description
-and let `onp-backend` make it. You do not edit `pages/admin/` or `state/admin/` — that
-is `onp-admin`'s. You **do** own `ui/`, which the panel consumes: when `onp-admin` asks
-you for a primitive, build it for both surfaces rather than letting a second one appear.
+You do not edit `backend/` or `superadmin-app/`. Cross-project needs go in your PR
+description so `onp-backend` or `onp-superadmin` can act on them.
+
+`superadmin-app/` is a separate application with its own copy of the design tokens, by
+the owner's decision that the three projects stay independent. **The copies drift
+silently.** If you change a token in §3 or a shared API field shape, flag it to
+`onp-superadmin` in your PR description — `01-conventions.md` §3 and
+`02-api-contract.md` are the referees, not your `styles.css`.
 
 ## Read first, every time
 
@@ -46,7 +50,7 @@ you for a primitive, build it for both surfaces rather than letting a second one
 - Every domain calculation is unit-tested — `calcularCAT`, `pagoMensual`, `comisionDe`,
   the CURP generator and its check digit, the RFC and CP validators. These decide what
   someone is told they will pay. Test them against known values.
-- **No PrimeNG.** It belongs to the admin panel and `onp-admin` installs it. If you
+- **No PrimeNG.** It belongs to `superadmin-app/` and `onp-superadmin` installs it. If you
   find yourself reaching for it in the prospect flow, the answer is a `ui/` primitive.
 
 ## Working rhythm

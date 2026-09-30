@@ -12,10 +12,21 @@ is a decision.*
 
 ## 1. The product
 
-A loan application (`solicitud de crédito`) for **ONP FER, S.A. de C.V., SOFOM, E.N.R.**
-A prospect completes 28 screens on a phone: simulator, registration, OTP, four form
-screens, PEP declarations, a legal declaratoria, INE photo capture with OCR, document
-uploads, biometrics, video, and a drawn signature. Staff use a 3-screen admin panel.
+A loan application (`solicitud de crédito`) for Mexican SOFOMs. A prospect completes
+28 screens on a phone: simulator, registration, OTP, four form screens, PEP
+declarations, a legal declaratoria, INE photo capture with OCR, document uploads,
+biometrics, video, and a drawn signature.
+
+**Three independent projects**, no shared package:
+
+| Project | Stack | Audience |
+|---|---|---|
+| `web-app/` | Angular 21 + NGXS 21 + Tailwind 4, no PrimeNG | a stranger on a 390px phone |
+| `superadmin-app/` | Angular 21 + NGXS 21 + Tailwind 4 + PrimeNG 21 | the platform operator, over all SOFOMs |
+| `backend/` | Hono 4 + Supabase | both |
+
+The source has one panel scoped to a single SOFOM. `superadmin-app/` builds the tier
+above it — see §12.
 
 It collects CURP, RFC, INE images, geolocation at four moments, income, and a signature.
 That is regulated personal data under the LFPDPPP. **Treat every field as PII.** Never
@@ -109,7 +120,9 @@ nothing.
 
 ---
 
-## 5. Layout
+## 5. Layout (`web-app/`)
+
+`superadmin-app/` is desktop-first and does not use this shell — see §12.
 
 - The app shell is `width: 100%; max-width: 390px; margin: 0 auto; min-height: 100dvh`,
   a column: sticky topbar → progress bar → scrolling body. Use `100dvh`, not `100vh` —
@@ -137,7 +150,7 @@ Angular 21, standalone, signals, **zoneless**. No NgModules.
   the thing it renders is composed of primitives.
 - Lazy-load every route with `loadComponent`.
 
-### Folder layout (`web-app/src/app/`)
+### Folder layout (`web-app/src/app/`; `superadmin-app/` mirrors it)
 
 ```
 core/            app-wide singletons: interceptors, error handling, config
@@ -148,7 +161,6 @@ model/
   interfaces/            Expediente, Solicitud, Producto, Ajustes…
 pages/
   solicitud/<step>/      one folder per wizard step
-  admin/<section>/
 pipes/           pesos, curp-format, fecha-mx…
 services/
   http/          one service per backend resource
@@ -175,7 +187,11 @@ States, each in `state/<name>/`:
 | `SesionState` | prospect session, OTP status, `esCliente`, folio |
 | `IdentidadState` | INE photos, OCR results, documents, biometrics, video, signature |
 | `NavegacionState` | reached steps, current step, progress — what the guard reads |
-| `AdminState` | panel session, expediente list, filters, producto, plantillas |
+
+
+`superadmin-app/` has its own store — `SuperadminState` (session and role), plus
+`SofomsState`, `UsuariosState`, `ExpedientesState` and `BitacoraState`. It does not
+share a state file with `web-app/`; they are separate applications.
 
 Rules:
 
@@ -252,6 +268,11 @@ Hono **4.13.11** on Node. TypeScript, ESM.
   key and is never exported to a route that does not need it.
 - `src/services/` holds the logic (otp, ocr, plantillas, expedientes); routes stay thin.
 - Rate-limit the OTP endpoints. An unthrottled OTP endpoint is an SMS-bill attack.
+- **Every endpoint is scoped by `sofom_id` by default.** Unscoped access exists only
+  behind a `superadmin` role check on the JWT, enforced here. A frontend that shows the
+  right rows is a convenience, not a boundary.
+- Every superadmin mutation writes a `bitacora` row before returning.
+- CORS allows two origins now, both from env.
 - Structured logging with request ids. **Never log a request body** — see §1.
 
 ### Data model (ported from the source's Supabase usage)
@@ -259,6 +280,10 @@ Hono **4.13.11** on Node. TypeScript, ESM.
 Tables: `sofoms`, `usuarios_panel`, `expedientes`, `propietarios_reales`, `archivos`,
 `documentos`, `plantillas`, `bitacora`. View: `v_lista_expedientes`. Storage bucket:
 `expedientes`, path `{folio}/{tipo}.{ext}`.
+
+`usuarios_panel.rol` is `superadmin | admin`, and `sofom_id` is nullable — a superadmin
+belongs to no single SOFOM. `bitacora` is **append-only**, enforced in the schema: an
+operator who can reach every tenant must not be able to erase the record of it.
 
 `archivos` rows carry `tipo`, `ruta`, `nombre_original`, `tipo_mime`, `tamano_bytes`,
 `hash_sha256`, `capturado_en`. **Keep the SHA-256** — it is the evidentiary value of
@@ -286,7 +311,56 @@ honest.
 
 ---
 
-## 12. Deviations from `manttio-design`
+## 12. The superadmin app
+
+`superadmin-app/` is a separate deployable application, not a route inside `web-app/`.
+
+**It is the one surface in this product that is not mobile-first.** A desktop tool for
+staff. Do not apply the 390px shell, do not squeeze the tables, and do not treat the
+phone layout as the baseline it must degrade from.
+
+Everything else about the design language is shared and unchanged: Charis SIL headings,
+Archivo body, the §3 tokens, the §4 radius and elevation ladders, Lucide icons, Spanish
+copy with accents. A different component library is not permission to look like a
+different company.
+
+PrimeNG lives here and only here, preset-first: stock Aura plus an ONP preset built from
+the §3 tokens. Never a `theme/` override sheet for looks; a sheet is only for layout
+integration, and every one opens with a comment saying why it exists. Tabular data is a
+`p-table` — header/body templates, `rowHover`, whole-row click into detail,
+`[scrollable]` + `scrollHeight`, `emptymessage`. Filters and page persist as URL query
+params, `queryParamMap` the single load path.
+
+### The tier, and what it costs
+
+The source's panel is scoped to one SOFOM. This app is the tier above: one operator over
+all of them, managing the SOFOMs themselves and their panel users. The `sofoms` table
+and `usuarios_panel.sofom_id` anticipated it; nobody built it.
+
+A session here can reach every SOFOM's expedientes — every CURP, every INE image, every
+signature in the platform. Three consequences:
+
+1. **Authorization is server-side.** A role guard in this app improves the UX. It is not
+   security. The endpoint must reject a wrong-role caller, and the QA checkpoint tests
+   that it does rather than that the button is hidden.
+2. **Every mutation is audited**, and the audit log is readable (CP-S8) and append-only.
+   There is no UI affordance to delete from it.
+3. **No PII in a URL, a log, or an analytics event.** Signed URLs for media are
+   short-lived and never persisted.
+
+### The duplication policy
+
+Three independent projects, no shared package — the owner's call, twice. The design
+tokens therefore exist in two `styles.css` files and the API types in two Angular apps
+plus the backend's Zod schemas.
+
+**These drift silently; the compiler will not catch it.** §3 and `02-api-contract.md`
+are the referees. A PR that changes one copy must change the others in the same PR, and
+a reviewer who sees a token changed in one place only should block it.
+
+---
+
+## 13. Deviations from `manttio-design`
 
 | # | Deviation | Reason | Owner | Date |
 |---|---|---|---|---|
@@ -294,7 +368,7 @@ honest.
 | D2 | Headings are Charis SIL, not Instrument Sans | Different company. ONP FER's identity is a serif heading over a cream ground; Instrument Sans is Manttio's | owner | 2026-09-30 |
 | D3 | Colour is hard-coded to ONP's navy/gold rather than built from `--brand-*` | Single tenant. The whitelabel indirection has no second tenant to serve | owner | 2026-09-30 |
 | D4 | Tailwind 4, not 3.4 | The repo was scaffolded on 4 and nothing in the ruleset depends on 3.4 | owner | 2026-09-30 |
-| D5 | PrimeNG only in the admin panel, not the prospect flow | A 390px consumer wizard uses nothing PrimeNG is good at; the admin `p-table` does | owner | 2026-09-30 |
+| D5 | PrimeNG only in `superadmin-app/`, not the prospect flow | A 390px consumer wizard uses nothing PrimeNG is good at; the admin `p-table` does | owner | 2026-09-30 |
 | D6 | The mocked biometric confidence (`"98%"` / `"95%"`) is kept verbatim | Owner's call: this is a demo, and the figure sits behind a "Modo demostración" label. It is the one carve-out from "no invented numbers" — everything financial stays computed | owner | 2026-09-30 |
 
 No open questions. The Charis SIL / Archivo split was confirmed by the owner on

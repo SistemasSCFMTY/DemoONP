@@ -1,10 +1,12 @@
 # DemoONP — ONP FER
 
-Solicitud de crédito en línea para una SOFOM mexicana (es-MX). Dos proyectos
-independientes, cada uno con su propio `package.json` y lockfile:
+Solicitud de crédito en línea para SOFOMs mexicanas (es-MX). **Tres proyectos
+independientes**, cada uno con su propio `package.json` y lockfile:
 
-- **`web-app/`** — Angular 21, standalone + signals, zoneless; NGXS 21; Tailwind 4.
-  PrimeNG 21 **solo** en el panel administrativo.
+- **`web-app/`** — el flujo del prospecto. Angular 21, standalone + signals, zoneless;
+  NGXS 21; Tailwind 4. **Sin PrimeNG.** Mobile first, 390px.
+- **`superadmin-app/`** — el panel del operador, sobre todas las SOFOMs. Angular 21 +
+  NGXS 21 + Tailwind 4 + **PrimeNG 21**. Desktop first.
 - **`backend/`** — Hono 4 sobre Node, Supabase como base de datos y almacén.
 
 Canonical docs — read these first:
@@ -18,15 +20,22 @@ Canonical docs — read these first:
 - **`.claude/skills/onp-design`** — committed skill mirroring the design language so
   module agents auto-load it. Edit it **in the same commit** as plan 01.
 
+Three agents, one directory each: `onp-backend`, `onp-frontend`, `onp-superadmin`.
+No agent writes in another's folder.
+
 The port source is `../ONP/onp_fer_etapa2_pf.html` (6,052 lines, single file).
 `onp_fer_app_CODIGO_v24.txt` is a byte-identical copy — ignore it.
 **Copy and screen structure are preserved verbatim**; only the implementation changes.
 
 ## Quick rules (the ones that get missed)
 
-- **Mobile first, 390px is the design width.** The source ships `max-width: 390px`
-  centered. Build at 390 and let it breathe upward — never design at desktop and
-  squeeze down.
+- **`web-app/` is mobile first, 390px is the design width.** The source ships
+  `max-width: 390px` centered. Build at 390 and let it breathe upward — never design at
+  desktop and squeeze down. **`superadmin-app/` is the exception**: a desktop tool for
+  staff, and it should not pretend otherwise.
+- **The superadmin reaches every SOFOM.** Authorization is enforced in the backend by
+  role, never by a frontend hiding a button. Every superadmin mutation writes a
+  `bitacora` row.
 - **No emojis; Lucide outlined icons only** (`@lucide/angular`, stroke-2; `size-4`
   inline, `size-5` nav). The source's `✓` glyphs in status text become icons.
 - **No arbitrary Tailwind values in templates** (`h-[235px]`, `w-[390px]`) — standard
@@ -45,14 +54,17 @@ The port source is `../ONP/onp_fer_etapa2_pf.html` (6,052 lines, single file).
   barrels**.
 - **Motion = Angular `animate.enter`/`animate.leave` + `src/animations.scss` tokens** —
   no ad-hoc keyframes; everything collapses under `prefers-reduced-motion`.
-- **Nothing Supabase reaches the browser.** No URL, no anon key, no `supabase-js` in
-  `web-app/`. The backend owns the credentials and reads them from env vars.
+- **Nothing Supabase reaches a browser.** No URL, no anon key, no `supabase-js` in
+  either Angular app. The backend owns the credentials and reads them from env vars.
+- **Design tokens and API types exist in both Angular apps, by decision.** They drift
+  silently; `01-conventions.md` §3 and `02-api-contract.md` are the referees. A PR
+  changing one copy must change the other.
 - **Spanish (es-MX) with accents — they are not optional.** `Identificación`,
   `crédito`, `teléfono`, `domicilio`, `próximo`. A missing tilde on a loan application
   reads as carelessness about people's money.
 
 ## Build + verification
 
-- `npm run build` green in **both** projects before closing any checkpoint.
+- `npm run build` green in **every project you touched** before closing a checkpoint.
 - Backend: `npm run typecheck` and the Zod contract tests must pass.
 - No screenshots unless asked (the owner watches :4200).

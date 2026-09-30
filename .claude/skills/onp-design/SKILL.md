@@ -13,7 +13,19 @@ is honest about what is happening to their data.
 `.claude/plans/onp/01-conventions.md` is authoritative. Where this skill and that file
 disagree, **the plan file wins** — and fix this file in the same commit.
 
-## Mobile first, 390px
+## Two surfaces, one design language
+
+`web-app/` is the prospect wizard: mobile-first, 390px, no PrimeNG. `superadmin-app/`
+is the operator panel: desktop-first, PrimeNG. They are separate applications with
+separate copies of the tokens.
+
+Everything below applies to both **except** the 390px rules, which are `web-app/`'s.
+A different component library is not permission to look like a different company.
+
+Because the token files are copies, a change to one is a change to both —
+`01-conventions.md` §3 is the referee, not either app's `styles.css`.
+
+## Mobile first, 390px (`web-app/`)
 
 The design width is 390px. Build there, let it breathe upward. Never design at desktop
 and squeeze down. The shell is `max-width: 390px` centered on a cream ground, a column:
@@ -119,10 +131,19 @@ Motion is Angular `animate.enter` / `animate.leave` plus the tokens in
 
 ## PrimeNG
 
-Admin panel only. The prospect flow is headless Tailwind — a 390px consumer wizard uses
-nothing PrimeNG is good at. In the admin panel, tabular data is a `p-table` with
-header/body templates, `rowHover`, whole-row click into detail, `[scrollable]` +
-`scrollHeight`, and an `emptymessage` — never a hand-rolled `<div>` row list.
+`superadmin-app/` only. The prospect flow is headless Tailwind — a 390px consumer
+wizard uses nothing PrimeNG is good at.
+
+Preset-first: stock Aura plus an ONP preset built from the tokens above. Never a
+`theme/` override sheet for looks; a sheet is only for layout integration, and every one
+opens with a comment saying why it exists.
+
+Tabular data is a `p-table` with header/body templates, `rowHover`, whole-row click into
+detail, `[scrollable]` + `scrollHeight`, and an `emptymessage` — never a hand-rolled
+`<div>` row list. Filters and page persist as URL query params.
+
+The panel reaches every SOFOM's data. No PII in a URL, a log, or an analytics event;
+signed URLs for media are short-lived and never persisted.
 
 ## Anti-slop
 
