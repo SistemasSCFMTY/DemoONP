@@ -5,13 +5,29 @@
 
 <form [formGroup]="formulario" (ngSubmit)="enviar()">
   <onp-field
-    idCampo="reg-nombre"
-    etiqueta="Nombre completo"
+    idCampo="reg-nombres"
+    etiqueta="Nombre(s)"
     marcador="Como aparece en tu identificación"
-    autocompletar="name"
+    autocompletar="given-name"
     [obligatorio]="true"
-    [control]="formulario.controls.nombre"
+    [control]="formulario.controls.nombres"
   />
+
+  <onp-fila>
+    <onp-field
+      idCampo="reg-apellido-p"
+      etiqueta="Apellido paterno"
+      autocompletar="family-name"
+      [obligatorio]="true"
+      [control]="formulario.controls.apellidoPaterno"
+    />
+    <onp-field
+      idCampo="reg-apellido-m"
+      etiqueta="Apellido materno"
+      [obligatorio]="true"
+      [control]="formulario.controls.apellidoMaterno"
+    />
+  </onp-fila>
 
   <onp-field
     idCampo="reg-correo"
