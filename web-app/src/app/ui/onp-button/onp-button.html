@@ -1,8 +1,14 @@
 <button
   [type]="tipo()"
-  [disabled]="deshabilitado()"
+  [disabled]="inhabilitado()"
+  [attr.aria-busy]="cargando() ? 'true' : null"
   [class]="clases()"
   (click)="pulsar.emit()"
 >
+  @if (cargando()) {
+    <!-- Decorative: the label already says what is happening, and under
+         prefers-reduced-motion this is hidden entirely (styles.css). -->
+    <svg lucideLoaderCircle class="onp-giro size-4" aria-hidden="true"></svg>
+  }
   <ng-content />
 </button>

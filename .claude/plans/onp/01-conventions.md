@@ -329,6 +329,19 @@ the other way:
 - Error summaries are `role="alert"`; status lines are `aria-live="polite"`.
 - The OTP inputs are six controls with one accessible group label, and accept a pasted
   six-digit code — the source already does this well (`:2753`), keep it.
+- **A button waiting on the network says so, and keeps saying it.** `onp-button` has
+  `cargando` for a request in flight and `deshabilitado` for a gate the prospect has
+  not met. They render the same grey button and mean opposite things — "wait" versus
+  "do something first" — so never OR them into one input; `cargando` disables on its
+  own. `cargando` adds the spinner, `aria-busy="true"`, and blocks a second click,
+  which on the submit is not cosmetic: two clicks are two expedientes for one person.
+- **The spinner is the enhancement, the label is the signal.** The global
+  `prefers-reduced-motion` floor sets `animation-iteration-count: 1`, so an infinite
+  spinner would stop after one turn, and a stopped spinner reads as a hung request —
+  the exact thing it exists to deny. Under reduced motion it is hidden outright and
+  the label ("Enviando tu solicitud…") carries the state. Any future busy indicator
+  obeys the same rule: never ship motion as the only way to tell that something is
+  still happening.
 - Colour never carries meaning alone — the status lines pair colour with an icon.
 - Visible focus ring on everything focusable. Never `outline: none` without a
   replacement.

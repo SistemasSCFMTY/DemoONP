@@ -37,6 +37,6 @@
   de Carácter General.
 </p>
 
-<onp-button [deshabilitado]="codigo().length !== 6 || validando()" (pulsar)="validar()">
+<onp-button [deshabilitado]="codigo().length !== 6" [cargando]="validando()" (pulsar)="validar()">
   {{ validando() ? 'Verificando…' : 'Verificar' }}
 </onp-button>
