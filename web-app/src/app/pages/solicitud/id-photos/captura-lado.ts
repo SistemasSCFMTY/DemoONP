@@ -3,6 +3,7 @@ import {
   Component,
   ElementRef,
   computed,
+  effect,
   inject,
   input,
   output,
@@ -56,7 +57,8 @@ export class CapturaLado {
 
   protected readonly camara = inject(Camara);
 
-  protected readonly camaraAbierta = signal(false);
+  private readonly flujo = signal<MediaStream | null>(null);
+  protected readonly camaraAbierta = computed(() => this.flujo() !== null);
   protected readonly vistaPrevia = signal<string | null>(null);
   protected readonly calidad = signal<ResultadoCalidad | null>(null);
 
@@ -69,28 +71,35 @@ export class CapturaLado {
   private readonly visor = viewChild<ElementRef<HTMLVideoElement>>('visor');
   private readonly archivo = viewChild.required<ElementRef<HTMLInputElement>>('archivo');
 
-  protected async abrirCamara(): Promise<void> {
-    const stream = await this.camara.abrir(this.lado());
-    if (!stream) {
-      this.camaraAbierta.set(false);
-      return;
-    }
-    this.camaraAbierta.set(true);
-    // The <video> only exists once @if has rendered it.
-    queueMicrotask(() => {
+  constructor() {
+    // The <video> only exists once @if has rendered it, and the app is
+    // zoneless: a microtask queued after opening the camera runs before that
+    // render, finds no element and leaves the viewfinder a blank navy box.
+    // The effect re-runs when the `viewChild` resolves, whenever that is.
+    effect(() => {
       const elemento = this.visor()?.nativeElement;
-      if (elemento) elemento.srcObject = stream;
+      const flujo = this.flujo();
+      if (!elemento || !flujo) return;
+      elemento.srcObject = flujo;
+      elemento.muted = true;
+      // Autoplay can be refused; "Capturar" stays inert until there is a frame.
+      void elemento.play()?.catch(() => undefined);
     });
+  }
+
+  protected async abrirCamara(): Promise<void> {
+    this.flujo.set(await this.camara.abrir(this.lado()));
   }
 
   protected cerrarCamara(): void {
     this.camara.cerrar(this.lado());
-    this.camaraAbierta.set(false);
+    this.flujo.set(null);
   }
 
   protected async capturar(): Promise<void> {
     const video = this.visor()?.nativeElement;
-    if (!video) return;
+    // No frame yet: a 0×0 canvas makes `getImageData` throw.
+    if (!video || !video.videoWidth || !video.videoHeight) return;
     const lienzo = this.camara.capturar(video);
     this.cerrarCamara();
     await this.procesar(lienzo);
