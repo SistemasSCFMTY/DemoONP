@@ -18,6 +18,12 @@
       solicitud no quedó registrada en el sistema.
     </onp-status>
   }
+  @if (videoNoAdjuntado()) {
+    <onp-status tono="aviso">
+      No pudimos adjuntar tu videograbación: se interrumpió la conexión al enviarla. Tu solicitud sí
+      quedó registrada con este folio; la grabación no forma parte del expediente.
+    </onp-status>
+  }
 </onp-card>
 
 <onp-card>

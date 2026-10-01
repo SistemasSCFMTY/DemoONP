@@ -38,3 +38,16 @@ export class EstablecerFolio {
   static readonly type = '[Sesión] Establecer folio';
   constructor(readonly folio: string) {}
 }
+
+/**
+ * The first `POST /solicitudes` died on the wire and the retry went out
+ * without the videograbación (03-videograbacion.md, CP-V4).
+ *
+ * Dispatched only when it actually happened, and only alongside a real
+ * folio: the expediente exists, the recording is not in it. Screen 28 reads
+ * this and says so — 01-conventions.md §11, a runtime fallback is never
+ * silent.
+ */
+export class RegistrarVideoNoAdjuntado {
+  static readonly type = '[Sesión] Registrar vídeo no adjuntado';
+}

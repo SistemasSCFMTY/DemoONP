@@ -9,6 +9,7 @@ import {
   EnviarOtp,
   EstablecerFolio,
   RegistrarProspecto,
+  RegistrarVideoNoAdjuntado,
   ValidarOtp,
   VerificarCliente,
 } from './sesion.actions';
@@ -44,6 +45,13 @@ export interface SesionModel {
    *  slug. Interpreted by `services/domain/reanudacion.ts`, never directly. */
   readonly paso: string | null;
   readonly folio: string | null;
+  /**
+   * The submission went out a second time without the videograbación,
+   * because the first attempt died on the wire (CP-V4). About the
+   * *submission*, not the capture — `IdentidadState` owns whether a
+   * recording was ever made.
+   */
+  readonly videoNoAdjuntado: boolean;
 }
 
 const INICIAL: SesionModel = {
@@ -62,6 +70,7 @@ const INICIAL: SesionModel = {
   otpValidado: false,
   paso: null,
   folio: null,
+  videoNoAdjuntado: false,
 };
 
 /**
@@ -94,6 +103,11 @@ export class SesionState {
   @Selector()
   static folio(s: SesionModel): string | null {
     return s.folio;
+  }
+
+  @Selector()
+  static videoNoAdjuntado(s: SesionModel): boolean {
+    return s.videoNoAdjuntado;
   }
 
   @Selector()
@@ -192,5 +206,10 @@ export class SesionState {
   @Action(EstablecerFolio)
   folio(ctx: StateContext<SesionModel>, { folio }: EstablecerFolio): void {
     ctx.patchState({ folio });
+  }
+
+  @Action(RegistrarVideoNoAdjuntado)
+  videoNoAdjuntado(ctx: StateContext<SesionModel>): void {
+    ctx.patchState({ videoNoAdjuntado: true });
   }
 }

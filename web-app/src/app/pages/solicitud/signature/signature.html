@@ -38,6 +38,13 @@
   <onp-status tono="error">{{ error() }}</onp-status>
 }
 
+@if (reintentandoSinVideo()) {
+  <onp-status tono="aviso">
+    No pudimos enviar tu videograbación: se interrumpió la conexión. Estamos reintentando el envío
+    de la solicitud sin ese archivo.
+  </onp-status>
+}
+
 <onp-button [deshabilitado]="!hayTrazo() || enviando()" (pulsar)="completar()">
-  {{ enviando() ? 'Enviando tu solicitud…' : 'Completar Etapa 2' }}
+  {{ etiquetaEnvio() }}
 </onp-button>
