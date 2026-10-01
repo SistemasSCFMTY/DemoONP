@@ -32,7 +32,7 @@
     Descarga el PDF de la solicitud que firmaste. Contiene la información que proporcionaste y
     tu firma.
   </p>
-  <onp-button variante="secondary" [deshabilitado]="descargando()" (pulsar)="descargar()">
+  <onp-button variante="secondary" [cargando]="descargando()" (pulsar)="descargar()">
     {{ descargando() ? 'Preparando el PDF…' : 'Descargar solicitud en PDF' }}
   </onp-button>
   @if (errorPdf()) {

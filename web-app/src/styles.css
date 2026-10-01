@@ -128,6 +128,34 @@
   }
 }
 
+/* The busy spinner inside `onp-button`.
+
+   It lives here and not in the template because the rotation and the
+   optical alignment are exact values, and because it needs a reduced-motion
+   rule of its own. The floor above sets `animation-iteration-count: 1`,
+   which would leave the spinner stopped after a single turn — and a stopped
+   spinner reads as a hung request, which is the precise thing it exists to
+   deny. So under reduced motion it is not shown at all; the button's own
+   label ("Enviando tu solicitud…") and `aria-busy` carry the state. */
+@keyframes onp-giro {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+.onp-giro {
+  display: inline-block;
+  vertical-align: -0.1875em;
+  margin-inline-end: 0.5rem;
+  animation: onp-giro 1s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onp-giro {
+    display: none;
+  }
+}
+
 /* ==========================================================================
    Two-column form rows (§5) — the `onp-fila` primitive
    ==========================================================================

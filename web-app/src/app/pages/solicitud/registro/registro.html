@@ -81,7 +81,7 @@
     <onp-status tono="error">{{ error() }}</onp-status>
   }
 
-  <onp-button tipo="submit" [deshabilitado]="enviando()">
+  <onp-button tipo="submit" [cargando]="enviando()">
     {{ enviando() ? 'Creando tu cuenta…' : 'Crear cuenta y continuar' }}
   </onp-button>
 </form>

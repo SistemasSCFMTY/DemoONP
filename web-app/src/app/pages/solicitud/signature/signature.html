@@ -45,6 +45,6 @@
   </onp-status>
 }
 
-<onp-button [deshabilitado]="!hayTrazo() || enviando()" (pulsar)="completar()">
+<onp-button [deshabilitado]="!hayTrazo()" [cargando]="enviando()" (pulsar)="completar()">
   {{ etiquetaEnvio() }}
 </onp-button>

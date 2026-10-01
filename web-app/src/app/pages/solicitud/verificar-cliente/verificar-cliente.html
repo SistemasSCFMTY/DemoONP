@@ -44,7 +44,7 @@
     <onp-status tono="error">{{ error() }}</onp-status>
   }
 
-  <onp-button tipo="submit" [deshabilitado]="verificando()">
+  <onp-button tipo="submit" [cargando]="verificando()">
     {{ verificando() ? 'Verificando…' : 'Verificar' }}
   </onp-button>
   <onp-button variante="secondary" (pulsar)="noSoyCliente()">No soy cliente</onp-button>
