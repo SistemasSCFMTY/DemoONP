@@ -30,6 +30,18 @@ The port source is `../ONP/onp_fer_etapa2_pf.html` (6,052 lines, single file).
 `onp_fer_app_CODIGO_v24.txt` is a byte-identical copy — ignore it.
 **Copy and screen structure are preserved verbatim**; only the implementation changes.
 
+## Worktrees
+
+Work happens in git worktrees, and **every worktree lives in `../DemoONP-worktrees/`** —
+the sibling of this checkout, one folder per branch (owner, 2026-09-30):
+
+```
+git worktree add "../DemoONP-worktrees/<slug>" -b <branch> origin/main
+```
+
+Never create one inside the repo (not `.claude/worktrees/`) or anywhere else on disk.
+`node_modules` is not shared: run `npm install` in each project the worktree touches.
+
 ## Quick rules (the ones that get missed)
 
 - **`web-app/` is mobile first, 390px is the design width.** Build at 390 and let it
